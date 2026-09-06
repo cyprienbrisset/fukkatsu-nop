@@ -2,7 +2,7 @@
 
 # 復活 Fukkatsu
 
-**Launcher maison pour Meta Portal 2nd Gen**
+**Launcher maison pour Meta Portal Plus (1ère & 2ème génération)**
 
 *Encre japonaise · Ambiant permanent · Sans Google Services*
 
@@ -16,7 +16,7 @@
 
 ---
 
-**復活** (*fukkatsu*, « renaissance ») transforme un Meta Portal 2nd Gen en hub maison permanent. L'interface s'inspire de la papeterie japonaise : encre Sumi profonde la nuit, parchemin Washi chaud le jour. Tout fonctionne sans connexion Google — pas de compte, pas de Play Store requis.
+**復活** (*fukkatsu*, « renaissance ») transforme un Meta Portal en hub maison permanent. Testé sur le **Portal Plus 1ère génération** et le **Portal 2ème génération**. L'interface s'inspire de la papeterie japonaise : encre Sumi profonde la nuit, parchemin Washi chaud le jour. Tout fonctionne sans connexion Google — pas de compte, pas de Play Store requis.
 
 ---
 
@@ -24,7 +24,7 @@
 
 **Une horloge ambiante** occupe la gauche de l'écran en permanence — heure, date, météo en direct et prochain réveil d'un seul coup d'œil. Quand de la musique joue, la pochette et les commandes apparaissent dessous. Les six derniers contacts Messenger ou WhatsApp avec qui vous avez échangé sont également affichés.
 
-**La grille d'apps** à droite regroupe vos raccourcis en médaillons. Un tap lance l'app, un appui long ouvre un panneau d'actions rapides (raccourcis de l'app, réordonner, supprimer).
+**La grille d'apps** à droite regroupe vos raccourcis en médaillons. Un tap lance l'app. Un badge rouge indique le nombre de notifications non lues. Appui long sur une tuile = actions rapides ; appui long dans la zone vide = mode réorganisation par glisser-déposer.
 
 Le thème bascule automatiquement entre mode nuit (Sumi) et mode jour (Washi) selon l'heure — 20h pour la nuit, 7h pour le jour. L'accent rouge vermillon **朱** reste constant.
 
@@ -39,6 +39,7 @@ Le thème bascule automatiquement entre mode nuit (Sumi) et mode jour (Washi) se
 | **Écarter deux doigts** (pinch-out) | Vue multitâche : cartes des apps récentes, glisser vers le haut pour fermer |
 | **Glisser le bord droit** de l'écran | Régler la luminosité (curseur vertical) |
 | **Appui long** sur une tuile | Actions rapides : raccourcis, déplacer, supprimer |
+| **Appui long** dans la zone vide du grid | Entrer en mode réorganisation — glisser pour déplacer, « Terminé » pour quitter |
 
 ---
 
@@ -48,6 +49,7 @@ Le Portal n'a pas de Play Store. FukkaStore comble ce manque : connectez votre c
 
 - Navigation par catégories (Productivité, Musique, Réseaux sociaux…)
 - Recherche en texte libre
+- Tap sur une app pour afficher sa fiche complète (description, captures d'écran, note)
 - Une seule pression pour télécharger et installer
 - Filtre automatique des apps incompatibles avec le Portal
 

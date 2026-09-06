@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>復活 Fukkatsu — Launcher pour Meta Portal</title>
-  <meta name="description" content="Fukkatsu transforme le Meta Portal 2nd Gen en hub maison permanent. Esthétique encre japonaise, zéro dépendance Google."/>
+  <meta name="description" content="Fukkatsu transforme le Meta Portal (1ère et 2ème génération) en hub maison permanent. Esthétique encre japonaise, zéro dépendance Google."/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet"/>
@@ -233,7 +233,7 @@
   <div class="hero-kanji" aria-hidden="true">復</div>
   <div class="hero-inner">
     <div class="hero-text">
-      <p class="hero-eyebrow">Meta Portal 2nd Gen · Android 10 · Sans GMS</p>
+      <p class="hero-eyebrow">Meta Portal Plus 1ère &amp; 2ème Gen · Android 10 · Sans GMS</p>
       <h1>
         <span class="jp">復活 fukkatsu</span>
         Un hub maison qui s'éveille au quotidien
@@ -302,7 +302,7 @@
       <div class="feat-card">
         <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-grid"/></svg></div>
         <h3>Grille d'apps</h3>
-        <p>Raccourcis personnalisables en médaillons. Réorganisez, supprimez ou accédez aux raccourcis en appui long.</p>
+        <p>Raccourcis personnalisables en médaillons avec badges de notifications. Glisser-déposer pour réorganiser, appui long pour les actions rapides.</p>
       </div>
       <div class="feat-card">
         <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-music"/></svg></div>
@@ -348,7 +348,7 @@
   <div class="container">
     <p class="section-tag">Gestes</p>
     <h2>Naviguer sans jamais chercher</h2>
-    <p class="lead">Cinq gestes couvrent l'ensemble des interactions — recherche, réglages, multitâche, luminosité.</p>
+    <p class="lead">Six gestes couvrent l'ensemble des interactions — recherche, réglages, multitâche, luminosité, réorganisation.</p>
 
     <div class="gestures-grid">
       <div class="gesture-card">
@@ -389,6 +389,14 @@
           <p class="gesture-trigger">Tuile · Appui long</p>
           <h3>Actions rapides</h3>
           <p>Raccourcis de l'app, déplacer vers le haut ou le bas, supprimer — sans quitter l'écran.</p>
+        </div>
+      </div>
+      <div class="gesture-card">
+        <div class="gesture-icon"><svg class="icon icon-lg"><use href="#i-layers"/></svg></div>
+        <div class="gesture-body">
+          <p class="gesture-trigger">Zone vide du grid · Appui long</p>
+          <h3>Réorganisation par glisser-déposer</h3>
+          <p>Appui long entre les tuiles pour entrer en mode réorganisation, puis glissez pour déplacer. Bouton « Terminé » pour quitter.</p>
         </div>
       </div>
       <div class="gesture-card">
@@ -488,6 +496,10 @@
           </li>
           <li>
             <svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg>
+            <span>Fiche app complète au tap : description, captures d'écran, note</span>
+          </li>
+          <li>
+            <svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg>
             <span>Filtre automatique des apps incompatibles avec l'API 29 du Portal</span>
           </li>
           <li>
@@ -564,7 +576,7 @@ bash scripts/provision-portal.sh \
     <div class="footer-brand" aria-hidden="true">墨</div>
     <div class="footer-info">
       <p>MIT — Copyright © 2024–2026 <a href="https://github.com/cyprienbrisset" target="_blank" rel="noopener">Cyprien Brisset</a></p>
-      <p style="margin-top:4px">Conçu pour le <strong style="color:var(--muted)">Meta Portal 2nd Gen</strong> · Android 10 · Jetpack Compose</p>
+      <p style="margin-top:4px">Testé sur le <strong style="color:var(--muted)">Meta Portal Plus 1ère &amp; 2ème Gen</strong> · Android 10 · Jetpack Compose</p>
     </div>
     <div class="footer-links">
       <a href="https://github.com/cyprienbrisset/fukkatsu" target="_blank" rel="noopener">
