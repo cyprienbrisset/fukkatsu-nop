@@ -8,8 +8,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Monitor
+import androidx.compose.material3.Icon
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -58,7 +62,7 @@ fun TileEditScreen(onBack: () -> Unit, vm: TileEditViewModel = viewModel()) {
         }
 
         SegmentedChoice(
-            listOf(Segment("アプリ", "Application"), Segment("ウェブ", "Web"), Segment("ストア", "Store")),
+            listOf(Segment("アプリ", "Application"), Segment("ウェブ", "Web"), Segment("ストア", "Store"), Segment("システム", "Système")),
             selectedIndex = mode, onSelect = { mode = it },
         )
         Spacer(Modifier.height(22.dp))
@@ -66,6 +70,20 @@ fun TileEditScreen(onBack: () -> Unit, vm: TileEditViewModel = viewModel()) {
         if (mode == 2) {
             // FukkaStore : rechercher et installer des apps sans passer par les Réglages.
             StoreBody(Modifier.weight(1f))
+            return@Column
+        }
+
+        if (mode == 3) {
+            SectionLabel("システム", "TUILES SYSTÈME")
+            Spacer(Modifier.height(16.dp))
+            Medallion(label = "Écran Mac", onClick = { vm.addAirPlay() }) {
+                Icon(
+                    imageVector = Icons.Rounded.Monitor,
+                    contentDescription = "Écran Mac",
+                    modifier = Modifier.size(46.dp),
+                )
+            }
+            Spacer(Modifier.weight(1f))
             return@Column
         }
 

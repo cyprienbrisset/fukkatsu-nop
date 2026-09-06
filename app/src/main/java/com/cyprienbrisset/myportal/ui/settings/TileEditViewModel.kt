@@ -31,6 +31,13 @@ class TileEditViewModel(app: Application) : AndroidViewModel(app) {
         repo.add(TileEntity(type = TileType.WEB, label = label, url = normalized, position = 0))
     }
 
+    fun addAirPlay() = viewModelScope.launch {
+        val existing = repo.getAll().firstOrNull { it.type == TileType.AIRPLAY }
+        if (existing == null) {
+            repo.add(TileEntity(type = TileType.AIRPLAY, label = "Écran Mac", position = 0))
+        }
+    }
+
     fun delete(tile: TileEntity) = viewModelScope.launch { repo.delete(tile) }
     fun moveUp(tile: TileEntity) = viewModelScope.launch {
         val list = repo.getAll().toMutableList()
