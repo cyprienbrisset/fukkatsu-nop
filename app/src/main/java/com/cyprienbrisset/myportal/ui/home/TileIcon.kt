@@ -2,11 +2,16 @@ package com.cyprienbrisset.myportal.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Monitor
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,8 +26,12 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.cyprienbrisset.myportal.airplay.AirPlayReceiver
+import com.cyprienbrisset.myportal.airplay.AirPlayState
 import com.cyprienbrisset.myportal.data.tile.TileEntity
 import com.cyprienbrisset.myportal.data.tile.TileType
+import com.cyprienbrisset.myportal.ui.theme.Kinari
+import com.cyprienbrisset.myportal.ui.theme.Shu
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -111,7 +120,38 @@ fun TileIcon(tile: TileEntity, size: Dp, modifier: Modifier = Modifier) {
             }
         }
         TileType.AIRPLAY -> {
-            Monogram(tile.label, size, modifier)
+            val airState by AirPlayReceiver.state.collectAsState()
+            val statusText = when (airState) {
+                is AirPlayState.Streaming  -> "● Live"
+                is AirPlayState.Connecting -> "Connexion…"
+                is AirPlayState.Error      -> "⚠ Erreur"
+                else                       -> "En attente"
+            }
+            val statusColor = when (airState) {
+                is AirPlayState.Streaming -> Shu
+                is AirPlayState.Error     -> Kinari
+                else                      -> Color.Gray
+            }
+            Box(
+                modifier.size(size).clip(RoundedCornerShape(size / 4))
+                    .background(Color(monogramColor("Mac"))),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Rounded.Monitor,
+                        contentDescription = "Écran Mac",
+                        tint = Color.White,
+                        modifier = Modifier.size(size * 0.45f),
+                    )
+                    Text(
+                        statusText,
+                        color = statusColor,
+                        fontSize = (size.value / 8).sp,
+                        lineHeight = (size.value / 8).sp,
+                    )
+                }
+            }
         }
     }
 }
