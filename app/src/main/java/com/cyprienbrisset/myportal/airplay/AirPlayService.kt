@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 class AirPlayService : Service() {
     private val scope = CoroutineScope(Dispatchers.Main + Job())
@@ -21,7 +22,8 @@ class AirPlayService : Service() {
         super.onCreate()
         createChannel()
         startForeground(NOTIF_ID, buildNotification("En attente de connexion"))
-        AirPlayReceiver.start(this)
+        // JmDNS.create() does a network call (DNS lookup) — must run off main thread.
+        scope.launch(Dispatchers.IO) { AirPlayReceiver.start(this@AirPlayService) }
         AirPlayReceiver.state.onEach { state ->
             val text = when (state) {
                 is AirPlayState.Streaming -> "Mac connecté ● Live"
