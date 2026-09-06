@@ -4,24 +4,21 @@
 #
 # Ce que fait le script :
 #   1. Construit l'APK debug si besoin (JBR d'Android Studio, aucun java requis sur le PATH).
-#   2. Installe l'APK sur le Portal (adb).
-#   3. Accorde les permissions qui ne peuvent l'être que via adb :
+#   2. Désactive le vérificateur de paquets (Play Protect) AVANT l'install.
+#      Le Portal n'a pas de GMS fonctionnel : le vérificateur ne peut jamais répondre
+#      et bloque toute installation (« install verification failure »).
+#   3. Installe l'APK sur le Portal (adb).
+#   4. Accorde les permissions qui ne peuvent l'être que via adb :
 #        - accès « Ne pas déranger » (politique de notifications)
 #        - administrateur d'appareil (extinction de l'écran)
-#   4. Propose de désactiver le vérificateur de paquets (Play Protect).
-#      >>> C'est un CHOIX laissé à l'utilisateur. <<<
-#      Le Portal n'a pas de GMS fonctionnel : si le vérificateur reste ACTIF, il ne
-#      peut jamais répondre et les installations depuis FukkaStore échouent
-#      (« install verification failure »). Le désactiver résout le problème ;
-#      c'est une atténuation de sécurité désactivée sur cet appareil kiosque perso.
 #
 # Usage :
 #   scripts/provision-portal.sh [SERIAL]
 #     SERIAL                 série adb du Portal (auto-détecté si un seul appareil)
 #   Options :
 #     --build                force la reconstruction de l'APK avant install
-#     --disable-verifier     désactive le vérificateur sans poser la question
-#     --keep-verifier        laisse le vérificateur actif sans poser la question
+#     --set-launcher         définit Fukkatsu comme launcher sans poser la question
+#     --no-launcher          laisse le launcher d'origine sans poser la question
 #     -h | --help            aide
 #
 # Variables d'env (surchargeables) : ADB, APK, JAVA_HOME
@@ -50,16 +47,13 @@ die()  { printf '%s✗ %s%s\n' "$RED" "$*" "$RST" >&2; exit 1; }
 # --- Arguments ----------------------------------------------------------------
 SERIAL=""
 FORCE_BUILD=0
-VERIFIER_CHOICE=""   # "disable" | "keep" | "" (demander)
 LAUNCHER_CHOICE=""   # "set" | "skip" | "" (demander)
 while [ $# -gt 0 ]; do
   case "$1" in
     --build) FORCE_BUILD=1 ;;
-    --disable-verifier) VERIFIER_CHOICE="disable" ;;
-    --keep-verifier) VERIFIER_CHOICE="keep" ;;
     --set-launcher) LAUNCHER_CHOICE="set" ;;
     --no-launcher) LAUNCHER_CHOICE="skip" ;;
-    -h|--help) sed -n '2,32p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,30p' "$0"; exit 0 ;;
     -*) die "Option inconnue : $1" ;;
     *) SERIAL="$1" ;;
   esac
@@ -90,7 +84,17 @@ if [ "$FORCE_BUILD" -eq 1 ] || [ ! -f "$APK" ]; then
 fi
 [ -f "$APK" ] || die "APK introuvable : $APK (utilise --build)."
 
-# --- 2. Install ---------------------------------------------------------------
+# --- 2. Vérificateur de paquets (AVANT l'install) -----------------------------
+# Le Portal n'a pas de GMS fonctionnel : si le vérificateur reste actif,
+# il ne peut jamais valider → "install verification failure" sur adb install
+# ET sur les installs FukkaStore. On le coupe systématiquement avant tout install.
+info "Désactivation du vérificateur de paquets (Play Protect)…"
+"${A[@]}" shell settings put global package_verifier_enable 0
+"${A[@]}" shell settings put global verifier_verify_adb_installs 0
+"${A[@]}" shell settings put global package_verifier_user_consent -1
+ok "Vérificateur désactivé — les installations ne seront plus bloquées."
+
+# --- 3. Install ---------------------------------------------------------------
 info "Installation de l'APK sur le Portal…"
 "${A[@]}" install -r -d "$APK" >/dev/null || die "Échec de l'installation de l'APK."
 ok "Fukkatsu installé."
@@ -115,6 +119,20 @@ if "${A[@]}" shell pm grant "$PKG" android.permission.WRITE_SECURE_SETTINGS >/de
   ok "WRITE_SECURE_SETTINGS accordé."
 else
   warn "Impossible d'accorder WRITE_SECURE_SETTINGS."
+fi
+
+info "Attribution de FORCE_STOP_PACKAGES (fermeture vraie des apps dans le multitask)…"
+if "${A[@]}" shell pm grant "$PKG" android.permission.FORCE_STOP_PACKAGES >/dev/null 2>&1; then
+  ok "FORCE_STOP_PACKAGES accordé — les apps seront vraiment quittées."
+else
+  warn "FORCE_STOP_PACKAGES non accordé (permission signature sur stock Android, mais l'app tentera via reflection et shell)."
+fi
+
+info "Attribution de WRITE_SETTINGS (contrôle de la luminosité)…"
+if "${A[@]}" shell appops set "$PKG" WRITE_SETTINGS allow >/dev/null 2>&1; then
+  ok "WRITE_SETTINGS accordé (luminosité persistante)."
+else
+  warn "Impossible d'accorder WRITE_SETTINGS — la luminosité ne persistera que dans l'app."
 fi
 
 # --- Launcher principal (CHOIX utilisateur) -----------------------------------
@@ -146,41 +164,6 @@ if [ "$LAUNCHER_CHOICE" = "set" ]; then
 else
   info "Launcher d'origine conservé."
   echo "  Pour le définir plus tard : scripts/provision-portal.sh $SERIAL --set-launcher"
-fi
-
-# --- 4. Vérificateur de paquets (CHOIX utilisateur) ---------------------------
-CUR_VERIFIER="$("${A[@]}" shell settings get global package_verifier_enable 2>/dev/null | tr -d '\r')"
-echo
-printf '%s————— Vérificateur de paquets (Play Protect) —————%s\n' "$BOLD" "$RST"
-echo "État actuel : package_verifier_enable = ${CUR_VERIFIER:-inconnu}"
-echo
-printf '%sImportant :%s ce Portal n'\''a pas de GMS fonctionnel. Si le vérificateur reste\n' "$YLW" "$RST"
-echo "ACTIF, il ne peut jamais valider une installation → les installs depuis"
-printf '%sFukkaStore échoueront%s (« install verification failure »).\n' "$RED" "$RST"
-echo "Le désactiver corrige le problème (réglage persistant, réversible)."
-echo
-
-if [ -z "$VERIFIER_CHOICE" ]; then
-  if [ -t 0 ]; then
-    read -r -p "Désactiver le vérificateur pour que FukkaStore fonctionne ? [O/n] " ans
-    case "$ans" in
-      ""|[Oo]|[Oo][Uu][Ii]|[Yy]|[Yy][Ee][Ss]) VERIFIER_CHOICE="disable" ;;
-      *) VERIFIER_CHOICE="keep" ;;
-    esac
-  else
-    warn "Non interactif : vérificateur laissé tel quel (utilise --disable-verifier)."
-    VERIFIER_CHOICE="keep"
-  fi
-fi
-
-if [ "$VERIFIER_CHOICE" = "disable" ]; then
-  "${A[@]}" shell settings put global package_verifier_enable 0
-  "${A[@]}" shell settings put global verifier_verify_adb_installs 0
-  "${A[@]}" shell settings put global package_verifier_user_consent -1
-  ok "Vérificateur désactivé — les installs FukkaStore fonctionneront."
-else
-  warn "Vérificateur laissé ACTIF — les installs depuis FukkaStore risquent d'échouer."
-  echo "  Pour le désactiver plus tard : scripts/provision-portal.sh $SERIAL --disable-verifier"
 fi
 
 echo
