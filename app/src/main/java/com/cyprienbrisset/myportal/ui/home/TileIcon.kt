@@ -38,7 +38,14 @@ fun monogramColor(label: String): Long {
     return palette[idx]
 }
 
-fun faviconUrl(url: String): String {
+fun directFaviconUrl(url: String): String {
+    val scheme = url.substringBefore("://", "http")
+    val noScheme = url.substringAfter("://", url)
+    val authority = noScheme.substringBefore('/')
+    return "$scheme://$authority/favicon.ico"
+}
+
+fun googleFaviconUrl(url: String): String {
     val noScheme = url.substringAfter("://", url)
     val host = noScheme.substringBefore('/').substringBefore(':')
     return "https://www.google.com/s2/favicons?sz=128&domain=$host"
@@ -85,18 +92,23 @@ fun TileIcon(tile: TileEntity, size: Dp, modifier: Modifier = Modifier) {
             if (url == null) {
                 Monogram(tile.label, size, modifier)
             } else {
-                var loadFailed by remember(url) { mutableStateOf(false) }
-                if (loadFailed) {
+                // 0 = try direct /favicon.ico, 1 = try Google service, 2 = monogram
+                var step by remember(url) { mutableStateOf(0) }
+                if (step >= 2) {
                     Monogram(tile.label, size, modifier)
                 } else {
+                    val iconUrl = if (step == 0) directFaviconUrl(url) else googleFaviconUrl(url)
                     AsyncImage(
-                        model = ImageRequest.Builder(ctx).data(faviconUrl(url)).crossfade(true).build(),
+                        model = ImageRequest.Builder(ctx).data(iconUrl).crossfade(true).build(),
                         contentDescription = tile.label,
                         modifier = modifier.size(size).clip(shape),
-                        onError = { loadFailed = true },
+                        onError = { step++ },
                     )
                 }
             }
+        }
+        TileType.AIRPLAY -> {
+            Monogram(tile.label, size, modifier)
         }
     }
 }

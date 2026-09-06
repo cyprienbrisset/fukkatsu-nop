@@ -3,7 +3,7 @@ package com.cyprienbrisset.myportal.data.tile
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-enum class TileType { APP, WEB }
+enum class TileType { APP, WEB, AIRPLAY }
 
 @Entity(tableName = "tiles")
 data class TileEntity(
