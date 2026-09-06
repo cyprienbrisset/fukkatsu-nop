@@ -51,6 +51,9 @@ fun googleFaviconUrl(url: String): String {
     return "https://www.google.com/s2/favicons?sz=128&domain=$host"
 }
 
+/** Alias used in tests — delegates to [googleFaviconUrl]. */
+fun faviconUrl(url: String): String = googleFaviconUrl(url)
+
 @Composable
 fun TileIcon(tile: TileEntity, size: Dp, modifier: Modifier = Modifier) {
     val ctx = LocalContext.current
