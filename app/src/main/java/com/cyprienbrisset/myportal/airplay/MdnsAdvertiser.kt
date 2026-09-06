@@ -1,13 +1,13 @@
 package com.cyprienbrisset.myportal.airplay
 
 import android.content.Context
+import android.net.nsd.NsdManager
+import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
-import java.net.InetAddress
-import javax.jmdns.JmDNS
-import javax.jmdns.ServiceInfo
 
 class MdnsAdvertiser(private val context: Context) {
-    private var jmdns: JmDNS? = null
+    private var nsdManager: NsdManager? = null
+    private var listener: NsdManager.RegistrationListener? = null
     private var multicastLock: WifiManager.MulticastLock? = null
 
     fun start() {
@@ -16,36 +16,33 @@ class MdnsAdvertiser(private val context: Context) {
             it.setReferenceCounted(false)
             it.acquire()
         }
-        // JmDNS.create() without an address binds to loopback on Android.
-        // We must pass the actual WiFi interface address so mDNS packets go out on the LAN.
-        @Suppress("DEPRECATION")
-        val ipInt = wm.connectionInfo?.ipAddress ?: 0
-        val wifiAddr: InetAddress? = runCatching {
-            InetAddress.getByAddress(byteArrayOf(
-                (ipInt and 0xFF).toByte(),
-                (ipInt shr 8 and 0xFF).toByte(),
-                (ipInt shr 16 and 0xFF).toByte(),
-                (ipInt shr 24 and 0xFF).toByte(),
-            ))
-        }.getOrNull()
 
-        val props = mapOf(
-            "deviceid" to "AA:BB:CC:DD:EE:FF",
-            "features"  to "0x5A7FFFF7,0x1E",
-            "flags"     to "0x4",
-            "model"     to "AppleTV3,2",
-            "pk"        to AirPlayKeyStore.publicKeyHex,
-            "srcvers"   to "220.68",
-        )
-        jmdns = if (wifiAddr != null) JmDNS.create(wifiAddr) else JmDNS.create()
-        val service = ServiceInfo.create("_airplay._tcp.local.", "Portal", 7000, 0, 0, props)
-        jmdns?.registerService(service)
+        val serviceInfo = NsdServiceInfo().apply {
+            serviceName = "Portal"
+            serviceType = "_airplay._tcp"
+            port = 7000
+            setAttribute("deviceid", "AA:BB:CC:DD:EE:FF")
+            setAttribute("features", "0x5A7FFFF7,0x1E")
+            setAttribute("flags", "0x4")
+            setAttribute("model", "AppleTV3,2")
+            setAttribute("srcvers", "220.68")
+        }
+
+        val reg = object : NsdManager.RegistrationListener {
+            override fun onServiceRegistered(info: NsdServiceInfo) {}
+            override fun onRegistrationFailed(info: NsdServiceInfo, err: Int) {}
+            override fun onServiceUnregistered(info: NsdServiceInfo) {}
+            override fun onUnregistrationFailed(info: NsdServiceInfo, err: Int) {}
+        }
+        listener = reg
+        nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
+        nsdManager?.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, reg)
     }
 
     fun stop() {
-        runCatching { jmdns?.unregisterAllServices() }
-        runCatching { jmdns?.close() }
-        jmdns = null
+        listener?.let { runCatching { nsdManager?.unregisterService(it) } }
+        listener = null
+        nsdManager = null
         multicastLock?.release()
         multicastLock = null
     }
