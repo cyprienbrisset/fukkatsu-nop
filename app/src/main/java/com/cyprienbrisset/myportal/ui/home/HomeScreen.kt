@@ -56,6 +56,9 @@ import com.cyprienbrisset.myportal.ui.theme.Kinari
 import com.cyprienbrisset.myportal.ui.theme.Mincho
 import com.cyprienbrisset.myportal.ui.theme.OnShu
 import com.cyprienbrisset.myportal.ui.theme.Shu
+import com.cyprienbrisset.myportal.airplay.AirPlayService
+import com.cyprienbrisset.myportal.airplay.AirPlayState
+import com.cyprienbrisset.myportal.ui.airplay.AirPlayActivity
 import com.cyprienbrisset.myportal.web.WebAppActivity
 
 @Composable
@@ -72,8 +75,17 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, vm: HomeViewMo
     var showSearch by remember { mutableStateOf(false) }
     var showRecents by remember { mutableStateOf(false) }
     val recentApps by vm.recentApps.collectAsStateWithLifecycle()
+    val airPlayState by vm.airPlayState.collectAsStateWithLifecycle()
     var quickActionsTile by remember { mutableStateOf<TileEntity?>(null) }
     var reorderMode by remember { mutableStateOf(false) }
+
+    LaunchedEffect(airPlayState) {
+        if (airPlayState is AirPlayState.Streaming) {
+            ctx.startActivity(Intent(ctx, AirPlayActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            })
+        }
+    }
 
     val launch: (TileEntity) -> Unit = { tile ->
         when (tile.type) {
@@ -88,8 +100,14 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, vm: HomeViewMo
                 Intent(ctx, WebAppActivity::class.java).putExtra(WebAppActivity.EXTRA_URL, tile.url)
             )
             TileType.AIRPLAY -> {
-                // TODO: Launch AirPlay receiver activity
-                Toast.makeText(ctx, "AirPlay: ${tile.label}", Toast.LENGTH_SHORT).show()
+                val st = vm.airPlayState.value
+                if (st is AirPlayState.Streaming) {
+                    ctx.startActivity(Intent(ctx, AirPlayActivity::class.java))
+                }
+                if (st is AirPlayState.Error) {
+                    ctx.startService(Intent(ctx, AirPlayService::class.java))
+                }
+                // Waiting/Connecting: no-op, service is already running
             }
         }
     }

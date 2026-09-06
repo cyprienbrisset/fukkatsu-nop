@@ -1,6 +1,8 @@
 package com.cyprienbrisset.myportal.ui.home
 
+import android.app.ActivityManager
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.cyprienbrisset.myportal.alarm.nextTriggerTime
@@ -8,13 +10,19 @@ import com.cyprienbrisset.myportal.data.AppDatabase
 import com.cyprienbrisset.myportal.integration.RecentContactsRepository
 import com.cyprienbrisset.myportal.data.alarm.AlarmRepository
 import com.cyprienbrisset.myportal.data.settings.SettingsRepository
+import com.cyprienbrisset.myportal.data.tile.TileEntity
 import com.cyprienbrisset.myportal.data.tile.TileRepository
+import kotlinx.coroutines.launch
 import com.cyprienbrisset.myportal.data.weather.Weather
 import com.cyprienbrisset.myportal.data.weather.WeatherRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import com.cyprienbrisset.myportal.airplay.AirPlayReceiver
+import com.cyprienbrisset.myportal.airplay.AirPlayState
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -59,10 +67,44 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     private val nowPlayingController = com.cyprienbrisset.myportal.media.NowPlayingController(app)
     val nowPlaying = nowPlayingController.state
     fun refreshNowPlaying() = nowPlayingController.refresh()
+
+    val airPlayState = AirPlayReceiver.state
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AirPlayState.Waiting)
     fun mediaToggle() = nowPlayingController.toggle()
     fun mediaNext() = nowPlayingController.next()
     fun mediaPrev() = nowPlayingController.prev()
     fun mediaSeek(positionMs: Long) = nowPlayingController.seekTo(positionMs)
+
+    fun deleteTile(tile: TileEntity) = viewModelScope.launch { repo.delete(tile) }
+
+    fun reorderTiles(ordered: List<TileEntity>) = viewModelScope.launch { repo.reorder(ordered) }
+
+    private val _recentApps = MutableStateFlow<List<RecentApp>>(emptyList())
+    val recentApps = _recentApps.asStateFlow()
+
+    fun recordLaunch(packageName: String, label: String) {
+        val current = _recentApps.value.toMutableList()
+        current.removeAll { it.packageName == packageName }
+        current.add(0, RecentApp(packageName, label))
+        _recentApps.value = if (current.size > 8) current.take(8) else current
+    }
+
+    fun removeRecent(packageName: String) {
+        _recentApps.value = _recentApps.value.filter { it.packageName != packageName }
+        killApp(packageName)
+    }
+
+    fun clearRecents() {
+        _recentApps.value.forEach { killApp(it.packageName) }
+        _recentApps.value = emptyList()
+    }
+
+    private fun killApp(packageName: String) {
+        // Best-effort: kills cached background processes. Apps with foreground services (WhatsApp,
+        // music players, etc.) cannot be terminated without system privileges — Android by design.
+        val am = getApplication<Application>().getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        runCatching { am.killBackgroundProcesses(packageName) }
+    }
 
     override fun onCleared() {
         nowPlayingController.dispose()
