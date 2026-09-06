@@ -20,6 +20,7 @@ coil = "2.7.0"
 coroutinesTest = "1.9.0"
 testCore = "1.6.1"
 gplayapi = "3.2.6"
+jmdns = "3.5.8"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -49,6 +50,7 @@ kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 androidx-room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
 androidx-test-core = { group = "androidx.test", name = "core-ktx", version.ref = "testCore" }
 gplayapi = { group = "com.gitlab.AuroraOSS", name = "gplayapi", version.ref = "gplayapi" }
+jmdns = { group = "org.jmdns", name = "jmdns", version.ref = "jmdns" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
