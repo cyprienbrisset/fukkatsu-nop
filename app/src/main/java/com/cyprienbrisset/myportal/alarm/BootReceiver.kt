@@ -12,6 +12,9 @@ import kotlinx.coroutines.launch
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
+        context.startForegroundService(
+            Intent(context, com.cyprienbrisset.myportal.airplay.AirPlayService::class.java)
+        )
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
