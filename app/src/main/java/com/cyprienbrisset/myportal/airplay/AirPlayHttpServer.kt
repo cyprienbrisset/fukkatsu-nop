@@ -76,6 +76,28 @@ class AirPlayHttpServer(
                 val path = requestLine.substringAfter(' ').substringBefore(' ')
 
                 when {
+                    // macOS probes the device with GET /info before showing it in Screen Mirroring.
+                    // Without a valid response here the device never appears in the picker.
+                    method == "GET" && (path == "/info" || path == "/server-info") -> {
+                        val plist = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>deviceid</key><string>AA:BB:CC:DD:EE:FF</string>
+<key>features</key><integer>1517580279</integer>
+<key>model</key><string>AppleTV3,2</string>
+<key>pk</key><string>${AirPlayKeyStore.publicKeyHex}</string>
+<key>srcvers</key><string>220.68</string>
+<key>vv</key><integer>2</integer>
+</dict></plist>"""
+                        val body = plist.toByteArray(Charsets.UTF_8)
+                        writer.print("HTTP/1.1 200 OK\r\n")
+                        writer.print("Content-Type: text/x-apple-plist+xml\r\n")
+                        writer.print("Content-Length: ${body.size}\r\n")
+                        writer.print("\r\n")
+                        writer.flush()
+                        socket.getOutputStream().write(body)
+                        socket.getOutputStream().flush()
+                    }
                     method == "POST" && path == "/fp-setup" -> {
                         val fpAck = ByteArray(32).also { buf ->
                             FP_MAGIC.copyInto(buf)
