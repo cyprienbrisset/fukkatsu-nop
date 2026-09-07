@@ -54,8 +54,9 @@ class GoogleViewModel(
         viewModelScope.launch {
             authManager.isLoggedIn.collect { loggedIn ->
                 if (loggedIn) {
+                    val alreadyLoggedIn = _state.value.authState is AuthState.LoggedIn
                     _state.update { it.copy(authState = AuthState.LoggedIn) }
-                    loadAll()
+                    if (!alreadyLoggedIn) loadAll()
                 } else if (_state.value.authState !is AuthState.DeviceFlow) {
                     _state.update { it.copy(authState = AuthState.NotLoggedIn) }
                 }
