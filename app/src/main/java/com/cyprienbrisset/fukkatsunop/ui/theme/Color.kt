@@ -51,10 +51,15 @@ val SumiLine:    Color get() = _sumiLine.value
 val Kinari:      Color get() = _kinari.value
 val SumiMuted:   Color get() = _sumiMuted.value
 
+// Light-mode card and sub-surface colors — distinctly lighter than the Washi page bg
+// so cards float visibly on the parchment background (same logic as white cards on gray in MD3)
+private val WashiCard    = Color(0xFFFAF8F4)  // near-white card surface
+private val WashiSubCard = Color(0xFFE0DBD0)  // darker slot (artwork placeholder, etc.)
+
 fun applyColorPalette(dark: Boolean) {
     _sumi.value        = if (dark) SumiRaw        else Washi
-    _ink2.value        = if (dark) Ink2Raw        else WashiSurface
-    _sumiSurface.value = if (dark) SumiSurfaceRaw else WashiSurface
+    _ink2.value        = if (dark) Ink2Raw        else WashiSubCard
+    _sumiSurface.value = if (dark) SumiSurfaceRaw else WashiCard
     _sumiLine.value    = if (dark) SumiLineRaw    else WashiLine
     _kinari.value      = if (dark) KinariRaw      else Ink
     _sumiMuted.value   = if (dark) SumiMutedRaw   else InkMuted
