@@ -23,6 +23,7 @@ gplayapi = "3.2.6"
 jmdns = "3.5.8"
 bcprov = "1.78.1"
 splashscreen = "1.0.1"
+zxing = "3.5.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -55,6 +56,7 @@ gplayapi = { group = "com.gitlab.AuroraOSS", name = "gplayapi", version.ref = "g
 jmdns = { group = "org.jmdns", name = "jmdns", version.ref = "jmdns" }
 bcprov = { group = "org.bouncycastle", name = "bcprov-jdk18on", version.ref = "bcprov" }
 androidx-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

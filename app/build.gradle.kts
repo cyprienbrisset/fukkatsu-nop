@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     // AGP 9.x has built-in Kotlin support, so org.jetbrains.kotlin.android is intentionally not applied.
@@ -19,6 +21,14 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        val localProps = Properties()
+        val localPropsFile = rootProject.file("local.properties")
+        if (localPropsFile.exists()) localProps.load(localPropsFile.inputStream())
+        buildConfigField("String", "GOOGLE_CLIENT_ID",
+            "\"${localProps["GOOGLE_CLIENT_ID"] ?: ""}\"")
+        buildConfigField("String", "GOOGLE_CLIENT_SECRET",
+            "\"${localProps["GOOGLE_CLIENT_SECRET"] ?: ""}\"")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -31,6 +41,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -65,6 +76,7 @@ dependencies {
     implementation(libs.jmdns)
     implementation(libs.bcprov)
     implementation(libs.gplayapi)
+    implementation(libs.zxing.core)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
