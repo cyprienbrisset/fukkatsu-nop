@@ -45,12 +45,11 @@ fun GoogleScreen(modifier: Modifier = Modifier) {
 
     // Connected view
     val scope = rememberCoroutineScope()
-    val pagerState = rememberPagerState(pageCount = { 3 })
-    val tabs = listOf("Agenda", "Mail", "Meet")
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val tabs = listOf("Agenda", "Meet")
     val selectedTab = pagerState.currentPage
 
     Column(modifier.fillMaxSize()) {
-        // Top bar: tab row + logout button
         Box(
             Modifier
                 .fillMaxWidth()
@@ -99,28 +98,13 @@ fun GoogleScreen(modifier: Modifier = Modifier) {
             )
         }
 
-        // Tab content
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.weight(1f),
         ) { page ->
             when (page) {
-                0 -> AgendaTab(
-                    state = uiState.agenda,
-                    onRetry = { vm.retryAgenda() },
-                )
-                1 -> MailTab(
-                    state = uiState.mail,
-                    selectedMailBody = uiState.selectedMailBody,
-                    selectedMessage = uiState.selectedMessage,
-                    onOpen = { vm.openMail(it) },
-                    onBack = { vm.closeMail() },
-                    onRetry = { vm.retryMail() },
-                )
-                2 -> MeetTab(
-                    state = uiState.agenda,
-                    onRetry = { vm.retryAgenda() },
-                )
+                0 -> AgendaTab(state = uiState.agenda, onRetry = { vm.retryAgenda() })
+                1 -> MeetTab(state = uiState.agenda, onRetry = { vm.retryAgenda() })
             }
         }
     }

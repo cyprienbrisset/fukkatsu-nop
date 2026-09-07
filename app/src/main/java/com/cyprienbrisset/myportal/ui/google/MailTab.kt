@@ -61,7 +61,7 @@ fun MailTab(
     selectedMessage: MailMessage?,
     onOpen: (String) -> Unit,
     onBack: () -> Unit,
-    onRetry: () -> Unit,
+    onRetry: (() -> Unit)? = null,
 ) {
     if (selectedMailBody != null) {
         MailReader(
@@ -84,7 +84,7 @@ fun MailTab(
 private fun MailInbox(
     state: TabState<List<MailMessage>>,
     onOpen: (String) -> Unit,
-    onRetry: () -> Unit,
+    onRetry: (() -> Unit)?,
 ) {
     when (state) {
         is TabState.Loading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
@@ -105,8 +105,10 @@ private fun MailInbox(
                     fontSize = 15.sp,
                     textAlign = TextAlign.Center,
                 )
-                Spacer(Modifier.height(16.dp))
-                SumiPrimaryButton("Réessayer", onRetry, Modifier.fillMaxWidth(0.5f))
+                if (onRetry != null) {
+                    Spacer(Modifier.height(16.dp))
+                    SumiPrimaryButton("Réessayer", onRetry, Modifier.fillMaxWidth(0.5f))
+                }
             }
         }
 

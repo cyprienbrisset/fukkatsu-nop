@@ -8,11 +8,7 @@ import com.cyprienbrisset.myportal.integration.google.CalendarEvent
 import com.cyprienbrisset.myportal.integration.google.DeviceFlowData
 import com.cyprienbrisset.myportal.integration.google.GoogleAuthManager
 import com.cyprienbrisset.myportal.integration.google.GoogleCalendarRepo
-import com.cyprienbrisset.myportal.integration.google.GoogleMailRepo
 import com.cyprienbrisset.myportal.integration.google.GoogleTokenStore
-import com.cyprienbrisset.myportal.integration.google.MailBody
-import com.cyprienbrisset.myportal.integration.google.MailMessage
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,11 +18,8 @@ import kotlinx.coroutines.launch
 // ── State types ───────────────────────────────────────────────────────────────
 
 data class GoogleUiState(
-    val authState: AuthState                    = AuthState.Loading,
-    val agenda: TabState<List<CalendarEvent>>   = TabState.Loading,
-    val mail: TabState<List<MailMessage>>       = TabState.Loading,
-    val selectedMailBody: TabState<MailBody>?   = null,
-    val selectedMessage: MailMessage?           = null,
+    val authState: AuthState                  = AuthState.Loading,
+    val agenda: TabState<List<CalendarEvent>> = TabState.Loading,
 )
 
 sealed interface AuthState {
@@ -47,7 +40,6 @@ sealed interface TabState<out T> {
 class GoogleViewModel(
     private val authManager: GoogleAuthManager,
     private val calendarRepo: GoogleCalendarRepo,
-    private val mailRepo: GoogleMailRepo,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(GoogleUiState())
@@ -88,28 +80,9 @@ class GoogleViewModel(
     }
 
     fun retryAgenda() { viewModelScope.launch { loadAgenda() } }
-    fun retryMail()   { viewModelScope.launch { loadMail() } }
-
-    fun openMail(id: String) {
-        viewModelScope.launch {
-            val message = (_state.value.mail as? TabState.Success)?.data?.find { it.id == id }
-            _state.update { it.copy(selectedMailBody = TabState.Loading, selectedMessage = message) }
-            runCatching { mailRepo.fetchBody(id) }
-                .onSuccess { body -> _state.update { it.copy(selectedMailBody = TabState.Success(body)) } }
-                .onFailure { e ->   _state.update { it.copy(selectedMailBody = TabState.Error(e.message ?: "Erreur réseau")) } }
-        }
-    }
-
-    fun closeMail() {
-        _state.update { it.copy(selectedMailBody = null, selectedMessage = null) }
-    }
 
     private fun loadAll() {
-        viewModelScope.launch {
-            val a = async { loadAgenda() }
-            val m = async { loadMail() }
-            a.await(); m.await()
-        }
+        viewModelScope.launch { loadAgenda() }
     }
 
     private suspend fun loadAgenda() {
@@ -119,21 +92,13 @@ class GoogleViewModel(
             .onFailure { e ->     _state.update { it.copy(agenda = TabState.Error(e.message ?: "Erreur réseau")) } }
     }
 
-    private suspend fun loadMail() {
-        _state.update { it.copy(mail = TabState.Loading) }
-        runCatching { mailRepo.listInbox() }
-            .onSuccess { msgs -> _state.update { it.copy(mail = TabState.Success(msgs)) } }
-            .onFailure { e ->    _state.update { it.copy(mail = TabState.Error(e.message ?: "Erreur réseau")) } }
-    }
-
     class Factory(private val context: Context) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             val store    = GoogleTokenStore(context)
             val auth     = GoogleAuthManager(context, store)
             val calendar = GoogleCalendarRepo(auth)
-            val mail     = GoogleMailRepo(auth)
-            return GoogleViewModel(auth, calendar, mail) as T
+            return GoogleViewModel(auth, calendar) as T
         }
     }
 }
