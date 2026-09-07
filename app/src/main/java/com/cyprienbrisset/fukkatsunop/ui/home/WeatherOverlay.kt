@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -26,9 +27,10 @@ import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
 import kotlin.math.PI
 import kotlin.math.sin
 
-private enum class WeatherEffect { NONE, RAIN, STORM, SNOW, FOG }
+private enum class WeatherEffect { NONE, CLOUDY, RAIN, STORM, SNOW, FOG }
 
 private fun descToEffect(description: String): WeatherEffect = when (description) {
+    "Nuageux"          -> WeatherEffect.CLOUDY
     "Pluie", "Averses" -> WeatherEffect.RAIN
     "Orage"            -> WeatherEffect.STORM
     "Neige"            -> WeatherEffect.SNOW
@@ -47,11 +49,54 @@ fun WeatherOverlay(weather: Weather?, isDark: Boolean, modifier: Modifier = Modi
     val fogBase       = if (isDark) SumiMuted else InkMuted
 
     when (effect) {
-        WeatherEffect.RAIN  -> RainCanvas(particleColor, modifier)
-        WeatherEffect.STORM -> StormCanvas(particleColor, modifier)
-        WeatherEffect.SNOW  -> SnowCanvas(particleColor, modifier)
-        WeatherEffect.FOG   -> FogCanvas(fogBase, modifier)
-        WeatherEffect.NONE  -> Unit
+        WeatherEffect.CLOUDY -> CloudCanvas(fogBase, modifier)
+        WeatherEffect.RAIN   -> RainCanvas(particleColor, modifier)
+        WeatherEffect.STORM  -> StormCanvas(particleColor, modifier)
+        WeatherEffect.SNOW   -> SnowCanvas(particleColor, modifier)
+        WeatherEffect.FOG    -> FogCanvas(fogBase, modifier)
+        WeatherEffect.NONE   -> Unit
+    }
+}
+
+// ── Cloudy ───────────────────────────────────────────────────────────────────
+
+private val CLOUD_LAYERS = arrayOf(
+    // yFrac, widthFrac, heightFrac, alpha, speedFrac (1 = plein écran / cycle)
+    floatArrayOf(0.12f, 0.55f, 0.09f, 0.07f, 0.018f),
+    floatArrayOf(0.28f, 0.70f, 0.11f, 0.09f, 0.012f),
+    floatArrayOf(0.45f, 0.45f, 0.08f, 0.06f, 0.022f),
+    floatArrayOf(0.60f, 0.65f, 0.12f, 0.08f, 0.009f),
+    floatArrayOf(0.78f, 0.50f, 0.09f, 0.05f, 0.015f),
+)
+
+@Composable
+private fun CloudCanvas(baseColor: Color, modifier: Modifier) {
+    val tr = rememberInfiniteTransition(label = "cloud")
+    // Slow global time 0→1 over 20s — each layer uses its own speed factor
+    val t by tr.animateFloat(
+        initialValue = 0f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(20_000, easing = LinearEasing)),
+        label = "cloud-t",
+    )
+    val offsets = remember { Array(CLOUD_LAYERS.size) { Math.random().toFloat() } }
+
+    Canvas(modifier.fillMaxSize()) {
+        CLOUD_LAYERS.forEachIndexed { i, layer ->
+            val (yFrac, wFrac, hFrac, alpha, speed) = layer
+            val phase = offsets[i]
+            // x oscillates: starts off-screen left (-w), exits right (+w)
+            val xFrac = ((t * speed * 3f + phase) % 1.5f) - 0.25f
+            val w = size.width * wFrac
+            val h = size.height * hFrac
+            val cx = xFrac * size.width + w / 2f
+            val cy = yFrac * size.height
+
+            drawOval(
+                color = baseColor.copy(alpha = alpha),
+                topLeft = Offset(cx - w / 2f, cy - h / 2f),
+                size = Size(w, h),
+            )
+        }
     }
 }
 
