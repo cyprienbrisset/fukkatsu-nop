@@ -18,7 +18,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,10 +43,17 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 private val MEET_TIME_FMT = DateTimeFormatter.ofPattern("HH:mm")
+private val MEET_ZONE: ZoneId = ZoneId.systemDefault()
 
 @Composable
 fun MeetTab(state: TabState<List<CalendarEvent>>, onRetry: () -> Unit) {
-    val now = remember { Instant.now() }
+    var now by remember { mutableStateOf(Instant.now()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(60_000L)
+            now = Instant.now()
+        }
+    }
     val meetEvents = remember(state, now) {
         if (state is TabState.Success) {
             state.data
@@ -92,19 +103,19 @@ fun MeetTab(state: TabState<List<CalendarEvent>>, onRetry: () -> Unit) {
 @Composable
 private fun MeetCard(event: CalendarEvent, now: Instant) {
     val ctx = LocalContext.current
-    val zone = ZoneId.systemDefault()
 
-    val countdownLabel: String = if (event.start.isBefore(now)) {
-        "EN COURS"
-    } else {
-        val secondsUntil = event.start.epochSecond - now.epochSecond
-        val hours = secondsUntil / 3600
-        val minutes = (secondsUntil % 3600) / 60
-        if (hours > 0) "DANS ${hours}h ${minutes}min" else "DANS ${minutes}min"
+    val secondsUntil = event.start.epochSecond - now.epochSecond
+    val hours = secondsUntil / 3600
+    val minutes = (secondsUntil % 3600) / 60
+    val countdownLabel = when {
+        event.start.isBefore(now) -> "EN COURS"
+        hours > 0                 -> "DANS ${hours}h ${minutes}min"
+        minutes > 0               -> "DANS ${minutes}min"
+        else                      -> "DANS < 1min"
     }
 
-    val startStr = event.start.atZone(zone).format(MEET_TIME_FMT)
-    val endStr = event.end.atZone(zone).format(MEET_TIME_FMT)
+    val startStr = event.start.atZone(MEET_ZONE).format(MEET_TIME_FMT)
+    val endStr = event.end.atZone(MEET_ZONE).format(MEET_TIME_FMT)
     val timeRange = "$startStr – $endStr"
 
     Column(
@@ -141,10 +152,12 @@ private fun MeetCard(event: CalendarEvent, now: Instant) {
             SumiPrimaryButton(
                 text = "Rejoindre",
                 onClick = {
-                    ctx.startActivity(
-                        Intent(Intent.ACTION_VIEW, Uri.parse(event.hangoutLink!!))
-                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    )
+                    event.hangoutLink?.let { link ->
+                        ctx.startActivity(
+                            Intent(Intent.ACTION_VIEW, Uri.parse(link))
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(0.5f),
             )
