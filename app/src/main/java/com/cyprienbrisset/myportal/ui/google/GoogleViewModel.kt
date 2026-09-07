@@ -10,6 +10,7 @@ import com.cyprienbrisset.myportal.integration.google.GoogleAuthManager
 import com.cyprienbrisset.myportal.integration.google.GoogleCalendarRepo
 import com.cyprienbrisset.myportal.integration.google.GoogleMailRepo
 import com.cyprienbrisset.myportal.integration.google.GoogleTokenStore
+import com.cyprienbrisset.myportal.integration.google.MailBody
 import com.cyprienbrisset.myportal.integration.google.MailMessage
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +25,8 @@ data class GoogleUiState(
     val authState: AuthState                    = AuthState.Loading,
     val agenda: TabState<List<CalendarEvent>>   = TabState.Loading,
     val mail: TabState<List<MailMessage>>       = TabState.Loading,
+    val selectedMailBody: TabState<MailBody>?   = null,
+    val selectedMessage: MailMessage?           = null,
 )
 
 sealed interface AuthState {
@@ -85,6 +88,20 @@ class GoogleViewModel(
 
     fun retryAgenda() { viewModelScope.launch { loadAgenda() } }
     fun retryMail()   { viewModelScope.launch { loadMail() } }
+
+    fun openMail(id: String) {
+        viewModelScope.launch {
+            val message = (_state.value.mail as? TabState.Success)?.data?.find { it.id == id }
+            _state.update { it.copy(selectedMailBody = TabState.Loading, selectedMessage = message) }
+            runCatching { mailRepo.fetchBody(id) }
+                .onSuccess { body -> _state.update { it.copy(selectedMailBody = TabState.Success(body)) } }
+                .onFailure { e ->   _state.update { it.copy(selectedMailBody = TabState.Error(e.message ?: "Erreur réseau")) } }
+        }
+    }
+
+    fun closeMail() {
+        _state.update { it.copy(selectedMailBody = null, selectedMessage = null) }
+    }
 
     private fun loadAll() {
         viewModelScope.launch {
