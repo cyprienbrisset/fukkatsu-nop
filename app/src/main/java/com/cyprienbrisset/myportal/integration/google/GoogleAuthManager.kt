@@ -38,6 +38,7 @@ class GoogleAuthManager(
         val body = FormBody.Builder()
             .add("client_id", BuildConfig.GOOGLE_CLIENT_ID)
             .add("scope", SCOPES)
+            .add("access_type", "offline")
             .build()
         val raw = http.newCall(
             Request.Builder().url(DEVICE_CODE_URL).post(body).build()
@@ -64,8 +65,9 @@ class GoogleAuthManager(
             when {
                 obj["access_token"] != null -> {
                     val access    = obj["access_token"]!!.jsonPrimitive.content
-                    val refresh   = obj["refresh_token"]!!.jsonPrimitive.content
-                    val expiresIn = obj["expires_in"]!!.jsonPrimitive.longOrNull ?: 3600L
+                    val refresh   = obj["refresh_token"]?.jsonPrimitive?.content
+                        ?: return@withContext false
+                    val expiresIn = obj["expires_in"]?.jsonPrimitive?.longOrNull ?: 3600L
                     tokenStore.save(access, refresh, System.currentTimeMillis() + expiresIn * 1_000L)
                     return@withContext true
                 }
