@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
@@ -70,28 +71,25 @@ fun GoogleScreen(modifier: Modifier = Modifier) {
                 horizontalArrangement = Arrangement.SpaceAround,
             ) {
                 tabs.forEachIndexed { index, label ->
-                    Box(
+                    Column(
                         Modifier
                             .weight(1f)
-                            .clickable { scope.launch { pagerState.animateScrollToPage(index) } }
-                            .padding(vertical = 10.dp),
-                        contentAlignment = Alignment.Center,
+                            .clickable { scope.launch { pagerState.animateScrollToPage(index) } },
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(
                             text = label,
                             fontFamily = Mincho,
                             fontSize = 14.sp,
                             color = if (selectedTab == index) Kinari else SumiMuted,
+                            modifier = Modifier.padding(vertical = 11.dp),
                         )
-                        if (selectedTab == index) {
-                            Box(
-                                Modifier
-                                    .align(Alignment.BottomCenter)
-                                    .fillMaxWidth()
-                                    .height(2.dp)
-                                    .background(AccentShu),
-                            )
-                        }
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(2.dp)
+                                .background(if (selectedTab == index) AccentShu else Color.Transparent),
+                        )
                     }
                 }
             }
