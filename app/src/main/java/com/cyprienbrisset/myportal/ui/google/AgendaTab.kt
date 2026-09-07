@@ -21,6 +21,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +43,10 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
+
+// Fix 3 — top-level formatters (never recreated on recomposition)
+private val DATE_FMT = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(Locale.FRENCH)
+private val TIME_FMT = DateTimeFormatter.ofPattern("HH:mm")
 
 @Composable
 fun AgendaTab(state: TabState<List<CalendarEvent>>, onRetry: () -> Unit) {
@@ -67,23 +72,26 @@ fun AgendaTab(state: TabState<List<CalendarEvent>>, onRetry: () -> Unit) {
             val today    = LocalDate.now(zone)
             val tomorrow = today.plusDays(1)
             val grouped  = state.data.groupBy { it.start.atZone(zone).toLocalDate() }
+            // Fix 2 — compute once, stable across recompositions
+            val now = remember { Instant.now() }
 
             LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
                 grouped.forEach { (date, events) ->
                     val label = when (date) {
                         today    -> "Aujourd'hui"
                         tomorrow -> "Demain"
-                        else     -> date.format(
-                            DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(Locale.FRENCH)
-                        )
+                        // Fix 3 — use top-level DATE_FMT
+                        else     -> date.format(DATE_FMT)
                     }
-                    item {
+                    // Fix 4 — stable key; Fix 5 — explicit locale for uppercase
+                    item(key = "header-$date") {
                         Spacer(Modifier.height(20.dp))
-                        SectionLabel(kana = "", text = label.uppercase())
+                        SectionLabel(kana = "", text = label.uppercase(Locale.FRENCH))
                         Spacer(Modifier.height(8.dp))
                     }
                     items(events, key = { it.id }) { event ->
-                        EventCard(event = event, zone = zone)
+                        // Fix 2 — pass hoisted now
+                        EventCard(event = event, zone = zone, now = now)
                         Spacer(Modifier.height(8.dp))
                     }
                 }
@@ -93,10 +101,10 @@ fun AgendaTab(state: TabState<List<CalendarEvent>>, onRetry: () -> Unit) {
     }
 }
 
+// Fix 2 — now is passed in (hoisted in AgendaTab) instead of computed here
 @Composable
-private fun EventCard(event: CalendarEvent, zone: ZoneId) {
+private fun EventCard(event: CalendarEvent, zone: ZoneId, now: Instant) {
     val ctx = LocalContext.current
-    val now = Instant.now()
     val isImminent = event.start.isAfter(now) && event.start.isBefore(now.plusSeconds(3600))
     val accentColor = if (isImminent) Shu else SumiSurface
 
@@ -124,9 +132,9 @@ private fun EventCard(event: CalendarEvent, zone: ZoneId) {
                 fontStyle = if (event.isAllDay) FontStyle.Italic else FontStyle.Normal,
             )
             Spacer(Modifier.height(2.dp))
-            val timeFmt = DateTimeFormatter.ofPattern("HH:mm", Locale.FRENCH)
+            // Fix 1+3 — use top-level TIME_FMT (no Locale needed for HH:mm)
             val timeStr = if (event.isAllDay) "Journée entière"
-                else "${event.start.atZone(zone).format(timeFmt)} – ${event.end.atZone(zone).format(timeFmt)}"
+                else "${event.start.atZone(zone).format(TIME_FMT)} – ${event.end.atZone(zone).format(TIME_FMT)}"
             Text(timeStr, style = MaterialTheme.typography.bodyMedium, color = SumiMuted)
             if (event.location != null) {
                 Text("📍 ${event.location}", style = MaterialTheme.typography.bodyMedium, color = SumiMuted)
