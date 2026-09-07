@@ -16,7 +16,7 @@
 
 ---
 
-**復活** (*fukkatsu no p*, « renaissance ») transforme un Meta Portal en hub maison permanent. Testé sur le **Portal Plus 1ère génération** (Android 9, API 28) et le **Portal 2ème génération** (Android 10, API 29). L'interface s'inspire de la papeterie japonaise : encre Sumi profonde la nuit, parchemin Washi chaud le jour. Tout fonctionne sans connexion Google — pas de compte, pas de Play Store requis.
+**復活** (*fukkatsu no p*, « renaissance ») transforme un Meta Portal en hub maison permanent. Testé sur le **Portal Plus 1ère génération** (Android 9, API 28) et le **Portal 2ème génération** (Android 10, API 29). L'interface s'inspire de la papeterie japonaise : encre Sumi profonde la nuit, parchemin Washi chaud le jour.
 
 ---
 
@@ -26,7 +26,7 @@
 
 **La grille d'apps** à droite regroupe vos raccourcis en médaillons. Un tap lance l'app. Un badge rouge indique le nombre de notifications non lues. Appui long sur une tuile = actions rapides ; appui long dans la zone vide = mode réorganisation par glisser-déposer.
 
-Le thème bascule automatiquement entre mode nuit (Sumi) et mode jour (Washi) selon l'heure — 20h pour la nuit, 7h pour le jour. L'accent rouge vermillon **朱** reste constant.
+Le thème bascule automatiquement entre mode nuit (Sumi) et mode jour (Washi) selon l'heure configurable. Un bouton discret à côté des réglages permet de basculer manuellement à tout moment.
 
 ---
 
@@ -43,7 +43,7 @@ Le thème bascule automatiquement entre mode nuit (Sumi) et mode jour (Washi) se
 
 ---
 
-## FukkaStore — installer des apps sans Google
+## FukkaStore — installer des apps sans Google Play
 
 Le Portal n'a pas de Play Store. FukkaStore comble ce manque : connectez votre compte Google une seule fois, puis parcourez et installez des applications directement depuis le catalogue officiel Google Play.
 
@@ -57,27 +57,25 @@ Le Portal n'a pas de Play Store. FukkaStore comble ce manque : connectez votre c
 
 ---
 
-## Intégration Google
+## Contrôles système — overlay universel
 
-Un onglet dédié regroupe les accès Google :
+Un panneau flottant accessible depuis n'importe quelle app :
 
-- **Agenda** — vos prochains événements, avec un bouton *Rejoindre* direct pour les réunions Google Meet
-- **Raccourcis** — Chat, Meet et Calendar s'ouvrent en un tap si l'app est installée
-
----
-
-## Réveil intégré
-
-Un gestionnaire de réveils complet, intégré au launcher : création par heure et jours de la semaine, sonnerie personnalisable, montée en volume progressive. Le prochain réveil est affiché en permanence sur l'écran ambiant.
+- **Volume** musique avec curseur + icône Bluetooth interactive (voir appareil connecté, liste des jumelés, ouvrir les réglages)
+- **Luminosité** — curseur dédié
+- **Mode nuit** — bascule jour/nuit instantanée
+- **Retour accueil** en un tap
 
 ---
 
-## Thèmes
+## Thème automatique
+
+L'accent vermillon **朱** `#C1272D` reste invariant. Deux palettes :
 
 <table>
 <tr>
-<th align="center">🌙 Sumi — Nuit (20h – 7h)</th>
-<th align="center">☀️ Washi — Jour (7h – 20h)</th>
+<th align="center">🌙 Sumi — Nuit</th>
+<th align="center">☀️ Washi — Jour</th>
 </tr>
 <tr>
 <td>Fond quasi-noir <code>#0D0E12</code>, texte ivoire <code>#ECE7DD</code></td>
@@ -85,7 +83,27 @@ Un gestionnaire de réveils complet, intégré au launcher : création par heure
 </tr>
 </table>
 
-Typographie **Noto Serif JP** (Mincho). Accent vermillon **朱** `#C1272D` invariant.
+Le basculement se fait à l'heure configurée dans **Réglages → Mode nuit automatique** (AlarmManager, survit aux redémarrages). Un bouton dans l'écran d'accueil et l'overlay permet de forcer le mode à tout moment.
+
+Typographie **Noto Serif JP** (Mincho).
+
+---
+
+## Réveil intégré
+
+Un gestionnaire de réveils complet : création par heure et jours de la semaine, sonnerie personnalisable, montée en volume progressive. Le prochain réveil est affiché en permanence sur l'écran ambiant.
+
+---
+
+## Fiabilité
+
+Un **watchdog** de crash est intégré : si l'app plante, un `AlarmManager` déclenche un redémarrage automatique dans la seconde — sans dialogue « Appli arrêtée », sans délai système.
+
+---
+
+## Splash screen
+
+Au démarrage, un **hanko seal 復** s'anime en rouge vermillon sur fond Sumi — fondu entrant, maintien, fondu sortant. Aucun écran blanc interstitiel.
 
 ---
 
@@ -101,13 +119,25 @@ Ce script construit l'APK si besoin, l'installe, et accorde automatiquement tout
 
 | Permission | Rôle |
 |---|---|
-| `WRITE_SECURE_SETTINGS` | Active l'AccessibilityService d'auto-install (Portal 1ère gen) |
+| `WRITE_SECURE_SETTINGS` | Mode nuit système + AccessibilityService d'auto-install |
 | `WRITE_SETTINGS` (appops) | Contrôle de la luminosité |
 | Notification Policy | Accès Ne Pas Déranger |
 | Device Admin | Extinction de l'écran |
+| `BLUETOOTH_CONNECT` | Noms et liste des appareils Bluetooth jumelés |
 | Verifier désactivé | Empêche les blocages d'installation Play Protect (pas de GMS) |
 
 Voir `docs/technical.md` pour le détail technique complet.
+
+---
+
+## Développement
+
+```bash
+# Build + install + relance (device connecté)
+./gradlew deployDebug
+```
+
+Nécessite Android Studio (JDK intégré) — pas de `java` global requis.
 
 ---
 

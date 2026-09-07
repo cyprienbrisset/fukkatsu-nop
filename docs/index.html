@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>復活 Fukkatsu No P — Launcher pour Meta Portal</title>
-  <meta name="description" content="Fukkatsu No P transforme le Meta Portal (1ère et 2ème génération) en hub maison permanent. Esthétique encre japonaise, zéro dépendance Google."/>
+  <meta name="description" content="Fukkatsu No P transforme le Meta Portal (1ère et 2ème génération) en hub maison permanent. Esthétique encre japonaise, FukkaStore, dark mode auto, watchdog."/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet"/>
@@ -20,11 +20,9 @@
     html { scroll-behavior: smooth; }
     body { background: var(--sumi); color: var(--ivory); font-family: var(--sans); font-weight: 300; line-height: 1.7; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 
-    /* ── Icons ── */
     .icon { width: 20px; height: 20px; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; fill: none; display: block; flex-shrink: 0; }
     .icon-lg { width: 22px; height: 22px; }
 
-    /* ── Nav ── */
     nav { position: sticky; top: 0; z-index: 100; background: rgba(13,14,18,0.88); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(193,39,45,0.14); }
     .nav-inner { max-width: 1020px; margin: 0 auto; padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
     .nav-logo { font-family: var(--serif); font-size: 1.05rem; letter-spacing: 0.05em; color: var(--ivory); text-decoration: none; display: flex; align-items: center; gap: 8px; }
@@ -35,7 +33,6 @@
     .nav-cta { color: var(--shu) !important; border: 1px solid rgba(193,39,45,0.4); padding: 6px 18px; border-radius: 2px; transition: background .2s, color .2s !important; }
     .nav-cta:hover { background: var(--shu) !important; color: #fff !important; }
 
-    /* ── Layout ── */
     .container { max-width: 1020px; margin: 0 auto; padding: 0 32px; }
     section { padding: 88px 0; border-top: 1px solid rgba(236,231,221,0.06); }
     .section-tag { font-size: 0.68rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--shu); margin-bottom: 12px; }
@@ -47,7 +44,6 @@
     header::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(193,39,45,0.10) 0%, transparent 65%), radial-gradient(ellipse 50% 50% at 80% 100%, rgba(193,39,45,0.05) 0%, transparent 55%); pointer-events: none; }
     .hero-kanji { position: absolute; right: -2vw; top: 50%; transform: translateY(-52%); font-family: var(--serif); font-size: clamp(14rem, 28vw, 22rem); font-weight: 300; color: rgba(236,231,221,0.04); line-height: 1; pointer-events: none; user-select: none; }
     .hero-inner { max-width: 1020px; margin: 0 auto; position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-    .hero-text { }
     .hero-eyebrow { font-size: 0.7rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--shu); margin-bottom: 20px; }
     h1 { font-family: var(--serif); font-size: clamp(2.4rem, 5vw, 3.8rem); font-weight: 300; line-height: 1.12; letter-spacing: -0.01em; margin-bottom: 20px; }
     h1 .jp { display: block; font-size: 0.58em; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.08em; }
@@ -62,24 +58,92 @@
     .device-wrap { perspective: 900px; }
     .device { background: #0A0B0E; border-radius: 18px; border: 1.5px solid rgba(255,255,255,0.07); box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 32px 72px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04); aspect-ratio: 8/5; width: 100%; padding: 16px 18px; display: flex; gap: 14px; transform: rotateX(4deg) rotateY(-6deg); transition: transform .4s ease; }
     .device:hover { transform: rotateX(2deg) rotateY(-2deg); }
-    .device-left { flex: 0 0 36%; display: flex; flex-direction: column; gap: 6px; }
-    .mock-brand { font-family: var(--serif); font-size: 0.55rem; color: rgba(193,39,45,0.8); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 4px; }
+    .device-left { flex: 0 0 36%; display: flex; flex-direction: column; gap: 4px; }
+    .mock-brand { font-family: var(--serif); font-size: 0.55rem; color: rgba(193,39,45,0.8); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 2px; }
     .mock-time { font-family: var(--serif); font-size: 1.8rem; font-weight: 300; color: rgba(236,231,221,0.9); line-height: 1; margin-bottom: 2px; }
     .mock-date { font-size: 0.42rem; color: rgba(154,148,136,0.9); letter-spacing: 0.06em; }
     .mock-weather { font-size: 0.42rem; color: rgba(193,39,45,0.9); margin-top: 2px; }
+    .mock-alarm { font-size: 0.38rem; color: rgba(154,148,136,0.7); margin-top: 1px; }
     .mock-sep { flex: 1; }
-    .mock-contacts { display: flex; gap: 4px; margin-top: auto; }
-    .mock-contact { width: 16px; height: 16px; border-radius: 50%; background: var(--sumi-3); border: 1px solid rgba(255,255,255,0.08); }
-    .mock-np { margin-top: 6px; background: rgba(255,255,255,0.03); border-radius: 4px; padding: 4px 6px; display: flex; align-items: center; gap: 5px; }
+    .mock-contacts { display: flex; gap: 3px; margin-top: auto; }
+    .mock-contact { width: 14px; height: 14px; border-radius: 50%; background: var(--sumi-3); border: 1px solid rgba(255,255,255,0.08); position: relative; }
+    .mock-badge { position: absolute; top: -2px; right: -2px; width: 5px; height: 5px; border-radius: 50%; background: var(--shu); }
+    .mock-np { margin-top: 6px; background: rgba(255,255,255,0.03); border-radius: 4px; padding: 4px 6px; }
+    .mock-np-top { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
+    .mock-np-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.1); flex-shrink: 0; }
+    .mock-np-title { font-size: 0.36rem; color: rgba(236,231,221,0.6); flex: 1; white-space: nowrap; overflow: hidden; }
     .mock-np-bar { flex: 1; height: 1.5px; background: rgba(255,255,255,0.08); border-radius: 1px; overflow: hidden; }
     .mock-np-fill { height: 100%; width: 42%; background: var(--shu); }
-    .mock-np-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.1); flex-shrink: 0; }
+    .mock-vol { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
+    .mock-vol-bar { flex: 1; height: 2px; background: rgba(255,255,255,0.1); border-radius: 1px; overflow: hidden; }
+    .mock-vol-fill { height: 100%; width: 65%; background: rgba(193,39,45,0.6); }
+    .mock-bt { width: 6px; height: 6px; border-radius: 1px; background: rgba(193,39,45,0.5); flex-shrink: 0; }
     .device-rule { width: 1px; background: linear-gradient(to bottom, transparent, rgba(193,39,45,0.5) 30%, rgba(193,39,45,0.5) 70%, transparent); flex-shrink: 0; }
-    .device-right { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-    .mock-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .mock-tile { aspect-ratio: 1; border-radius: 6px; background: var(--sumi-2); border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; }
+    .device-right { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .mock-top-bar { display: flex; justify-content: flex-end; gap: 4px; margin-bottom: 6px; }
+    .mock-icon-btn { width: 12px; height: 12px; border-radius: 3px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; }
+    .mock-icon-dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(154,148,136,0.5); }
+    .mock-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .mock-tile { aspect-ratio: 1; border-radius: 6px; background: var(--sumi-2); border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; position: relative; }
     .mock-tile .dot { width: 24%; height: 24%; border-radius: 50%; }
     .mock-add { background: transparent; border: 1px dashed rgba(255,255,255,0.08) !important; }
+    .mock-tile-badge { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--shu); border: 1px solid #0A0B0E; font-size: 0.28rem; color: #fff; display: flex; align-items: center; justify-content: center; }
+
+    /* ── Screenshots section ── */
+    .screens-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+    .screen-card { background: var(--sumi-2); border: 1px solid rgba(236,231,221,0.06); border-radius: 12px; overflow: hidden; }
+    .screen-preview { aspect-ratio: 16/10; background: var(--sumi); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .screen-label { padding: 14px 18px; }
+    .screen-label h3 { font-family: var(--serif); font-size: 0.88rem; font-weight: 400; color: var(--ivory); margin-bottom: 4px; }
+    .screen-label p { font-size: 0.75rem; color: var(--muted); line-height: 1.5; }
+
+    /* mini mockups for screen cards */
+    .mini-device { background: #0A0B0E; border-radius: 10px; border: 1px solid rgba(255,255,255,0.07); width: 100%; max-width: 260px; padding: 10px 12px; display: flex; gap: 8px; }
+    .mini-left { flex: 0 0 38%; display: flex; flex-direction: column; gap: 3px; }
+    .mini-right { flex: 1; }
+    .mini-time { font-family: var(--serif); font-size: 1.3rem; font-weight: 300; color: rgba(236,231,221,0.85); line-height: 1; }
+    .mini-date { font-size: 0.32rem; color: rgba(154,148,136,0.8); letter-spacing: 0.05em; }
+    .mini-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .mini-row { display: flex; gap: 3px; flex-wrap: wrap; margin-top: auto; }
+    .mini-rule { width: 1px; background: rgba(193,39,45,0.4); }
+    .mini-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    .mini-tile { aspect-ratio: 1; border-radius: 4px; background: var(--sumi-3); border: 1px solid rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; }
+
+    /* overlay mockup */
+    .overlay-mock { background: rgba(13,14,18,0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; width: 180px; backdrop-filter: blur(20px); }
+    .overlay-title { font-family: var(--serif); font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--shu); margin-bottom: 10px; }
+    .overlay-slider { margin-bottom: 8px; }
+    .overlay-sl-label { font-size: 0.32rem; color: rgba(154,148,136,0.8); margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
+    .overlay-sl-track { height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+    .overlay-sl-fill { height: 100%; background: var(--shu); border-radius: 2px; }
+    .overlay-sl-bt { display: flex; align-items: center; gap: 4px; margin-top: 6px; }
+    .overlay-sl-bt-icon { width: 12px; height: 12px; border-radius: 3px; background: rgba(193,39,45,0.12); border: 1px solid rgba(193,39,45,0.25); display: flex; align-items: center; justify-content: center; }
+    .overlay-sl-bt-name { font-size: 0.3rem; color: rgba(193,39,45,0.9); }
+    .overlay-btns { display: flex; gap: 6px; margin-top: 10px; }
+    .overlay-btn { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 5px; text-align: center; font-size: 0.3rem; color: var(--muted); }
+    .overlay-btn.active { background: rgba(193,39,45,0.12); border-color: rgba(193,39,45,0.3); color: var(--shu); }
+
+    /* splash mockup */
+    .splash-mock { background: var(--sumi); border-radius: 10px; border: 1px solid rgba(255,255,255,0.07); width: 200px; aspect-ratio: 8/5; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px; }
+    .splash-kanji { font-family: var(--serif); font-size: 3rem; font-weight: 400; color: var(--shu); line-height: 1; }
+    .splash-sub { font-size: 0.28rem; letter-spacing: 0.18em; color: rgba(236,231,221,0.35); text-transform: uppercase; }
+
+    /* BT picker mockup */
+    .bt-dialog { background: #141418; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); padding: 14px; width: 180px; }
+    .bt-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .bt-icon { width: 12px; height: 12px; border-radius: 3px; background: rgba(193,39,45,0.15); border: 1px solid rgba(193,39,45,0.3); display: flex; align-items: center; justify-content: center; }
+    .bt-title { font-family: var(--serif); font-size: 0.5rem; color: var(--ivory); flex: 1; }
+    .bt-active-chip { background: rgba(193,39,45,0.12); border-radius: 10px; padding: 1px 6px; font-size: 0.28rem; color: var(--shu); }
+    .bt-row { display: flex; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .bt-row:last-of-type { border-bottom: none; }
+    .bt-row-icon { width: 10px; height: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .bt-row-info { flex: 1; }
+    .bt-row-name { font-size: 0.34rem; color: var(--ivory); }
+    .bt-row-name.active { color: var(--shu); }
+    .bt-row-status { font-size: 0.28rem; color: rgba(76,175,80,0.9); }
+    .bt-row-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--shu); }
+    .bt-settings-row { display: flex; align-items: center; gap: 5px; padding-top: 7px; }
+    .bt-settings-row span { font-size: 0.3rem; color: var(--muted); }
 
     /* ── Features ── */
     .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(236,231,221,0.05); border: 1px solid rgba(236,231,221,0.05); }
@@ -89,15 +153,15 @@
     .feat-icon svg { stroke: var(--shu); }
     .feat-card h3 { font-family: var(--serif); font-size: 0.95rem; font-weight: 400; margin-bottom: 8px; color: var(--ivory); }
     .feat-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.65; }
+    .feat-new { display: inline-block; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--shu); border: 1px solid rgba(193,39,45,0.35); padding: 1px 7px; border-radius: 10px; margin-bottom: 8px; }
 
-    /* ── Gestures ── */
+    /* ── Gestes ── */
     #gestes { background: var(--sumi-2); }
     .gestures-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; }
     .gesture-card { background: var(--sumi); border: 1px solid rgba(236,231,221,0.05); padding: 28px; display: flex; gap: 20px; align-items: flex-start; transition: border-color .2s; }
     .gesture-card:hover { border-color: rgba(193,39,45,0.25); }
     .gesture-icon { width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; background: rgba(13,14,18,0.6); border: 1px solid rgba(236,231,221,0.08); display: flex; align-items: center; justify-content: center; }
     .gesture-icon svg { stroke: var(--ivory); opacity: 0.7; }
-    .gesture-body { }
     .gesture-trigger { font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--shu); margin-bottom: 6px; }
     .gesture-card h3 { font-family: var(--serif); font-size: 0.9rem; font-weight: 400; color: var(--ivory); margin-bottom: 6px; }
     .gesture-card p { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
@@ -146,7 +210,6 @@
     .steps { list-style: none; counter-reset: s; }
     .steps li { counter-increment: s; display: flex; gap: 18px; padding: 18px 0; border-bottom: 1px solid rgba(236,231,221,0.05); }
     .steps li::before { content: counter(s); flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--shu); color: #fff; font-size: 0.72rem; font-weight: 400; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
-    .steps li div { }
     .steps li strong { display: block; font-size: 0.88rem; color: var(--ivory); font-weight: 400; margin-bottom: 4px; }
     .steps li span { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
     .code-block { background: var(--sumi); border: 1px solid rgba(236,231,221,0.07); border-left: 2px solid var(--shu); border-radius: 0 4px 4px 0; padding: 24px; }
@@ -167,7 +230,6 @@
     .footer-links a:hover { color: var(--ivory); }
     .footer-links svg { stroke: currentColor; }
 
-    /* ── Responsive ── */
     @media (max-width: 820px) {
       .hero-inner { grid-template-columns: 1fr; gap: 48px; }
       .device-wrap { max-width: 480px; }
@@ -176,6 +238,7 @@
       .themes-wrap { grid-template-columns: 1fr; }
       .store-wrap { grid-template-columns: 1fr; }
       .install-grid { grid-template-columns: 1fr; }
+      .screens-grid { grid-template-columns: 1fr 1fr; }
       .hero-desc { max-width: none; }
       .nav-links a:not(.nav-cta) { display: none; }
       .footer-inner { flex-direction: column; text-align: center; }
@@ -183,6 +246,7 @@
     }
     @media (max-width: 560px) {
       .features-grid { grid-template-columns: 1fr; }
+      .screens-grid { grid-template-columns: 1fr; }
       header { padding: 60px 20px 48px; }
       section { padding: 64px 0; }
     }
@@ -190,37 +254,36 @@
 </head>
 <body>
 
-<!-- ── SVG icon sprite ──────────────────────────────────────── -->
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
   <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
   <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
-  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/></symbol>
   <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
   <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></symbol>
   <symbol id="i-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
   <symbol id="i-arrow-up" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></symbol>
   <symbol id="i-arrow-down" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></symbol>
-  <symbol id="i-swipe-right" viewBox="0 0 24 24"><path d="M5 9l4-4 4 4"/><path d="M9 5v10a4 4 0 0 0 4 4h4a4 4 0 0 0 4-4v-3a2 2 0 0 0-2-2h-1"/><path d="M9 9H3"/></symbol>
-  <symbol id="i-press" viewBox="0 0 24 24"><path d="M9 11V6a2 2 0 0 1 2-2v0a2 2 0 0 1 2 2v5"/><path d="M13 11V9a2 2 0 0 1 2-2v0a2 2 0 0 1 2 2v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-1a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2"/><path d="M13 5V3"/></symbol>
-  <symbol id="i-pinch" viewBox="0 0 24 24"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="i-bluetooth" viewBox="0 0 24 24"><polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
   <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></symbol>
   <symbol id="i-terminal" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></symbol>
-  <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
   <symbol id="i-map" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></symbol>
+  <symbol id="i-press" viewBox="0 0 24 24"><path d="M9 11V6a2 2 0 0 1 2-2v0a2 2 0 0 1 2 2v5"/><path d="M13 11V9a2 2 0 0 1 2-2v0a2 2 0 0 1 2 2v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-1a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2"/><path d="M13 5V3"/></symbol>
 </svg>
 
-<!-- ── Nav ─────────────────────────────────────────────────── -->
 <nav>
   <div class="nav-inner">
     <a class="nav-logo" href="#"><span class="jp">復活</span> Fukkatsu No P</a>
     <div class="nav-links">
       <a href="#features">Fonctionnalités</a>
+      <a href="#screens">Aperçus</a>
       <a href="#gestes">Gestes</a>
       <a href="#install">Installation</a>
       <a class="nav-cta" href="https://github.com/cyprienbrisset/fukkatsu-nop" target="_blank" rel="noopener">GitHub →</a>
@@ -228,7 +291,7 @@
   </div>
 </nav>
 
-<!-- ── Hero ─────────────────────────────────────────────────── -->
+<!-- ── Hero ── -->
 <header>
   <div class="hero-kanji" aria-hidden="true">復</div>
   <div class="hero-inner">
@@ -239,7 +302,7 @@
         Un hub maison qui s'éveille au quotidien
       </h1>
       <p class="hero-desc">
-        Remplace l'interface stock du Portal par un launcher permanent — horloge ambiante, météo, contacts, musique et apps en un coup d'œil. Esthétique encre japonaise, zéro dépendance Google.
+        Remplace l'interface stock du Portal par un launcher permanent — horloge ambiante, météo, contacts, musique, FukkaStore et contrôles système. Esthétique encre japonaise, mode nuit automatique, zéro dépendance Google.
       </p>
       <div class="hero-btns">
         <a class="btn-prim" href="https://github.com/cyprienbrisset/fukkatsu-nop/releases" target="_blank" rel="noopener">Télécharger</a>
@@ -254,27 +317,39 @@
         <div class="device-left">
           <div class="mock-brand">復活</div>
           <div class="mock-time">21:34</div>
-          <div class="mock-date">Mer 5 sept · 18° Ensoleillé</div>
+          <div class="mock-date">Dim 7 sept · 17° Partiellement nuageux</div>
+          <div class="mock-alarm">⏰ 07:30 — Lun, Mar, Mer</div>
           <div class="mock-sep"></div>
           <div class="mock-contacts">
-            <div class="mock-contact" style="background:#2a2060"></div>
+            <div class="mock-contact" style="background:#2a2060"><div class="mock-badge"></div></div>
             <div class="mock-contact" style="background:#1a4030"></div>
-            <div class="mock-contact" style="background:#3a1520"></div>
+            <div class="mock-contact" style="background:#3a1520"><div class="mock-badge"></div></div>
             <div class="mock-contact" style="background:#1a2a40"></div>
             <div class="mock-contact" style="background:#302010"></div>
           </div>
           <div class="mock-np">
-            <div class="mock-np-dot"></div>
+            <div class="mock-np-top">
+              <div class="mock-np-dot"></div>
+              <div class="mock-np-title">Nujabes — Feather</div>
+            </div>
             <div class="mock-np-bar"><div class="mock-np-fill"></div></div>
+            <div class="mock-vol">
+              <div class="mock-vol-bar"><div class="mock-vol-fill"></div></div>
+              <div class="mock-bt" title="BT actif"></div>
+            </div>
           </div>
         </div>
         <div class="device-rule"></div>
         <div class="device-right">
+          <div class="mock-top-bar">
+            <div class="mock-icon-btn"><div class="mock-icon-dot" style="background:rgba(236,231,221,0.4)"></div></div>
+            <div class="mock-icon-btn"><div class="mock-icon-dot" style="background:rgba(193,39,45,0.6)"></div></div>
+          </div>
           <div class="mock-grid">
-            <div class="mock-tile"><div class="dot" style="background:#4C5FD5;border-radius:50%"></div></div>
-            <div class="mock-tile"><div class="dot" style="background:#D54C7A;border-radius:50%"></div></div>
-            <div class="mock-tile"><div class="dot" style="background:#3FA34D;border-radius:50%"></div></div>
-            <div class="mock-tile"><div class="dot" style="background:#D58A4C;border-radius:50%"></div></div>
+            <div class="mock-tile"><div class="dot" style="background:#4C5FD5;border-radius:50%"></div><div class="mock-tile-badge">3</div></div>
+            <div class="mock-tile"><div class="dot" style="background:#1DB954;border-radius:50%"></div></div>
+            <div class="mock-tile"><div class="dot" style="background:#4285F4;border-radius:50%"></div></div>
+            <div class="mock-tile"><div class="dot" style="background:#D58A4C;border-radius:50%"></div><div class="mock-tile-badge">1</div></div>
             <div class="mock-tile"><div class="dot" style="background:#8A4CD5;border-radius:50%"></div></div>
             <div class="mock-tile"><div class="dot" style="background:#4CB5D5;border-radius:50%"></div></div>
             <div class="mock-tile"><div class="dot" style="background:#C1272D;border-radius:50%"></div></div>
@@ -286,7 +361,7 @@
   </div>
 </header>
 
-<!-- ── Fonctionnalités ──────────────────────────────────────── -->
+<!-- ── Fonctionnalités ── -->
 <section id="features">
   <div class="container">
     <p class="section-tag">Fonctionnalités</p>
@@ -315,9 +390,9 @@
         <p>Vos six derniers contacts Messenger ou WhatsApp toujours à portée, sans ouvrir la messagerie.</p>
       </div>
       <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-calendar"/></svg></div>
-        <h3>Agenda Google</h3>
-        <p>Prochains événements avec bouton Rejoindre direct pour les réunions Meet — sans app Google requise.</p>
+        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-moon"/></svg></div>
+        <h3>Thème automatique</h3>
+        <p>Sumi profond la nuit, Washi chaud le jour — bascule programmée à l'heure choisie, ou manuellement en un tap depuis l'accueil ou l'overlay.</p>
       </div>
       <div class="feat-card">
         <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-bell"/></svg></div>
@@ -327,23 +402,251 @@
       <div class="feat-card">
         <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-bag"/></svg></div>
         <h3>FukkaStore</h3>
-        <p>Catalogue Google Play accessible sans GMS. Une connexion Google, une pression pour installer.</p>
+        <p>Catalogue Google Play complet sans GMS. Authentification Google unique, catégories, recherche, fiche complète — une pression pour installer.</p>
       </div>
       <div class="feat-card">
         <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-sliders"/></svg></div>
-        <h3>Contrôles système</h3>
-        <p>Luminosité, Ne Pas Déranger et extinction d'écran — tous accessibles sans quitter le launcher.</p>
+        <h3>Overlay système</h3>
+        <p>Panneau flottant accessible depuis n'importe quelle app — volume, luminosité, mode nuit, retour accueil.</p>
       </div>
       <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-moon"/></svg></div>
-        <h3>Thème automatique</h3>
-        <p>Sumi profond la nuit, Washi chaud le jour — la palette bascule seule selon l'heure, sans réglage.</p>
+        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-bluetooth"/></svg></div>
+        <span class="feat-new">Nouveau</span>
+        <h3>Audio Bluetooth</h3>
+        <p>Icône interactive à côté du volume : appareil actif en un coup d'œil, liste des jumelés, ouverture des réglages Bluetooth.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-shield"/></svg></div>
+        <span class="feat-new">Nouveau</span>
+        <h3>Watchdog de crash</h3>
+        <p>Redémarrage automatique en 1 seconde si le launcher plante — sans dialogue système, sans intervention.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-zap"/></svg></div>
+        <span class="feat-new">Nouveau</span>
+        <h3>Splash screen</h3>
+        <p>Hanko seal 復 animé au démarrage — fondu entrant, maintien, fondu sortant. Aucun écran blanc interstitiel.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-search"/></svg></div>
+        <h3>Apps installées</h3>
+        <p>Liste de toutes les apps avec recherche intégrée et désinstallation directe depuis les réglages.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── Gestes ───────────────────────────────────────────────── -->
+<!-- ── Aperçus ── -->
+<section id="screens">
+  <div class="container">
+    <p class="section-tag">Aperçus</p>
+    <h2>L'interface en détail</h2>
+    <p class="lead">Mockups fidèles à l'interface réelle — esthétique Sumi (nuit) et Washi (jour), typographie Mincho, accent vermillon invariant.</p>
+
+    <div class="screens-grid">
+
+      <!-- Écran principal nuit -->
+      <div class="screen-card">
+        <div class="screen-preview" style="background:#0D0E12;">
+          <div class="mini-device" style="background:#0A0B0E;">
+            <div class="mini-left">
+              <div style="font-family:var(--serif);font-size:0.38rem;color:rgba(193,39,45,0.8);letter-spacing:0.15em;">復活</div>
+              <div class="mini-time">21:34</div>
+              <div class="mini-date">Dim 7 sept · 17°</div>
+              <div style="font-size:0.28rem;color:rgba(193,39,45,0.7);margin-top:2px;">Partiellement nuageux</div>
+              <div style="flex:1;"></div>
+              <div class="mini-row">
+                <div class="mini-dot" style="background:#2a2060;width:9px;height:9px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);"></div>
+                <div class="mini-dot" style="background:#1a4030;width:9px;height:9px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);"></div>
+                <div class="mini-dot" style="background:#3a1520;width:9px;height:9px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);"></div>
+                <div class="mini-dot" style="background:#1a2a40;width:9px;height:9px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);"></div>
+              </div>
+              <div style="background:rgba(255,255,255,0.03);border-radius:3px;padding:3px 4px;margin-top:4px;">
+                <div style="font-size:0.26rem;color:rgba(154,148,136,0.7);">Nujabes — Feather</div>
+                <div style="height:1.5px;background:rgba(255,255,255,0.08);border-radius:1px;margin-top:2px;overflow:hidden;"><div style="height:100%;width:42%;background:var(--shu);"></div></div>
+              </div>
+            </div>
+            <div class="mini-rule"></div>
+            <div class="mini-right">
+              <div class="mini-grid">
+                <div class="mini-tile"><div style="width:40%;height:40%;border-radius:50%;background:#4C5FD5;"></div></div>
+                <div class="mini-tile"><div style="width:40%;height:40%;border-radius:50%;background:#1DB954;"></div></div>
+                <div class="mini-tile"><div style="width:40%;height:40%;border-radius:50%;background:#4285F4;"></div></div>
+                <div class="mini-tile"><div style="width:40%;height:40%;border-radius:50%;background:#D58A4C;"></div></div>
+                <div class="mini-tile"><div style="width:40%;height:40%;border-radius:50%;background:#8A4CD5;"></div></div>
+                <div class="mini-tile" style="border:1px dashed rgba(255,255,255,0.08);background:transparent;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-label">
+          <h3>🌙 Accueil — Sumi (nuit)</h3>
+          <p>Horloge ambiante, météo, contacts récents, Now Playing avec volume + BT, grille d'apps avec badges.</p>
+        </div>
+      </div>
+
+      <!-- Écran jour -->
+      <div class="screen-card">
+        <div class="screen-preview" style="background:#F2EDE3;">
+          <div class="mini-device" style="background:#EDE8DE;border-color:rgba(0,0,0,0.1);">
+            <div class="mini-left">
+              <div style="font-family:var(--serif);font-size:0.38rem;color:#C1272D;letter-spacing:0.15em;">復活</div>
+              <div class="mini-time" style="color:#14161C;font-size:1.1rem;">09:15</div>
+              <div class="mini-date" style="color:#6E6B61;">Lun 8 sept · 22°</div>
+              <div style="font-size:0.28rem;color:#C1272D;margin-top:2px;">Ensoleillé</div>
+              <div style="flex:1;"></div>
+              <div class="mini-row">
+                <div style="width:9px;height:9px;border-radius:50%;background:#B8B0A0;border:1px solid rgba(0,0,0,0.1);"></div>
+                <div style="width:9px;height:9px;border-radius:50%;background:#C0B898;border:1px solid rgba(0,0,0,0.1);"></div>
+                <div style="width:9px;height:9px;border-radius:50%;background:#A8B0C0;border:1px solid rgba(0,0,0,0.1);"></div>
+                <div style="width:9px;height:9px;border-radius:50%;background:#C0A8A0;border:1px solid rgba(0,0,0,0.1);"></div>
+              </div>
+            </div>
+            <div class="mini-rule" style="background:rgba(193,39,45,0.3);"></div>
+            <div class="mini-right">
+              <div class="mini-grid">
+                <div class="mini-tile" style="background:#E6E1D6;border-color:rgba(0,0,0,0.06);"><div style="width:40%;height:40%;border-radius:50%;background:#4C5FD5;"></div></div>
+                <div class="mini-tile" style="background:#E6E1D6;border-color:rgba(0,0,0,0.06);"><div style="width:40%;height:40%;border-radius:50%;background:#1DB954;"></div></div>
+                <div class="mini-tile" style="background:#E6E1D6;border-color:rgba(0,0,0,0.06);"><div style="width:40%;height:40%;border-radius:50%;background:#4285F4;"></div></div>
+                <div class="mini-tile" style="background:#E6E1D6;border-color:rgba(0,0,0,0.06);"><div style="width:40%;height:40%;border-radius:50%;background:#D58A4C;"></div></div>
+                <div class="mini-tile" style="background:#E6E1D6;border-color:rgba(0,0,0,0.06);"><div style="width:40%;height:40%;border-radius:50%;background:#8A4CD5;"></div></div>
+                <div class="mini-tile" style="background:transparent;border:1px dashed rgba(0,0,0,0.12);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-label">
+          <h3>☀️ Accueil — Washi (jour)</h3>
+          <p>Même information, palette parchemin chaud. Bascule automatique à l'heure configurée ou en un tap.</p>
+        </div>
+      </div>
+
+      <!-- Overlay système -->
+      <div class="screen-card">
+        <div class="screen-preview" style="background:#0D0E12;">
+          <div class="overlay-mock">
+            <div class="overlay-title">Contrôles</div>
+            <div class="overlay-slider">
+              <div class="overlay-sl-label">
+                <svg style="width:8px;height:8px;stroke:var(--muted);stroke-width:1.5;fill:none;flex-shrink:0;"><use href="#i-sliders"/></svg>
+                Volume
+              </div>
+              <div class="overlay-sl-track"><div class="overlay-sl-fill" style="width:65%;"></div></div>
+              <div class="overlay-sl-bt">
+                <div class="overlay-sl-bt-icon">
+                  <svg style="width:6px;height:6px;stroke:var(--shu);stroke-width:2;fill:none;"><use href="#i-bluetooth"/></svg>
+                </div>
+                <div class="overlay-sl-bt-name">AirPods Pro</div>
+              </div>
+            </div>
+            <div class="overlay-slider">
+              <div class="overlay-sl-label">
+                <svg style="width:8px;height:8px;stroke:var(--muted);stroke-width:1.5;fill:none;flex-shrink:0;"><use href="#i-sun"/></svg>
+                Luminosité
+              </div>
+              <div class="overlay-sl-track"><div class="overlay-sl-fill" style="width:80%;"></div></div>
+            </div>
+            <div class="overlay-btns">
+              <div class="overlay-btn active">🌙 Nuit</div>
+              <div class="overlay-btn">⌂ Accueil</div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-label">
+          <h3>Overlay système</h3>
+          <p>Flottant par-dessus toute app — volume avec appareil BT actif, luminosité, bascule mode nuit.</p>
+        </div>
+      </div>
+
+      <!-- Splash screen -->
+      <div class="screen-card">
+        <div class="screen-preview" style="background:#0D0E12;">
+          <div class="splash-mock">
+            <div class="splash-kanji">復</div>
+            <div class="splash-sub">F U K K A T S U &nbsp; N O &nbsp; P</div>
+          </div>
+        </div>
+        <div class="screen-label">
+          <h3>Splash screen</h3>
+          <p>Hanko seal vermillon sur Sumi — 3 phases animées au démarrage. Aucun écran blanc interstitiel.</p>
+        </div>
+      </div>
+
+      <!-- BT Picker -->
+      <div class="screen-card">
+        <div class="screen-preview" style="background:#0D0E12;">
+          <div class="bt-dialog">
+            <div class="bt-header">
+              <div class="bt-icon"><svg style="width:6px;height:6px;stroke:var(--shu);stroke-width:2;fill:none;"><use href="#i-bluetooth"/></svg></div>
+              <div class="bt-title">Sortie audio</div>
+              <div class="bt-active-chip">AirPods Pro</div>
+            </div>
+            <div class="bt-row">
+              <div class="bt-row-icon"><svg style="width:8px;height:8px;stroke:var(--shu);stroke-width:1.5;fill:none;"><use href="#i-bluetooth"/></svg></div>
+              <div class="bt-row-info">
+                <div class="bt-row-name active">AirPods Pro</div>
+                <div class="bt-row-status">Actif · Audio en cours</div>
+              </div>
+              <div class="bt-row-dot"></div>
+            </div>
+            <div class="bt-row">
+              <div class="bt-row-icon"><svg style="width:8px;height:8px;stroke:rgba(76,175,80,0.9);stroke-width:1.5;fill:none;"><use href="#i-bluetooth"/></svg></div>
+              <div class="bt-row-info">
+                <div class="bt-row-name">JBL Charge 5</div>
+                <div class="bt-row-status">Connecté</div>
+              </div>
+            </div>
+            <div class="bt-row">
+              <div class="bt-row-icon"><svg style="width:8px;height:8px;stroke:var(--muted);stroke-width:1.5;fill:none;"><use href="#i-bluetooth"/></svg></div>
+              <div class="bt-row-info">
+                <div class="bt-row-name" style="color:var(--muted);">Sony WH-1000XM5</div>
+              </div>
+            </div>
+            <div class="bt-settings-row">
+              <svg style="width:7px;height:7px;stroke:var(--muted);stroke-width:1.5;fill:none;"><use href="#i-sliders"/></svg>
+              <span>Paramètres Bluetooth</span>
+            </div>
+          </div>
+        </div>
+        <div class="screen-label">
+          <h3>Sélecteur audio Bluetooth</h3>
+          <p>Tap sur l'icône BT à droite du volume — appareil actif, jumelés connectés, ouvre les réglages système.</p>
+        </div>
+      </div>
+
+      <!-- FukkaStore -->
+      <div class="screen-card">
+        <div class="screen-preview" style="background:#0D0E12;">
+          <div class="store-card" style="width:220px;padding:14px;">
+            <div style="font-family:var(--serif);font-size:0.55rem;color:var(--shu);letter-spacing:0.2em;margin-bottom:8px;">FUKKASTORE</div>
+            <div class="store-row" style="padding:6px 0;">
+              <div class="store-app-icon" style="background:#4285F4;border-radius:7px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;"><svg style="width:14px;height:14px;stroke:#fff;stroke-width:1.5;fill:none;"><use href="#i-map"/></svg></div>
+              <div><div style="font-size:0.7rem;color:var(--ivory);">Google Maps</div><div style="font-size:0.58rem;color:var(--muted);">Navigation</div></div>
+              <span style="font-size:0.6rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--shu);border:1px solid rgba(193,39,45,0.35);padding:3px 8px;border-radius:2px;">Installer</span>
+            </div>
+            <div class="store-row" style="padding:6px 0;">
+              <div class="store-app-icon" style="background:#1DB954;border-radius:7px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;"><svg style="width:14px;height:14px;stroke:#fff;stroke-width:1.5;fill:none;"><use href="#i-music"/></svg></div>
+              <div><div style="font-size:0.7rem;color:var(--ivory);">Spotify</div><div style="font-size:0.58rem;color:var(--muted);">Musique</div></div>
+              <span style="font-size:0.6rem;letter-spacing:0.06em;text-transform:uppercase;color:rgba(76,175,80,0.9);border:1px solid rgba(76,175,80,0.3);padding:3px 8px;border-radius:2px;">✓</span>
+            </div>
+            <div class="store-row" style="padding:6px 0;border-bottom:none;">
+              <div class="store-app-icon" style="background:#FF6900;border-radius:7px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;"><svg style="width:14px;height:14px;stroke:#fff;stroke-width:1.5;fill:none;"><use href="#i-zap"/></svg></div>
+              <div><div style="font-size:0.7rem;color:var(--ivory);">Notion</div><div style="font-size:0.58rem;color:var(--muted);">Productivité</div></div>
+              <span style="font-size:0.6rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--shu);border:1px solid rgba(193,39,45,0.35);padding:3px 8px;border-radius:2px;">Installer</span>
+            </div>
+          </div>
+        </div>
+        <div class="screen-label">
+          <h3>FukkaStore</h3>
+          <p>Google Play complet sans GMS. Login Google unique, navigation par catégories, installation en un tap.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── Gestes ── -->
 <section id="gestes">
   <div class="container">
     <p class="section-tag">Gestes</p>
@@ -399,19 +702,11 @@
           <p>Appui long entre les tuiles pour entrer en mode réorganisation, puis glissez pour déplacer. Bouton « Terminé » pour quitter.</p>
         </div>
       </div>
-      <div class="gesture-card">
-        <div class="gesture-icon"><svg class="icon icon-lg"><use href="#i-search"/></svg></div>
-        <div class="gesture-body">
-          <p class="gesture-trigger">Tuile web · Favicon auto</p>
-          <h3>Icônes intelligentes</h3>
-          <p>Les tuiles web chargent la favicon directement sur le serveur — fonctionne aussi pour les serveurs locaux.</p>
-        </div>
-      </div>
     </div>
   </div>
 </section>
 
-<!-- ── Thèmes ────────────────────────────────────────────────── -->
+<!-- ── Thèmes ── -->
 <section id="themes">
   <div class="container">
     <p class="section-tag">Thèmes</p>
@@ -421,26 +716,26 @@
     <div class="themes-wrap">
       <div class="theme-panel night" data-kanji="墨">
         <p class="theme-name">🌙 Sumi</p>
-        <p class="theme-time">Nuit · 20h00 – 06h59</p>
+        <p class="theme-time">Nuit · heure configurable</p>
         <div class="palette">
-          <div class="swatch" style="background:#0D0E12" title="Fond #0D0E12"></div>
-          <div class="swatch" style="background:#191C23" title="Surface #191C23"></div>
-          <div class="swatch" style="background:#ECE7DD" title="Texte #ECE7DD"></div>
-          <div class="swatch" style="background:#9A9488" title="Atténué #9A9488"></div>
-          <div class="swatch" style="background:#C1272D" title="Accent #C1272D"></div>
+          <div class="swatch" style="background:#0D0E12" title="Fond"></div>
+          <div class="swatch" style="background:#191C23" title="Surface"></div>
+          <div class="swatch" style="background:#ECE7DD" title="Texte"></div>
+          <div class="swatch" style="background:#9A9488" title="Atténué"></div>
+          <div class="swatch" style="background:#C1272D" title="Accent"></div>
         </div>
         <p class="theme-desc">Fond quasi-noir <code style="color:#5A5750">#0D0E12</code>, texte ivoire <code style="color:#5A5750">#ECE7DD</code>. Encre de Chine et parchemin nocturne.</p>
         <div class="theme-accent"></div>
       </div>
       <div class="theme-panel day" data-kanji="和">
         <p class="theme-name" style="color:#14161C">☀️ Washi</p>
-        <p class="theme-time" style="color:#6E6B61">Jour · 07h00 – 19h59</p>
+        <p class="theme-time" style="color:#6E6B61">Jour · heure configurable</p>
         <div class="palette">
-          <div class="swatch" style="background:#F2EDE3;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.1)" title="Fond #F2EDE3"></div>
-          <div class="swatch" style="background:#E6E1D6" title="Surface #E6E1D6"></div>
-          <div class="swatch" style="background:#14161C" title="Texte #14161C"></div>
-          <div class="swatch" style="background:#6E6B61" title="Atténué #6E6B61"></div>
-          <div class="swatch" style="background:#C1272D" title="Accent #C1272D"></div>
+          <div class="swatch" style="background:#F2EDE3;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.1)"></div>
+          <div class="swatch" style="background:#E6E1D6"></div>
+          <div class="swatch" style="background:#14161C"></div>
+          <div class="swatch" style="background:#6E6B61"></div>
+          <div class="swatch" style="background:#C1272D"></div>
         </div>
         <p class="theme-desc" style="color:#6E6B61">Fond parchemin <code style="color:#8a8880">#F2EDE3</code>, texte encre <code style="color:#8a8880">#14161C</code>. Papier Washi et calligraphie au soleil.</p>
         <div class="theme-accent"></div>
@@ -449,7 +744,7 @@
   </div>
 </section>
 
-<!-- ── FukkaStore ───────────────────────────────────────────── -->
+<!-- ── FukkaStore ── -->
 <section id="fukkastore">
   <div class="container">
     <div class="store-wrap">
@@ -464,7 +759,7 @@
           <div class="store-row">
             <div class="store-app-icon" style="background:#1DB954;border-radius:9px;display:flex;align-items:center;justify-content:center"><svg style="width:18px;height:18px;stroke:#fff;stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round"><use href="#i-music"/></svg></div>
             <div><div class="store-app-name">Spotify</div><div class="store-app-cat">Musique</div></div>
-            <span class="store-install">Installer</span>
+            <span class="store-install" style="color:rgba(76,175,80,0.9);border-color:rgba(76,175,80,0.3);">✓ Installé</span>
           </div>
           <div class="store-row">
             <div class="store-app-icon" style="background:#FF6900;border-radius:9px;display:flex;align-items:center;justify-content:center"><svg style="width:18px;height:18px;stroke:#fff;stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round"><use href="#i-zap"/></svg></div>
@@ -482,41 +777,19 @@
         <p class="section-tag">FukkaStore</p>
         <h2>Le Play Store du Portal</h2>
         <ul class="store-bullets">
-          <li>
-            <svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg>
-            <span>Catalogue Google Play complet — sans compte Google Play requis sur l'appareil</span>
-          </li>
-          <li>
-            <svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg>
-            <span>Authentification unique via votre compte Google, token AAS stocké localement</span>
-          </li>
-          <li>
-            <svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg>
-            <span>Catégories, chips de filtres et recherche en texte libre</span>
-          </li>
-          <li>
-            <svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg>
-            <span>Fiche app complète au tap : description, captures d'écran, note</span>
-          </li>
-          <li>
-            <svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg>
-            <span>Filtre automatique des apps incompatibles avec le Portal (API 28/29)</span>
-          </li>
-          <li>
-            <svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg>
-            <span>Filtre ABI : seuls les splits compatibles avec le processeur sont installés — évite les crashes sur Portal 1ère gen</span>
-          </li>
-          <li>
-            <svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg>
-            <span>Téléchargement et installation en une pression — aucune manipulation ADB requise</span>
-          </li>
+          <li><svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg><span>Catalogue Google Play complet — authentification Google unique, token stocké localement</span></li>
+          <li><svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg><span>Navigation par catégories, chips de filtres et recherche en texte libre</span></li>
+          <li><svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg><span>Fiche app complète au tap : description, captures d'écran, note</span></li>
+          <li><svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg><span>Filtre automatique des apps incompatibles avec le Portal (API 28/29)</span></li>
+          <li><svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg><span>Filtre ABI : seuls les splits compatibles avec le processeur sont installés</span></li>
+          <li><svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg><span>Installation silencieuse via AccessibilityService sur Portal 1ère gen</span></li>
         </ul>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── Installation ─────────────────────────────────────────── -->
+<!-- ── Installation ── -->
 <section id="install">
   <div class="container">
     <p class="section-tag">Installation</p>
@@ -562,7 +835,10 @@ git clone https://github.com/cyprienbrisset/fukkatsu-nop.git
 cd fukkatsu-nop
 
 <span class="cm"># Construire, installer et configurer</span>
-bash scripts/provision-portal.sh --set-launcher</pre>
+bash scripts/provision-portal.sh --set-launcher
+
+<span class="cm"># Ou en développement</span>
+./gradlew deployDebug</pre>
         </div>
         <p style="margin-top:16px;font-size:0.78rem;color:var(--muted2);">
           Nécessite <strong style="color:var(--muted)">Android Studio</strong> (JDK intégré) et <strong style="color:var(--muted)">ADB</strong> dans <code style="color:var(--muted2)">~/Library/Android/sdk/platform-tools/</code>.
@@ -572,7 +848,6 @@ bash scripts/provision-portal.sh --set-launcher</pre>
   </div>
 </section>
 
-<!-- ── Footer ───────────────────────────────────────────────── -->
 <footer>
   <div class="footer-inner">
     <div class="footer-brand" aria-hidden="true">墨</div>
