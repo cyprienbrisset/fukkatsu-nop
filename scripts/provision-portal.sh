@@ -33,7 +33,7 @@ ADB="${ADB:-$HOME/Library/Android/sdk/platform-tools/adb}"
 APK="${APK:-$REPO_ROOT/app/build/outputs/apk/debug/app-debug.apk}"
 JAVA_HOME="${JAVA_HOME:-/Users/cyprienbrisset/Applications/Android Studio.app/Contents/jbr/Contents/Home}"
 
-PKG="com.cyprienbrisset.myportal"
+PKG="com.cyprienbrisset.fukkatsunop"
 ADMIN="$PKG/.system.MyDeviceAdminReceiver"
 
 # --- Sortie lisible -----------------------------------------------------------
