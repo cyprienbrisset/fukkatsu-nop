@@ -71,7 +71,8 @@ fun GoogleAuthScreen(
                     )
                     Text(
                         text = "Agenda · Mail · Meet",
-                        style = MaterialTheme.typography.bodyMedium,
+                        fontFamily = Mincho,
+                        fontSize = 15.sp,
                         color = SumiMuted,
                     )
                     Spacer(Modifier.height(20.dp))
@@ -88,7 +89,7 @@ fun GoogleAuthScreen(
                     verticalArrangement = Arrangement.Center,
                 ) {
                     val qrBitmap = remember(authState.verificationUrl) {
-                        generateQrBitmap(authState.verificationUrl, 400)
+                        generateQrBitmap(authState.verificationUrl, 540)
                     }
                     Image(
                         bitmap = qrBitmap.asImageBitmap(),
