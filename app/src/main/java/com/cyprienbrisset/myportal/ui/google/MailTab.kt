@@ -1,6 +1,7 @@
 package com.cyprienbrisset.myportal.ui.google
 
 import android.webkit.WebView
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +25,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -133,13 +135,12 @@ private fun MailInbox(
 
 @Composable
 private fun MessageRow(message: MailMessage, onOpen: (String) -> Unit) {
-    val zone  = ZoneId.systemDefault()
-    val today = LocalDate.now(zone)
-    val msgDate = message.date.atZone(zone).toLocalDate()
-    val dateStr = if (msgDate == today) {
-        message.date.atZone(zone).format(TIME_FMT_MAIL)
-    } else {
-        message.date.atZone(zone).format(DATE_FMT_MAIL)
+    val zone    = ZoneId.systemDefault()
+    val today   = remember { LocalDate.now(zone) }
+    val msgDate = remember(message.date) { message.date.atZone(zone).toLocalDate() }
+    val dateStr = remember(msgDate, today) {
+        if (msgDate == today) message.date.atZone(zone).format(TIME_FMT_MAIL)
+        else                  message.date.atZone(zone).format(DATE_FMT_MAIL)
     }
     val weight = if (message.isUnread) FontWeight.Medium else FontWeight.Normal
 
@@ -217,6 +218,7 @@ private fun MailReader(
     message: MailMessage?,
     onBack: () -> Unit,
 ) {
+    BackHandler(onBack = onBack)
     Column(Modifier.fillMaxSize()) {
         // Top bar
         Row(
@@ -285,12 +287,9 @@ private fun MailReader(
                 val body = bodyState.data
                 when {
                     body.html != null -> {
-                        val htmlWithCss = """
-                            <html><head><style>
-                            body{background:#0D0E12;color:#ECE7DD;font-family:serif;font-size:15px;padding:12px;}
-                            a{color:#C1272D;}
-                            </style></head><body>${body.html}</body></html>
-                        """.trimIndent()
+                        val htmlWithCss = remember(body.html) {
+                            "<html><head><style>body{background:#0D0E12;color:#ECE7DD;font-family:serif;font-size:15px;padding:12px;}a{color:#C1272D;}</style></head><body>${body.html}</body></html>"
+                        }
                         AndroidView(
                             factory = { ctx ->
                                 WebView(ctx).apply {
@@ -306,6 +305,10 @@ private fun MailReader(
                                     "UTF-8",
                                     null,
                                 )
+                            },
+                            onRelease = { webView ->
+                                webView.stopLoading()
+                                webView.destroy()
                             },
                             modifier = Modifier.fillMaxSize(),
                         )
