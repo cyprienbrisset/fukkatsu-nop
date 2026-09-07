@@ -31,7 +31,7 @@ data class GoogleUiState(
 
 sealed interface AuthState {
     object Loading     : AuthState
-    object NotLoggedIn : AuthState
+    data class NotLoggedIn(val error: String? = null) : AuthState
     data class DeviceFlow(val userCode: String, val verificationUrl: String) : AuthState
     object LoggedIn    : AuthState
 }
@@ -61,13 +61,14 @@ class GoogleViewModel(
                     _state.update { it.copy(authState = AuthState.LoggedIn) }
                     if (!alreadyLoggedIn) loadAll()
                 } else if (_state.value.authState !is AuthState.DeviceFlow) {
-                    _state.update { it.copy(authState = AuthState.NotLoggedIn) }
+                    _state.update { it.copy(authState = AuthState.NotLoggedIn()) }
                 }
             }
         }
     }
 
     fun startDeviceFlow() {
+        _state.update { it.copy(authState = AuthState.Loading) }
         viewModelScope.launch {
             try {
                 val data: DeviceFlowData = authManager.startDeviceFlow()
@@ -75,9 +76,9 @@ class GoogleViewModel(
                     it.copy(authState = AuthState.DeviceFlow(data.userCode, data.verificationUrl))
                 }
                 val success = authManager.pollForToken(data)
-                if (!success) _state.update { it.copy(authState = AuthState.NotLoggedIn) }
+                if (!success) _state.update { it.copy(authState = AuthState.NotLoggedIn("Autorisation refusée ou expirée")) }
             } catch (e: Exception) {
-                _state.update { it.copy(authState = AuthState.NotLoggedIn) }
+                _state.update { it.copy(authState = AuthState.NotLoggedIn(e.message ?: "Erreur de connexion")) }
             }
         }
     }

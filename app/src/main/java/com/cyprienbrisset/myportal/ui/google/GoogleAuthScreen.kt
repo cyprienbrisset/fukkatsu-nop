@@ -76,6 +76,15 @@ fun GoogleAuthScreen(
                         color = SumiMuted,
                     )
                     Spacer(Modifier.height(20.dp))
+                    if (authState.error != null) {
+                        Text(
+                            text = authState.error,
+                            fontFamily = Mincho,
+                            fontSize = 13.sp,
+                            color = Shu,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                     SumiPrimaryButton(text = "Connecter mon compte", onClick = onStartAuth)
                 }
             }
