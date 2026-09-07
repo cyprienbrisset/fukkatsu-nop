@@ -14,12 +14,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cyprienbrisset.myportal.ui.theme.Mincho
+import com.cyprienbrisset.myportal.ui.theme.AccentShu
 import com.cyprienbrisset.myportal.ui.theme.OnShu
-import com.cyprienbrisset.myportal.ui.theme.Shu
 
 @Composable
 fun SumiPrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(modifier.fillMaxWidth().height(60.dp).clip(RoundedCornerShape(16.dp)).background(Shu).clickable { onClick() },
+    Box(modifier.fillMaxWidth().height(60.dp).clip(RoundedCornerShape(16.dp)).background(AccentShu).clickable { onClick() },
         contentAlignment = Alignment.Center) {
         Text(text, color = OnShu, fontFamily = Mincho, fontSize = 18.sp)
     }

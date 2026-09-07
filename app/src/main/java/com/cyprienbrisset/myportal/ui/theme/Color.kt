@@ -14,6 +14,19 @@ val SumiMuted = Color(0xFF9A9488)
 val Shu = Color(0xFFC1272D)
 val OnShu = Color(0xFFF6EEE0)
 
+// Seasonal accents
+val Sakura = Color(0xFFE8A0AF)
+val Momiji = Color(0xFFC85A14)
+
+val AccentShu: Color get() {
+    val month = java.time.LocalDate.now().monthValue
+    return when (month) {
+        3, 4, 5   -> Sakura
+        9, 10, 11 -> Momiji
+        else      -> Shu
+    }
+}
+
 // Light palette (day / Washi)
 val Washi = Color(0xFFF2EDE3)
 val WashiSurface = Color(0xFFE6E1D6)

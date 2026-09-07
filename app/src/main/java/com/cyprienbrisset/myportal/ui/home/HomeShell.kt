@@ -22,7 +22,7 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.cyprienbrisset.myportal.ui.google.GoogleScreen
-import com.cyprienbrisset.myportal.ui.theme.Shu
+import com.cyprienbrisset.myportal.ui.theme.AccentShu
 import com.cyprienbrisset.myportal.ui.widgets.WidgetDashboard
 import kotlinx.coroutines.launch
 
@@ -95,7 +95,7 @@ fun HomeShell(onOpenSettings: () -> Unit, onAddTile: () -> Unit) {
                     Modifier
                         .size(size)
                         .clip(CircleShape)
-                        .background(Shu.copy(alpha = if (isSelected) 1f else 0.3f)),
+                        .background(AccentShu.copy(alpha = if (isSelected) 1f else 0.3f)),
                 )
             }
         }

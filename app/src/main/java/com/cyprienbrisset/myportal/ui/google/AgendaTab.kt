@@ -34,6 +34,7 @@ import com.cyprienbrisset.myportal.ui.sumi.SectionLabel
 import com.cyprienbrisset.myportal.ui.sumi.SumiPrimaryButton
 import com.cyprienbrisset.myportal.ui.theme.Kinari
 import com.cyprienbrisset.myportal.ui.theme.Mincho
+import com.cyprienbrisset.myportal.ui.theme.AccentShu
 import com.cyprienbrisset.myportal.ui.theme.Shu
 import com.cyprienbrisset.myportal.ui.theme.SumiMuted
 import com.cyprienbrisset.myportal.ui.theme.SumiSurface
@@ -106,7 +107,7 @@ fun AgendaTab(state: TabState<List<CalendarEvent>>, onRetry: () -> Unit) {
 private fun EventCard(event: CalendarEvent, zone: ZoneId, now: Instant) {
     val ctx = LocalContext.current
     val isImminent = event.start.isAfter(now) && event.start.isBefore(now.plusSeconds(3600))
-    val accentColor = if (isImminent) Shu else SumiSurface
+    val accentColor = if (isImminent) AccentShu else SumiSurface
 
     Row(
         Modifier

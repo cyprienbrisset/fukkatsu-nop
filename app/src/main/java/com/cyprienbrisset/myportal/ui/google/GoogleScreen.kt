@@ -33,6 +33,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cyprienbrisset.myportal.ui.sumi.SealIconButton
 import com.cyprienbrisset.myportal.ui.theme.Kinari
 import com.cyprienbrisset.myportal.ui.theme.Mincho
+import com.cyprienbrisset.myportal.ui.theme.AccentShu
 import com.cyprienbrisset.myportal.ui.theme.Shu
 import com.cyprienbrisset.myportal.ui.theme.SumiMuted
 import com.cyprienbrisset.myportal.ui.theme.SumiSurface
@@ -88,7 +89,7 @@ fun GoogleScreen(modifier: Modifier = Modifier) {
                                     .align(Alignment.BottomCenter)
                                     .fillMaxWidth()
                                     .height(2.dp)
-                                    .background(Shu),
+                                    .background(AccentShu),
                             )
                         }
                     }

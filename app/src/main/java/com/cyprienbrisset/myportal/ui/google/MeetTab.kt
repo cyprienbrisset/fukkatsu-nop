@@ -35,6 +35,7 @@ import com.cyprienbrisset.myportal.ui.sumi.SumiPrimaryButton
 import com.cyprienbrisset.myportal.ui.theme.Gothic
 import com.cyprienbrisset.myportal.ui.theme.Kinari
 import com.cyprienbrisset.myportal.ui.theme.Mincho
+import com.cyprienbrisset.myportal.ui.theme.AccentShu
 import com.cyprienbrisset.myportal.ui.theme.Shu
 import com.cyprienbrisset.myportal.ui.theme.SumiMuted
 import com.cyprienbrisset.myportal.ui.theme.SumiSurface
@@ -128,7 +129,7 @@ private fun MeetCard(event: CalendarEvent, now: Instant) {
     ) {
         Text(
             text = countdownLabel,
-            color = Shu,
+            color = AccentShu,
             fontFamily = Gothic,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
