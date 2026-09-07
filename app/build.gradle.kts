@@ -77,6 +77,7 @@ dependencies {
     implementation(libs.bcprov)
     implementation(libs.gplayapi)
     implementation(libs.zxing.core)
+    implementation("com.alphacephei:vosk-android:0.3.47")
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

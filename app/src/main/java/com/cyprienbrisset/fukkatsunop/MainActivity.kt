@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.cyprienbrisset.fukkatsunop.system.DarkModeManager
 import com.cyprienbrisset.fukkatsunop.system.FirmwareWatcher
+import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
 import com.cyprienbrisset.fukkatsunop.ui.AppNav
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.MyPortalTheme
@@ -67,6 +68,19 @@ class MainActivity : ComponentActivity() {
         }
         DarkModeManager.initFromSystem(this)
         FirmwareWatcher.init(this)
+
+        // Request RECORD_AUDIO if voice enabled
+        if (VoiceService.isEnabled(this)) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    this, android.Manifest.permission.RECORD_AUDIO
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                VoiceService.start(this)
+            } else {
+                requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), 42)
+            }
+        }
+
         enableEdgeToEdge()
 
         setContent {
@@ -91,6 +105,12 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 42 && grantResults.firstOrNull() == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            VoiceService.start(this)
         }
     }
 }

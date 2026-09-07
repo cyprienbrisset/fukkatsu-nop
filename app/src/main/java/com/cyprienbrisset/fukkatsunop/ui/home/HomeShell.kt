@@ -1,18 +1,27 @@
 package com.cyprienbrisset.fukkatsunop.ui.home
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -21,8 +30,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
 import com.cyprienbrisset.fukkatsunop.ui.google.GoogleScreen
 import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
+import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
+import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
+import com.cyprienbrisset.fukkatsunop.ui.theme.SumiSurface
 import com.cyprienbrisset.fukkatsunop.ui.widgets.WidgetDashboard
 import kotlinx.coroutines.launch
 
@@ -32,6 +46,7 @@ import kotlinx.coroutines.launch
 fun HomeShell(onOpenSettings: () -> Unit, onAddTile: () -> Unit) {
     val pagerState = rememberPagerState(initialPage = 1) { 3 }
     val scope = rememberCoroutineScope()
+    val voiceState by VoiceService.state.collectAsState()
 
     Box(
         Modifier
@@ -96,6 +111,36 @@ fun HomeShell(onOpenSettings: () -> Unit, onAddTile: () -> Unit) {
                         .size(size)
                         .clip(CircleShape)
                         .background(AccentShu.copy(alpha = if (isSelected) 1f else 0.3f)),
+                )
+            }
+        }
+
+        // Voice listening banner — shown when in COMMAND mode (after "Portal" wake word)
+        AnimatedVisibility(
+            visible = voiceState == VoiceService.ListenState.COMMAND,
+            enter = slideInVertically(initialOffsetY = { it }),
+            exit = slideOutVertically(targetOffsetY = { it }),
+            modifier = Modifier.align(Alignment.BottomCenter),
+        ) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .background(SumiSurface)
+                    .padding(horizontal = 24.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Icon(
+                    Icons.Default.Mic,
+                    contentDescription = null,
+                    tint = AccentShu,
+                    modifier = Modifier.size(20.dp),
+                )
+                Text(
+                    "Parlez…",
+                    color = Kinari,
+                    fontFamily = Mincho,
+                    fontSize = 14.sp,
                 )
             }
         }

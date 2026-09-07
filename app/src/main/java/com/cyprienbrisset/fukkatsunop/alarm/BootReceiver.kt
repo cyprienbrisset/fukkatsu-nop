@@ -7,6 +7,7 @@ import com.cyprienbrisset.fukkatsunop.data.AppDatabase
 import com.cyprienbrisset.fukkatsunop.data.alarm.AlarmRepository
 import com.cyprienbrisset.fukkatsunop.system.DarkModeManager
 import com.cyprienbrisset.fukkatsunop.system.FirmwareWatcher
+import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -17,6 +18,7 @@ class BootReceiver : BroadcastReceiver() {
         DarkModeManager.reschedule(context)
         FirmwareWatcher.init(context)
         FirmwareWatcher.scheduleDaily(context)
+        VoiceService.start(context)
         context.startForegroundService(
             Intent(context, com.cyprienbrisset.fukkatsunop.airplay.AirPlayService::class.java)
         )
