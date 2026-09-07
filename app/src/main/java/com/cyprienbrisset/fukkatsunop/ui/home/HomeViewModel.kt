@@ -94,6 +94,13 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         killApp(packageName)
     }
 
+    val weatherEffectsEnabled: StateFlow<Boolean> = settings.weatherEffectsEnabled
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    fun setWeatherEffectsEnabled(enabled: Boolean) {
+        viewModelScope.launch { settings.setWeatherEffectsEnabled(enabled) }
+    }
+
     fun clearRecents() {
         _recentApps.value.forEach { killApp(it.packageName) }
         _recentApps.value = emptyList()

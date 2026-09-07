@@ -23,12 +23,15 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cyprienbrisset.fukkatsunop.ui.home.HomeViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -60,6 +63,8 @@ fun SettingsScreen(
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
+    val homeVm: HomeViewModel = viewModel()
+    val weatherEffects by homeVm.weatherEffectsEnabled.collectAsState()
     var voiceEnabled by remember { mutableStateOf(VoiceService.isEnabled(ctx)) }
     var modelReady by remember { mutableStateOf(VoiceModelManager.isModelReady(ctx)) }
     var downloading by remember { mutableStateOf(false) }
@@ -204,8 +209,36 @@ fun SettingsScreen(
             }
             Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
         }
+
+        // ── Effets météo ─────────────────────────────────────────────────────────
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 68.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text("Effets météo", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
+                Text(
+                    if (weatherEffects) "Pluie, neige, brouillard animés sur l'écran d'accueil"
+                    else "Désactivés",
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                    fontSize = 12.sp,
+                    fontFamily = Mincho,
+                )
+            }
+            Switch(
+                checked = weatherEffects,
+                onCheckedChange = { homeVm.setWeatherEffectsEnabled(it) },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = AccentShu,
+                    checkedTrackColor = AccentShu.copy(alpha = 0.4f),
+                ),
+            )
+        }
+        Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
     }
 }
+
 
 @Composable
 private fun SettingRow(text: String, subtitle: String? = null, chevron: Boolean = true, onClick: () -> Unit) {
