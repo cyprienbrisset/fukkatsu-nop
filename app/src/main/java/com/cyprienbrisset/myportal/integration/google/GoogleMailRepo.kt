@@ -88,8 +88,8 @@ internal fun parseMessageIds(raw: String): List<String> {
 
 internal fun parseMessageMeta(raw: String): MailMessage {
     val obj      = Json.parseToJsonElement(raw).jsonObject
-    val id       = obj["id"]!!.jsonPrimitive.content
-    val threadId = obj["threadId"]!!.jsonPrimitive.content
+    val id       = obj["id"]?.jsonPrimitive?.content ?: throw IllegalArgumentException("missing id")
+    val threadId = obj["threadId"]?.jsonPrimitive?.content ?: throw IllegalArgumentException("missing threadId")
     val snippet  = obj["snippet"]?.jsonPrimitive?.content ?: ""
     val isUnread = obj["labelIds"]?.jsonArray?.any { it.jsonPrimitive.content == "UNREAD" } ?: false
     val dateMs   = obj["internalDate"]?.jsonPrimitive?.content?.toLongOrNull() ?: 0L
@@ -122,7 +122,7 @@ internal fun parseMessageBody(raw: String): MailBody {
     return MailBody(html, text)
 }
 
-private fun extractMimeParts(
+internal fun extractMimeParts(
     part: JsonObject,
     onPart: (mimeType: String, data: String) -> Unit,
 ) {
@@ -136,6 +136,6 @@ private fun extractMimeParts(
 
 private fun decodeBase64(data: String): String =
     String(
-        Base64.getUrlDecoder().decode(data.replace("\n", "").replace(" ", "")),
+        Base64.getUrlDecoder().decode(data.filter { !it.isWhitespace() }),
         Charsets.UTF_8,
     )
