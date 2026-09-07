@@ -181,8 +181,6 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, vm: HomeViewMo
                                 onSeek = { vm.mediaSeek(it) },
                                 onOpenApp = { np.packageName?.let { p -> LaunchIntentResolver.launch(ctx, p) } },
                             )
-                            Spacer(Modifier.height(14.dp))
-                            VolumeSlider()
                         }
                     }
                     Spacer(Modifier.weight(1f))
@@ -257,8 +255,6 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, vm: HomeViewMo
                     onOpenApp = { np.packageName?.let { p -> LaunchIntentResolver.launch(ctx, p) } },
                 )
                 }
-                Spacer(Modifier.height(18.dp))
-                VolumeSlider()
                 if (recentContacts.isNotEmpty()) {
                     Spacer(Modifier.height(16.dp))
                     RecentContactsStrip(recentContacts)

@@ -21,6 +21,7 @@ import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -113,6 +114,8 @@ fun NowPlayingBar(
         if (np.durationMs > 0 && np.positionMs >= 0) {
             SeekBar(np = np, onSeek = onSeek)
         }
+        HorizontalDivider(color = SumiLine, thickness = 1.dp)
+        VolumeSlider(modifier = Modifier.fillMaxWidth())
     }
 }
 
