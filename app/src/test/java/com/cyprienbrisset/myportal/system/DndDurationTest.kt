@@ -1,4 +1,4 @@
-package com.cyprienbrisset.myportal.system
+package com.cyprienbrisset.fukkatsunop.system
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

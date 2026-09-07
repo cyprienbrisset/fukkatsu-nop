@@ -9,13 +9,13 @@ plugins {
 }
 
 android {
-    namespace = "com.cyprienbrisset.myportal"
+    namespace = "com.cyprienbrisset.fukkatsunop"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.cyprienbrisset.myportal"
+        applicationId = "com.cyprienbrisset.fukkatsunop"
         minSdk = 28
         targetSdk = 37
         versionCode = 1
@@ -95,7 +95,7 @@ tasks.register("deployDebug") {
         fun run(vararg cmd: String) = ProcessBuilder(*cmd).inheritIO().start().waitFor()
         check(run(adb, "install", "-r", apk.get().asFile.absolutePath) == 0) { "adb install failed" }
         run(adb, "shell", "am", "start",
-            "-n", "com.cyprienbrisset.myportal/.MainActivity",
+            "-n", "com.cyprienbrisset.fukkatsunop/.MainActivity",
             "-a", "android.intent.action.MAIN",
             "-c", "android.intent.category.LAUNCHER")
     }

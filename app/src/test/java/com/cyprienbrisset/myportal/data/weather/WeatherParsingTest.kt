@@ -1,4 +1,4 @@
-package com.cyprienbrisset.myportal.data.weather
+package com.cyprienbrisset.fukkatsunop.data.weather
 
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals

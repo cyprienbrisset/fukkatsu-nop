@@ -1,4 +1,4 @@
-package com.cyprienbrisset.myportal.airplay
+package com.cyprienbrisset.fukkatsunop.airplay
 
 import org.junit.Assert.*
 import org.junit.Test

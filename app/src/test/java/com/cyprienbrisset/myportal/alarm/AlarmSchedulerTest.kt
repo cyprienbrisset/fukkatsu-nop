@@ -1,6 +1,6 @@
-package com.cyprienbrisset.myportal.alarm
+package com.cyprienbrisset.fukkatsunop.alarm
 
-import com.cyprienbrisset.myportal.data.alarm.AlarmEntity
+import com.cyprienbrisset.fukkatsunop.data.alarm.AlarmEntity
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.LocalDateTime

@@ -1,4 +1,4 @@
-package com.cyprienbrisset.myportal.integration.google
+package com.cyprienbrisset.fukkatsunop.integration.google
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

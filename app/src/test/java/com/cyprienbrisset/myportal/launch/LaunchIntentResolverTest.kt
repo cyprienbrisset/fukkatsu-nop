@@ -1,4 +1,4 @@
-package com.cyprienbrisset.myportal.launch
+package com.cyprienbrisset.fukkatsunop.launch
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

@@ -1,4 +1,4 @@
-package com.cyprienbrisset.myportal.alarm
+package com.cyprienbrisset.fukkatsunop.alarm
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

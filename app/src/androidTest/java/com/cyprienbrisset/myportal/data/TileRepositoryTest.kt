@@ -1,11 +1,11 @@
-package com.cyprienbrisset.myportal.data
+package com.cyprienbrisset.fukkatsunop.data
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.cyprienbrisset.myportal.data.tile.TileEntity
-import com.cyprienbrisset.myportal.data.tile.TileRepository
-import com.cyprienbrisset.myportal.data.tile.TileType
+import com.cyprienbrisset.fukkatsunop.data.tile.TileEntity
+import com.cyprienbrisset.fukkatsunop.data.tile.TileRepository
+import com.cyprienbrisset.fukkatsunop.data.tile.TileType
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals

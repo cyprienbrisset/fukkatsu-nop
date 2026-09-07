@@ -1,4 +1,4 @@
-package com.cyprienbrisset.myportal.media
+package com.cyprienbrisset.fukkatsunop.media
 
 import android.media.session.PlaybackState
 import org.junit.Assert.assertEquals

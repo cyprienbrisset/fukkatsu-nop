@@ -116,16 +116,16 @@
         </service>
 
         <receiver android:name=".system.DndOffReceiver" android:exported="false">
-            <intent-filter><action android:name="com.cyprienbrisset.myportal.DND_OFF" /></intent-filter>
+            <intent-filter><action android:name="com.cyprienbrisset.fukkatsunop.DND_OFF" /></intent-filter>
         </receiver>
 
         <receiver android:name=".store.InstallResultReceiver" android:exported="false">
-            <intent-filter><action android:name="com.cyprienbrisset.myportal.INSTALL_STATUS" /></intent-filter>
+            <intent-filter><action android:name="com.cyprienbrisset.fukkatsunop.INSTALL_STATUS" /></intent-filter>
         </receiver>
 
         <receiver android:name=".system.FirmwareCheckReceiver" android:exported="false">
             <intent-filter>
-                <action android:name="com.cyprienbrisset.myportal.FIRMWARE_CHECK" />
+                <action android:name="com.cyprienbrisset.fukkatsunop.FIRMWARE_CHECK" />
             </intent-filter>
         </receiver>
 
@@ -154,8 +154,8 @@
         <receiver android:name=".alarm.AlarmReceiver" android:exported="false" />
         <receiver android:name=".system.DarkModeReceiver" android:exported="false">
             <intent-filter>
-                <action android:name="com.cyprienbrisset.myportal.DARK_MODE_ON" />
-                <action android:name="com.cyprienbrisset.myportal.DARK_MODE_OFF" />
+                <action android:name="com.cyprienbrisset.fukkatsunop.DARK_MODE_ON" />
+                <action android:name="com.cyprienbrisset.fukkatsunop.DARK_MODE_OFF" />
             </intent-filter>
         </receiver>
         <receiver android:name=".alarm.BootReceiver" android:exported="true">

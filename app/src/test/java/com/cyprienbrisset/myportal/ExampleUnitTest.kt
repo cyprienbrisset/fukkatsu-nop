@@ -1,4 +1,4 @@
-package com.cyprienbrisset.myportal
+package com.cyprienbrisset.fukkatsunop
 
 import org.junit.Test
 
