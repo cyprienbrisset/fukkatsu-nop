@@ -81,6 +81,13 @@ class GoogleViewModel(
 
     fun retryAgenda() { viewModelScope.launch { loadAgenda() } }
 
+    fun createEvent(title: String, start: java.time.Instant, end: java.time.Instant) {
+        viewModelScope.launch {
+            runCatching { calendarRepo.createEvent(title, start, end) }
+                .onSuccess { ok -> if (ok) loadAgenda() }
+        }
+    }
+
     private fun loadAll() {
         viewModelScope.launch { loadAgenda() }
     }

@@ -6,12 +6,15 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 
 data class CalendarEvent(
     val id: String,
@@ -32,10 +35,10 @@ class GoogleCalendarRepo(
 ) {
     suspend fun fetchEvents(): List<CalendarEvent> = withContext(Dispatchers.IO) {
         val token = authManager.validToken() ?: return@withContext emptyList()
-        val now     = Instant.now()
-        val maxTime = now.plusSeconds(14L * 24 * 3600)
-        val url = "$CALENDAR_URL?timeMin=${now}&timeMax=${maxTime}" +
-                  "&maxResults=50&orderBy=startTime&singleEvents=true"
+        val now     = Instant.now().truncatedTo(ChronoUnit.SECONDS)
+        val maxTime = now.plusSeconds(60L * 24 * 3600)
+        val url = "$CALENDAR_URL?timeMin=$now&timeMax=$maxTime" +
+                  "&maxResults=100&orderBy=startTime&singleEvents=true"
         val response = http.newCall(
             Request.Builder().url(url).header("Authorization", "Bearer $token").build()
         ).execute()
@@ -45,6 +48,21 @@ class GoogleCalendarRepo(
         }
         parseEventsResponse(raw)
     }
+    suspend fun createEvent(title: String, start: Instant, end: Instant): Boolean =
+        withContext(Dispatchers.IO) {
+            val token = authManager.validToken() ?: return@withContext false
+            val s = start.truncatedTo(ChronoUnit.SECONDS)
+            val e = end.truncatedTo(ChronoUnit.SECONDS)
+            val json = """{"summary":"$title","start":{"dateTime":"$s"},"end":{"dateTime":"$e"}}"""
+            val response = http.newCall(
+                Request.Builder()
+                    .url(CALENDAR_URL)
+                    .header("Authorization", "Bearer $token")
+                    .post(json.toRequestBody("application/json".toMediaType()))
+                    .build()
+            ).execute()
+            response.use { it.isSuccessful }
+        }
 }
 
 // ── Pure helper ──────────────────────────────────────────────────────────────
