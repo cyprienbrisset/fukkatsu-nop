@@ -4,6 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 
 private val DarkScheme = darkColorScheme(
     primary = Shu,
@@ -36,6 +37,7 @@ fun isDaytime(hour: Int) = hour in 7..19
 
 @Composable
 fun MyPortalTheme(darkTheme: Boolean = true, content: @Composable () -> Unit) {
+    SideEffect { applyColorPalette(darkTheme) }
     MaterialTheme(
         colorScheme = if (darkTheme) DarkScheme else LightScheme,
         typography = PortalTypography,
