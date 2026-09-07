@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cyprienbrisset.myportal.overlay.OverlayService
 import com.cyprienbrisset.myportal.system.DarkModeManager
+import com.cyprienbrisset.myportal.system.FirmwareWatcher
 import com.cyprienbrisset.myportal.ui.sumi.HankoSeal
 import com.cyprienbrisset.myportal.ui.theme.Mincho
 import com.cyprienbrisset.myportal.ui.theme.Shu
@@ -96,6 +97,7 @@ fun SettingsScreen(
             }
         }
 
+        SettingRow("Surveillance firmware", subtitle = FirmwareWatcher.currentBuild(), chevron = false) {}
         SettingRow("Réglages système") {
             ctx.startActivity(Intent(Settings.ACTION_SETTINGS))
         }
@@ -103,12 +105,17 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SettingRow(text: String, chevron: Boolean = true, onClick: () -> Unit) {
+private fun SettingRow(text: String, subtitle: String? = null, chevron: Boolean = true, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().heightIn(min = 68.dp).clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text, color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp, modifier = Modifier.weight(1f))
+        Column(Modifier.weight(1f)) {
+            Text(text, color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
+            if (subtitle != null) {
+                Text(subtitle, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), fontSize = 12.sp, fontFamily = Mincho)
+            }
+        }
         Spacer(Modifier.width(10.dp))
         if (chevron) Text("›", color = Shu, fontSize = 22.sp)
     }

@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.cyprienbrisset.myportal.system.DarkModeManager
+import com.cyprienbrisset.myportal.system.FirmwareWatcher
 import com.cyprienbrisset.myportal.ui.AppNav
 import com.cyprienbrisset.myportal.ui.theme.Mincho
 import com.cyprienbrisset.myportal.ui.theme.MyPortalTheme
@@ -65,6 +66,7 @@ class MainActivity : ComponentActivity() {
             notifPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
         DarkModeManager.initFromSystem(this)
+        FirmwareWatcher.init(this)
         enableEdgeToEdge()
 
         setContent {

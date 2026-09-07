@@ -123,6 +123,12 @@
             <intent-filter><action android:name="com.cyprienbrisset.myportal.INSTALL_STATUS" /></intent-filter>
         </receiver>
 
+        <receiver android:name=".system.FirmwareCheckReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="com.cyprienbrisset.myportal.FIRMWARE_CHECK" />
+            </intent-filter>
+        </receiver>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
