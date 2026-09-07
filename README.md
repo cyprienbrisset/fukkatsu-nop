@@ -43,6 +43,48 @@ Le thème bascule automatiquement entre mode nuit (Sumi) et mode jour (Washi) se
 
 ---
 
+## Intégration Google — Agenda & Meet
+
+Un troisième écran (glisser vers la droite depuis l'accueil) connecte le Portal à votre compte Google via le **Device Authorization Flow** — un code s'affiche sur le Portal, vous l'approuvez depuis n'importe quel autre appareil, zéro navigateur requis sur le Portal :
+
+- **Agenda** : événements des 60 prochains jours, groupés par jour, indicateur vermillon pour les réunions imminentes (< 1 h). Créez un événement directement depuis le Portal via le bouton « + ».
+- **Meet** : réunions Google Meet des 48 prochaines heures avec compte à rebours en direct et bouton « Rejoindre ».
+
+Scope limité à `calendar` (lecture/écriture). Aucune dépendance Gmail. Tokens stockés localement via DataStore.
+
+---
+
+## Surveillance firmware
+
+Un `AlarmManager` vérifie quotidiennement `android.os.Build.DISPLAY`. Si la valeur change (mise à jour OTA Meta), une notification haute priorité alerte immédiatement — permettant de vérifier que l'ADB et les overlays système restent fonctionnels après la mise à jour. La version courante du firmware est visible dans **Réglages → Surveillance firmware**.
+
+---
+
+## Thèmes saisonniers
+
+L'accent vermillon **朱** adopte une variante saisonnière automatique :
+
+| Saison | Mois | Couleur |
+|---|---|---|
+| 桜 Sakura | Mars — Mai | Rose `#E8A0AF` |
+| 朱 Shu | Juin — Août, Déc. | Vermillon `#C1272D` |
+| 紅葉 Momiji | Septembre — Novembre | Orangé `#C85A14` |
+
+La bascule est entièrement automatique, sans configuration. Dans l'esprit de la papeterie japonaise du projet.
+
+---
+
+## Commandes vocales locales — sans cloud
+
+Le micro-réseau du Portal est réactivé via **Vosk**, moteur de reconnaissance 100% embarqué (zéro cloud, zéro GMS) :
+
+- Dites **« Portal »** — le wake word est détecté localement en continu, aucun bouton requis
+- **Commandes** : `ouvre [nom app]`, `mode nuit`, `mode jour`, `éteins l'écran`, `météo`, `alarme`
+- Retour visuel : bannière en bas de l'écran pendant la fenêtre d'écoute (5 s)
+- Modèle `vosk-model-small-fr-0.22` (~40 MB), téléchargé à la première activation depuis **Réglages → Commandes vocales**
+
+---
+
 ## FukkaStore — installer des apps sans Google Play
 
 Le Portal n'a pas de Play Store. FukkaStore comble ce manque : connectez votre compte Google une seule fois, puis parcourez et installez des applications directement depuis le catalogue officiel Google Play.
