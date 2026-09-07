@@ -27,6 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cyprienbrisset.myportal.overlay.OverlayService
+import com.cyprienbrisset.myportal.system.DarkModeManager
 import com.cyprienbrisset.myportal.ui.sumi.HankoSeal
 import com.cyprienbrisset.myportal.ui.theme.Mincho
 import com.cyprienbrisset.myportal.ui.theme.Shu
@@ -39,6 +41,7 @@ fun SettingsScreen(
     onWeather: () -> Unit,
     onStore: () -> Unit = {},
     onInstalledApps: () -> Unit = {},
+    onDarkSchedule: () -> Unit = {},
 ) {
     val ctx = LocalContext.current
     var verifierDisabled by remember {
@@ -60,6 +63,7 @@ fun SettingsScreen(
         SettingRow("Ville météo") { onWeather() }
         SettingRow("FukkaStore") { onStore() }
         SettingRow("Applications installées") { onInstalledApps() }
+        SettingRow("Mode nuit automatique") { onDarkSchedule() }
         SettingRow(
             text = if (verifierDisabled) "Vérificateur désactivé ✓" else "Activer FukkaStore (vérificateur)",
             chevron = !verifierDisabled,
@@ -73,6 +77,25 @@ fun SettingsScreen(
                 }
             }
         }
+        // Overlay
+        var overlayRunning by remember { mutableStateOf(OverlayService.isRunning) }
+        SettingRow(
+            text = if (overlayRunning) "Contrôles flottants actifs ✓" else "Activer les contrôles flottants",
+            chevron = !overlayRunning,
+        ) {
+            if (overlayRunning) {
+                ctx.startService(Intent(ctx, OverlayService::class.java).apply { action = OverlayService.ACTION_STOP })
+                overlayRunning = false
+            } else {
+                if (!Settings.canDrawOverlays(ctx)) {
+                    ctx.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                } else {
+                    ctx.startForegroundService(Intent(ctx, OverlayService::class.java))
+                    overlayRunning = true
+                }
+            }
+        }
+
         SettingRow("Réglages système") {
             ctx.startActivity(Intent(Settings.ACTION_SETTINGS))
         }

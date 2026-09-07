@@ -18,7 +18,7 @@ object AlarmNotifications {
             val channel = NotificationChannel(
                 CHANNEL_ID, "Réveil", NotificationManager.IMPORTANCE_HIGH,
             ).apply {
-                description = "Alarmes de MyPortal"
+                description = "Alarmes de FukkatsuNoP"
                 setBypassDnd(true)
                 setSound(null, null) // sound handled by the foreground service
             }

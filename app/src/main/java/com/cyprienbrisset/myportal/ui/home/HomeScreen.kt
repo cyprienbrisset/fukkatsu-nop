@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.NotificationsOff
 import androidx.compose.material.icons.rounded.PowerSettingsNew
@@ -29,6 +31,7 @@ import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +49,7 @@ import com.cyprienbrisset.myportal.data.tile.TileEntity
 import com.cyprienbrisset.myportal.data.tile.TileType
 import com.cyprienbrisset.myportal.integration.NotificationBadgeRepository
 import com.cyprienbrisset.myportal.launch.LaunchIntentResolver
+import com.cyprienbrisset.myportal.system.DarkModeManager
 import com.cyprienbrisset.myportal.system.DndController
 import com.cyprienbrisset.myportal.system.ScreenLock
 import com.cyprienbrisset.myportal.ui.sumi.SealIconButton
@@ -78,6 +82,7 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, vm: HomeViewMo
     val airPlayState by vm.airPlayState.collectAsStateWithLifecycle()
     var quickActionsTile by remember { mutableStateOf<TileEntity?>(null) }
     var reorderMode by remember { mutableStateOf(false) }
+    val isDark by DarkModeManager.isDarkFlow.collectAsState()
 
     LaunchedEffect(airPlayState) {
         if (airPlayState is AirPlayState.Streaming) {
@@ -210,6 +215,11 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, vm: HomeViewMo
                             contentDescription = "Réglages",
                             onClick = onOpenSettings,
                         )
+                        SealIconButton(
+                            icon = if (isDark) Icons.Rounded.LightMode else Icons.Rounded.DarkMode,
+                            contentDescription = if (isDark) "Mode jour" else "Mode nuit",
+                            onClick = { DarkModeManager.apply(ctx, !isDark) },
+                        )
                     }
                 }
                 VerticalVermilionRule(Modifier.align(Alignment.CenterVertically).padding(horizontal = 8.dp), length = 220.dp)
@@ -297,6 +307,11 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, vm: HomeViewMo
                     icon = Icons.Rounded.Settings,
                     contentDescription = "Réglages",
                     onClick = onOpenSettings,
+                )
+                SealIconButton(
+                    icon = if (isDark) Icons.Rounded.LightMode else Icons.Rounded.DarkMode,
+                    contentDescription = if (isDark) "Mode jour" else "Mode nuit",
+                    onClick = { DarkModeManager.apply(ctx, !isDark) },
                 )
             }
         }

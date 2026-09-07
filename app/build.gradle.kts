@@ -72,3 +72,18 @@ dependencies {
     androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.kotlinx.coroutines.test)
 }
+
+// Deploy + launch in one command:  ./gradlew deployDebug
+tasks.register("deployDebug") {
+    dependsOn("assembleDebug")
+    val apk = layout.buildDirectory.file("outputs/apk/debug/app-debug.apk")
+    doLast {
+        val adb = "${System.getenv("HOME")}/Library/Android/sdk/platform-tools/adb"
+        fun run(vararg cmd: String) = ProcessBuilder(*cmd).inheritIO().start().waitFor()
+        check(run(adb, "install", "-r", apk.get().asFile.absolutePath) == 0) { "adb install failed" }
+        run(adb, "shell", "am", "start",
+            "-n", "com.cyprienbrisset.myportal/.MainActivity",
+            "-a", "android.intent.action.MAIN",
+            "-c", "android.intent.category.LAUNCHER")
+    }
+}

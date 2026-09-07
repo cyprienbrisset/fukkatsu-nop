@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import com.cyprienbrisset.myportal.data.AppDatabase
 import com.cyprienbrisset.myportal.data.alarm.AlarmRepository
+import com.cyprienbrisset.myportal.system.DarkModeManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -12,6 +13,7 @@ import kotlinx.coroutines.launch
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
+        DarkModeManager.reschedule(context)
         context.startForegroundService(
             Intent(context, com.cyprienbrisset.myportal.airplay.AirPlayService::class.java)
         )

@@ -13,6 +13,7 @@ object Routes {
     const val ALARM_EDIT = "alarm_edit"
     const val STORE = "store"
     const val INSTALLED_APPS = "installed_apps"
+    const val DARK_SCHEDULE = "dark_schedule"
 }
 
 @Composable
@@ -20,7 +21,7 @@ fun AppNav() {
     val nav = rememberNavController()
     NavHost(navController = nav, startDestination = Routes.HOME) {
         composable(Routes.HOME) {
-            com.cyprienbrisset.myportal.ui.home.HomeScreen(
+            com.cyprienbrisset.myportal.ui.home.HomeShell(
                 onOpenSettings = { nav.navigate(Routes.SETTINGS) },
                 onAddTile = { nav.navigate(Routes.TILE_EDIT) },
             )
@@ -33,6 +34,7 @@ fun AppNav() {
                 onWeather = { nav.navigate(Routes.SETTINGS + "/weather") },
                 onStore = { nav.navigate(Routes.STORE) },
                 onInstalledApps = { nav.navigate(Routes.INSTALLED_APPS) },
+                onDarkSchedule = { nav.navigate(Routes.DARK_SCHEDULE) },
             )
         }
         composable(Routes.INSTALLED_APPS) {
@@ -55,6 +57,9 @@ fun AppNav() {
         }
         composable(Routes.ALARM_EDIT) {
             com.cyprienbrisset.myportal.ui.alarms.AlarmEditScreen(onDone = { nav.popBackStack() })
+        }
+        composable(Routes.DARK_SCHEDULE) {
+            com.cyprienbrisset.myportal.ui.settings.DarkModeScheduleScreen(onBack = { nav.popBackStack() })
         }
     }
 }

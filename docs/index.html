@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>復活 Fukkatsu — Launcher pour Meta Portal</title>
-  <meta name="description" content="Fukkatsu transforme le Meta Portal (1ère et 2ème génération) en hub maison permanent. Esthétique encre japonaise, zéro dépendance Google."/>
+  <title>復活 FukkatsuNoP — Launcher pour Meta Portal</title>
+  <meta name="description" content="FukkatsuNoP transforme le Meta Portal (1ère et 2ème génération) en hub maison permanent. Esthétique encre japonaise, zéro dépendance Google."/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet"/>
@@ -218,12 +218,12 @@
 <!-- ── Nav ─────────────────────────────────────────────────── -->
 <nav>
   <div class="nav-inner">
-    <a class="nav-logo" href="#"><span class="jp">復活</span> Fukkatsu</a>
+    <a class="nav-logo" href="#"><span class="jp">復活</span> FukkatsuNoP</a>
     <div class="nav-links">
       <a href="#features">Fonctionnalités</a>
       <a href="#gestes">Gestes</a>
       <a href="#install">Installation</a>
-      <a class="nav-cta" href="https://github.com/cyprienbrisset/fukkatsu" target="_blank" rel="noopener">GitHub →</a>
+      <a class="nav-cta" href="https://github.com/cyprienbrisset/fukkatsu-nop" target="_blank" rel="noopener">GitHub →</a>
     </div>
   </div>
 </nav>
@@ -233,24 +233,24 @@
   <div class="hero-kanji" aria-hidden="true">復</div>
   <div class="hero-inner">
     <div class="hero-text">
-      <p class="hero-eyebrow">Meta Portal Plus 1ère &amp; 2ème Gen · Android 10 · Sans GMS</p>
+      <p class="hero-eyebrow">Meta Portal Plus 1ère &amp; 2ème Gen · Android 9 / 10 · Sans GMS</p>
       <h1>
-        <span class="jp">復活 fukkatsu</span>
+        <span class="jp">復活 fukkatsuNoP</span>
         Un hub maison qui s'éveille au quotidien
       </h1>
       <p class="hero-desc">
         Remplace l'interface stock du Portal par un launcher permanent — horloge ambiante, météo, contacts, musique et apps en un coup d'œil. Esthétique encre japonaise, zéro dépendance Google.
       </p>
       <div class="hero-btns">
-        <a class="btn-prim" href="https://github.com/cyprienbrisset/fukkatsu/releases" target="_blank" rel="noopener">Télécharger</a>
-        <a class="btn-sec" href="https://github.com/cyprienbrisset/fukkatsu" target="_blank" rel="noopener">
+        <a class="btn-prim" href="https://github.com/cyprienbrisset/fukkatsu-nop/releases" target="_blank" rel="noopener">Télécharger</a>
+        <a class="btn-sec" href="https://github.com/cyprienbrisset/fukkatsu-nop" target="_blank" rel="noopener">
           <svg class="icon"><use href="#i-github"/></svg>
           Code source
         </a>
       </div>
     </div>
     <div class="device-wrap">
-      <div class="device" role="img" aria-label="Aperçu de l'interface Fukkatsu">
+      <div class="device" role="img" aria-label="Aperçu de l'interface FukkatsuNoP">
         <div class="device-left">
           <div class="mock-brand">復活</div>
           <div class="mock-time">21:34</div>
@@ -291,7 +291,7 @@
   <div class="container">
     <p class="section-tag">Fonctionnalités</p>
     <h2>Tout sur un seul écran, en permanence</h2>
-    <p class="lead">Fukkatsu est conçu pour rester allumé — chaque information utile visible d'un coup d'œil, chaque action à portée d'un geste.</p>
+    <p class="lead">FukkatsuNoP est conçu pour rester allumé — chaque information utile visible d'un coup d'œil, chaque action à portée d'un geste.</p>
 
     <div class="features-grid">
       <div class="feat-card">
@@ -500,7 +500,11 @@
           </li>
           <li>
             <svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg>
-            <span>Filtre automatique des apps incompatibles avec l'API 29 du Portal</span>
+            <span>Filtre automatique des apps incompatibles avec le Portal (API 28/29)</span>
+          </li>
+          <li>
+            <svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg>
+            <span>Filtre ABI : seuls les splits compatibles avec le processeur sont installés — évite les crashes sur Portal 1ère gen</span>
           </li>
           <li>
             <svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg>
@@ -542,7 +546,7 @@
         <li>
           <div>
             <strong>Lancer le script</strong>
-            <span>Une commande construit l'APK, l'installe, accorde toutes les permissions et définit Fukkatsu comme launcher principal.</span>
+            <span>Une commande construit l'APK, l'installe, accorde toutes les permissions et définit FukkatsuNoP comme launcher principal.</span>
           </div>
         </li>
       </ol>
@@ -554,13 +558,11 @@
             Terminal
           </div>
           <pre><span class="cm"># Cloner</span>
-git clone https://github.com/cyprienbrisset/fukkatsu.git
-cd fukkatsu
+git clone https://github.com/cyprienbrisset/fukkatsu-nop.git
+cd fukkatsu-nop
 
 <span class="cm"># Construire, installer et configurer</span>
-bash scripts/provision-portal.sh \
-  --disable-verifier \
-  --set-launcher</pre>
+bash scripts/provision-portal.sh --set-launcher</pre>
         </div>
         <p style="margin-top:16px;font-size:0.78rem;color:var(--muted2);">
           Nécessite <strong style="color:var(--muted)">Android Studio</strong> (JDK intégré) et <strong style="color:var(--muted)">ADB</strong> dans <code style="color:var(--muted2)">~/Library/Android/sdk/platform-tools/</code>.
@@ -576,14 +578,14 @@ bash scripts/provision-portal.sh \
     <div class="footer-brand" aria-hidden="true">墨</div>
     <div class="footer-info">
       <p>MIT — Copyright © 2024–2026 <a href="https://github.com/cyprienbrisset" target="_blank" rel="noopener">Cyprien Brisset</a></p>
-      <p style="margin-top:4px">Testé sur le <strong style="color:var(--muted)">Meta Portal Plus 1ère &amp; 2ème Gen</strong> · Android 10 · Jetpack Compose</p>
+      <p style="margin-top:4px">Testé sur le <strong style="color:var(--muted)">Meta Portal Plus 1ère &amp; 2ème Gen</strong> · Android 9 / 10 · Jetpack Compose</p>
     </div>
     <div class="footer-links">
-      <a href="https://github.com/cyprienbrisset/fukkatsu" target="_blank" rel="noopener">
+      <a href="https://github.com/cyprienbrisset/fukkatsu-nop" target="_blank" rel="noopener">
         <svg class="icon"><use href="#i-github"/></svg>
         GitHub
       </a>
-      <a href="https://github.com/cyprienbrisset/fukkatsu/blob/main/README.md" target="_blank" rel="noopener">
+      <a href="https://github.com/cyprienbrisset/fukkatsu-nop/blob/main/README.md" target="_blank" rel="noopener">
         <svg class="icon"><use href="#i-terminal"/></svg>
         README
       </a>

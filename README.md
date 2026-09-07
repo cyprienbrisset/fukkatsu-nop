@@ -1,6 +1,6 @@
 <div align="center">
 
-# 復活 Fukkatsu
+# 復活 FukkatsuNoP
 
 **Launcher maison pour Meta Portal Plus (1ère & 2ème génération)**
 
@@ -8,15 +8,15 @@
 
 ---
 
-[![Android 10](https://img.shields.io/badge/Android-10-3DDC84?style=flat-square&logo=android&logoColor=white)](https://github.com/cyprienbrisset/fukkatsu)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://github.com/cyprienbrisset/fukkatsu)
+[![Android 9/10](https://img.shields.io/badge/Android-9%20%2F%2010-3DDC84?style=flat-square&logo=android&logoColor=white)](https://github.com/cyprienbrisset/fukkatsu-nop)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://github.com/cyprienbrisset/fukkatsu-nop)
 [![Licence MIT](https://img.shields.io/badge/Licence-MIT-C1272D?style=flat-square)](LICENSE)
 
 </div>
 
 ---
 
-**復活** (*fukkatsu*, « renaissance ») transforme un Meta Portal en hub maison permanent. Testé sur le **Portal Plus 1ère génération** et le **Portal 2ème génération**. L'interface s'inspire de la papeterie japonaise : encre Sumi profonde la nuit, parchemin Washi chaud le jour. Tout fonctionne sans connexion Google — pas de compte, pas de Play Store requis.
+**復活** (*fukkatsuNoP*, « renaissance ») transforme un Meta Portal en hub maison permanent. Testé sur le **Portal Plus 1ère génération** (Android 9, API 28) et le **Portal 2ème génération** (Android 10, API 29). L'interface s'inspire de la papeterie japonaise : encre Sumi profonde la nuit, parchemin Washi chaud le jour. Tout fonctionne sans connexion Google — pas de compte, pas de Play Store requis.
 
 ---
 
@@ -52,6 +52,8 @@ Le Portal n'a pas de Play Store. FukkaStore comble ce manque : connectez votre c
 - Tap sur une app pour afficher sa fiche complète (description, captures d'écran, note)
 - Une seule pression pour télécharger et installer
 - Filtre automatique des apps incompatibles avec le Portal
+- Filtre ABI automatique : seuls les splits compatibles avec le processeur de l'appareil sont installés
+- **Portal 1ère génération** : installation silencieuse via AccessibilityService (l'interface système du Portal masque la fenêtre de confirmation standard)
 
 ---
 
@@ -92,10 +94,20 @@ Typographie **Noto Serif JP** (Mincho). Accent vermillon **朱** `#C1272D` invar
 Le Portal doit avoir le **débogage USB** activé. Branchez-le et lancez :
 
 ```bash
-bash scripts/provision-portal.sh --disable-verifier --set-launcher
+bash scripts/provision-portal.sh --set-launcher
 ```
 
-Ce script construit l'APK, l'installe, accorde les permissions nécessaires (Ne Pas Déranger, luminosité, administrateur d'appareil) et définit Fukkatsu comme launcher par défaut.
+Ce script construit l'APK si besoin, l'installe, et accorde automatiquement toutes les permissions requises via ADB :
+
+| Permission | Rôle |
+|---|---|
+| `WRITE_SECURE_SETTINGS` | Active l'AccessibilityService d'auto-install (Portal 1ère gen) |
+| `WRITE_SETTINGS` (appops) | Contrôle de la luminosité |
+| Notification Policy | Accès Ne Pas Déranger |
+| Device Admin | Extinction de l'écran |
+| Verifier désactivé | Empêche les blocages d'installation Play Protect (pas de GMS) |
+
+Voir `docs/technical.md` pour le détail technique complet.
 
 ---
 
