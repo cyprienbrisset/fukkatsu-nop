@@ -1,6 +1,6 @@
 <div align="center">
 
-# 復活 FukkatsuNoP
+# 復活 Fukkatsu No P
 
 **Launcher maison pour Meta Portal Plus (1ère & 2ème génération)**
 
@@ -16,7 +16,7 @@
 
 ---
 
-**復活** (*fukkatsuNoP*, « renaissance ») transforme un Meta Portal en hub maison permanent. Testé sur le **Portal Plus 1ère génération** (Android 9, API 28) et le **Portal 2ème génération** (Android 10, API 29). L'interface s'inspire de la papeterie japonaise : encre Sumi profonde la nuit, parchemin Washi chaud le jour. Tout fonctionne sans connexion Google — pas de compte, pas de Play Store requis.
+**復活** (*fukkatsu no p*, « renaissance ») transforme un Meta Portal en hub maison permanent. Testé sur le **Portal Plus 1ère génération** (Android 9, API 28) et le **Portal 2ème génération** (Android 10, API 29). L'interface s'inspire de la papeterie japonaise : encre Sumi profonde la nuit, parchemin Washi chaud le jour. Tout fonctionne sans connexion Google — pas de compte, pas de Play Store requis.
 
 ---
 

@@ -83,7 +83,7 @@ fun HomeBranding(portrait: Boolean, modifier: Modifier = Modifier) {
             fontSize = if (portrait) 84.sp else 120.sp,
         )
         Text(
-            "F U K K A T S U  N o P",
+            "F U K K A T S U  N O  P",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 13.sp,
             letterSpacing = 6.sp,

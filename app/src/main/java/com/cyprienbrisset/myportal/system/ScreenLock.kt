@@ -19,7 +19,7 @@ object ScreenLock {
             ctx.startActivity(
                 Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
                     .putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, admin(ctx))
-                    .putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Autorise FukkatsuNoP à éteindre l'écran.")
+                    .putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Autorise Fukkatsu No P à éteindre l'écran.")
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
         }

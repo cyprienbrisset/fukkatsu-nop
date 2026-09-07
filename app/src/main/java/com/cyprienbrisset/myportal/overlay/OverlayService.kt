@@ -91,7 +91,7 @@ class OverlayService : Service() {
             PendingIntent.FLAG_IMMUTABLE,
         )
         return NotificationCompat.Builder(this, ch)
-            .setContentTitle("Contrôles FukkatsuNoP actifs")
+            .setContentTitle("Contrôles Fukkatsu No P actifs")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .addAction(0, "Arrêter", stopPi)
             .setPriority(NotificationCompat.PRIORITY_MIN)
