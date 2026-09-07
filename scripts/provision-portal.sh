@@ -64,7 +64,9 @@ done
 
 # --- Sélection de l'appareil --------------------------------------------------
 if [ -z "$SERIAL" ]; then
-  mapfile -t DEVICES < <("$ADB" devices | awk 'NR>1 && $2=="device" {print $1}')
+  # mapfile/readarray (bash 4+) absent sur macOS bash 3 — on utilise read dans une boucle
+  DEVICES=()
+  while IFS= read -r line; do DEVICES+=("$line"); done < <("$ADB" devices | awk 'NR>1 && $2=="device" {print $1}')
   case "${#DEVICES[@]}" in
     0) die "Aucun appareil adb connecté. Branche le Portal (débogage USB activé)." ;;
     1) SERIAL="${DEVICES[0]}" ;;
@@ -105,6 +107,33 @@ if "${A[@]}" shell cmd notification allow_dnd "$PKG" >/dev/null 2>&1; then
   ok "Accès DND accordé."
 else
   warn "Impossible d'accorder le DND automatiquement (à activer dans les réglages si besoin)."
+fi
+
+# Notification Listener — requis pour MediaSessionManager.getActiveSessions()
+# Sur Android 9 (Portal 1ère gen), cmd notification allow_listener n'existe pas ;
+# on modifie directement le réglage sécurisé via shell (pas besoin de WRITE_SECURE_SETTINGS
+# car le shell ADB a les droits pour écrire enabled_notification_listeners).
+info "Activation du Notification Listener (lecteur en cours de lecture)…"
+LISTENER="$PKG/.system.MediaListenerService"
+EXISTING=$("${A[@]}" shell settings get secure enabled_notification_listeners 2>/dev/null || true)
+if echo "$EXISTING" | grep -qF "$LISTENER"; then
+  ok "Notification Listener déjà activé."
+else
+  UPDATED="${EXISTING:-}"
+  [ -n "$UPDATED" ] && [ "$UPDATED" != "null" ] && UPDATED="$UPDATED:" || UPDATED=""
+  UPDATED="${UPDATED}${LISTENER}"
+  if "${A[@]}" shell settings put secure enabled_notification_listeners "$UPDATED" >/dev/null 2>&1; then
+    ok "Notification Listener ajouté à la liste."
+  else
+    warn "Impossible d'ajouter le Notification Listener (à faire manuellement : Réglages → Accès spécial → Accès aux notifications → Fukkatsu)."
+  fi
+fi
+# Sur Android 9, écrire dans enabled_notification_listeners ne suffit pas à déclencher
+# le bind — il faut aussi appeler cmd notification allow_listener.
+if "${A[@]}" shell cmd notification allow_listener "$LISTENER" >/dev/null 2>&1; then
+  ok "Notification Listener actif — le lecteur en cours sera visible sur l'écran d'accueil."
+else
+  warn "cmd notification allow_listener non supporté — le lecteur apparaîtra au prochain redémarrage."
 fi
 
 info "Attribution du rôle administrateur d'appareil (extinction écran)…"

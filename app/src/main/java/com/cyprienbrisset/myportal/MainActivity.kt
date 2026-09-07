@@ -8,22 +8,56 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.ui.Modifier
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.cyprienbrisset.myportal.system.DarkModeManager
 import com.cyprienbrisset.myportal.ui.AppNav
+import com.cyprienbrisset.myportal.ui.theme.Mincho
 import com.cyprienbrisset.myportal.ui.theme.MyPortalTheme
+import com.cyprienbrisset.myportal.ui.theme.Shu
+import kotlinx.coroutines.delay
+
+// Cubic ease-out for natural deceleration
+private val EaseOut = Easing { t -> 1f - (1f - t) * (1f - t) * (1f - t) }
 
 class MainActivity : ComponentActivity() {
     private val notifPermission =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* result ignored */ }
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        // Keep system splash on screen until our Compose animation takes over
+        var splashReady = false
+        splashScreen.setKeepOnScreenCondition { !splashReady }
+
         startService(Intent(this, com.cyprienbrisset.myportal.airplay.AirPlayService::class.java))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
@@ -32,6 +66,7 @@ class MainActivity : ComponentActivity() {
         }
         DarkModeManager.initFromSystem(this)
         enableEdgeToEdge()
+
         setContent {
             val isDark by DarkModeManager.isDarkFlow.collectAsState()
             MyPortalTheme(darkTheme = isDark) {
@@ -39,9 +74,76 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    AppNav()
+                    var showSplash by remember { mutableStateOf(true) }
+
+                    // Release the system splash once our Compose tree is drawn
+                    LaunchedEffect(Unit) {
+                        splashReady = true
+                    }
+
+                    Box(Modifier.fillMaxSize()) {
+                        AppNav()
+                        if (showSplash) {
+                            SplashOverlay(onDone = { showSplash = false })
+                        }
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SplashOverlay(onDone: () -> Unit) {
+    // Phase 0 → 1: fade-in + scale up (0–1200ms)
+    // Phase 1: hold (1200–2800ms)
+    // Phase 2: fade out (2800–3700ms)
+    var phase by remember { mutableStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        delay(1200)
+        phase = 1
+        delay(1600)
+        phase = 2
+        delay(900)
+        onDone()
+    }
+
+    val alpha by animateFloatAsState(
+        targetValue = if (phase < 2) 1f else 0f,
+        animationSpec = tween(durationMillis = if (phase < 2) 1200 else 800, easing = EaseOut),
+        label = "splash-alpha",
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (phase == 0) 0.88f else if (phase == 1) 1f else 1.05f,
+        animationSpec = tween(durationMillis = 1200, easing = EaseOut),
+        label = "splash-scale",
+    )
+
+    Box(
+        Modifier
+            .fillMaxSize()
+            .alpha(alpha)
+            .background(Color(0xFF0D0E12)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "復活",
+                fontFamily = Mincho,
+                fontWeight = FontWeight.Medium,
+                color = Shu,
+                fontSize = 128.sp,
+                modifier = Modifier.scale(scale),
+            )
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = "F U K K A T S U   N O   P",
+                color = Color(0xFFECE7DD).copy(alpha = 0.55f),
+                fontSize = 11.sp,
+                letterSpacing = 7.sp,
+                fontFamily = Mincho,
+            )
         }
     }
 }

@@ -1,6 +1,11 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme (night). Uses a platform theme so no AppCompat/Material XML
-         library is required; the Compose Material3 theme is applied in-app.
-         A proper Compose theme is introduced in a later task. -->
     <style name="Theme.MyPortal" parent="android:Theme.Material.NoActionBar" />
+
+    <style name="Theme.MyPortal.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#0D0E12</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <item name="windowSplashScreenIconBackgroundColor">#C1272D</item>
+
+        <item name="postSplashScreenTheme">@style/Theme.MyPortal</item>
+    </style>
 </resources>

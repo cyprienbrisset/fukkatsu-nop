@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Splash icon — hanko seal style
+  Outer ring: Kinari ivory, inner field: transparent (icon bg = Shu red via theme),
+  center mark: two Kinari bars forming a cross (evokes a seal impression)
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer ring — Kinari ivory circle (ring shape via two concentric paths) -->
+    <path
+        android:fillColor="#ECE7DD"
+        android:pathData="
+          M54,6
+          C27.5,6 6,27.5 6,54
+          C6,80.5 27.5,102 54,102
+          C80.5,102 102,80.5 102,54
+          C102,27.5 80.5,6 54,6 Z
+          M54,16
+          C74.9,16 92,33.1 92,54
+          C92,74.9 74.9,92 54,92
+          C33.1,92 16,74.9 16,54
+          C16,33.1 33.1,16 54,16 Z" />
+
+    <!-- Inner cross mark — vertical bar -->
+    <path
+        android:fillColor="#ECE7DD"
+        android:pathData="M50,30 L58,30 L58,78 L50,78 Z" />
+
+    <!-- Inner cross mark — horizontal bar -->
+    <path
+        android:fillColor="#ECE7DD"
+        android:pathData="M30,50 L78,50 L78,58 L30,58 Z" />
+
+    <!-- Four corner dots — small Kinari accents -->
+    <path android:fillColor="#ECE7DD" android:pathData="M36,36 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <path android:fillColor="#ECE7DD" android:pathData="M72,36 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <path android:fillColor="#ECE7DD" android:pathData="M36,72 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <path android:fillColor="#ECE7DD" android:pathData="M72,72 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+
+</vector>

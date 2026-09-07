@@ -1,6 +1,16 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. Uses a platform theme so no AppCompat/Material XML
-         library is required; the Compose Material3 theme is applied in-app.
-         A proper Compose theme is introduced in a later task. -->
     <style name="Theme.MyPortal" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Splash screen theme — used only during cold start -->
+    <style name="Theme.MyPortal.Starting" parent="Theme.SplashScreen">
+        <!-- Deep Sumi black background -->
+        <item name="windowSplashScreenBackground">#0D0E12</item>
+        <!-- Hanko icon (Kinari marks drawn on Shu red circle bg) -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <item name="windowSplashScreenIconBackgroundColor">#C1272D</item>
+        <!-- Smooth brand color at bottom -->
+
+        <!-- App theme to switch to once splash exits -->
+        <item name="postSplashScreenTheme">@style/Theme.MyPortal</item>
+    </style>
 </resources>
