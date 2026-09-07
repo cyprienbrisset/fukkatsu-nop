@@ -36,9 +36,13 @@ class GoogleCalendarRepo(
         val maxTime = now.plusSeconds(14L * 24 * 3600)
         val url = "$CALENDAR_URL?timeMin=${now}&timeMax=${maxTime}" +
                   "&maxResults=50&orderBy=startTime&singleEvents=true"
-        val raw = http.newCall(
+        val response = http.newCall(
             Request.Builder().url(url).header("Authorization", "Bearer $token").build()
-        ).execute().use { it.body!!.string() }
+        ).execute()
+        val raw = response.use {
+            if (!it.isSuccessful) return@withContext emptyList()
+            it.body?.string() ?: return@withContext emptyList()
+        }
         parseEventsResponse(raw)
     }
 }
@@ -58,13 +62,19 @@ internal fun parseEventsResponse(raw: String): List<CalendarEvent> {
         val start: Instant
         val end: Instant
         if (isAllDay) {
-            start = LocalDate.parse(startObj["date"]!!.jsonPrimitive.content)
-                .atStartOfDay(ZoneOffset.UTC).toInstant()
-            end   = LocalDate.parse(endObj["date"]!!.jsonPrimitive.content)
-                .atStartOfDay(ZoneOffset.UTC).toInstant()
+            start = LocalDate.parse(
+                startObj["date"]?.jsonPrimitive?.content ?: return@mapNotNull null
+            ).atStartOfDay(ZoneOffset.UTC).toInstant()
+            end = LocalDate.parse(
+                endObj["date"]?.jsonPrimitive?.content ?: return@mapNotNull null
+            ).atStartOfDay(ZoneOffset.UTC).toInstant()
         } else {
-            start = OffsetDateTime.parse(startObj["dateTime"]!!.jsonPrimitive.content).toInstant()
-            end   = OffsetDateTime.parse(endObj["dateTime"]!!.jsonPrimitive.content).toInstant()
+            start = OffsetDateTime.parse(
+                startObj["dateTime"]?.jsonPrimitive?.content ?: return@mapNotNull null
+            ).toInstant()
+            end = OffsetDateTime.parse(
+                endObj["dateTime"]?.jsonPrimitive?.content ?: return@mapNotNull null
+            ).toInstant()
         }
         CalendarEvent(
             id          = id,
