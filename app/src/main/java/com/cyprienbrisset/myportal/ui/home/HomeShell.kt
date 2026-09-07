@@ -21,15 +21,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import com.cyprienbrisset.myportal.ui.google.GoogleScreen
 import com.cyprienbrisset.myportal.ui.theme.Shu
 import com.cyprienbrisset.myportal.ui.widgets.WidgetDashboard
 import kotlinx.coroutines.launch
 
-// Two-page shell: page 0 = widget dashboard, page 1 = home.
+// Three-page shell: page 0 = widget dashboard, page 1 = home, page 2 = Google.
 // Two-finger horizontal swipe switches pages (avoids conflict with single-finger gestures).
 @Composable
 fun HomeShell(onOpenSettings: () -> Unit, onAddTile: () -> Unit) {
-    val pagerState = rememberPagerState(initialPage = 1) { 2 }
+    val pagerState = rememberPagerState(initialPage = 1) { 3 }
     val scope = rememberCoroutineScope()
 
     Box(
@@ -60,7 +61,7 @@ fun HomeShell(onOpenSettings: () -> Unit, onAddTile: () -> Unit) {
                         when {
                             totalDx > threshold && page > 0 ->
                                 scope.launch { pagerState.animateScrollToPage(page - 1) }
-                            totalDx < -threshold && page < 1 ->
+                            totalDx < -threshold && page < 2 ->
                                 scope.launch { pagerState.animateScrollToPage(page + 1) }
                         }
                     }
@@ -74,6 +75,7 @@ fun HomeShell(onOpenSettings: () -> Unit, onAddTile: () -> Unit) {
         ) { page ->
             when (page) {
                 0 -> WidgetDashboard()
+                2 -> GoogleScreen()
                 else -> HomeScreen(onOpenSettings = onOpenSettings, onAddTile = onAddTile)
             }
         }
@@ -86,7 +88,7 @@ fun HomeShell(onOpenSettings: () -> Unit, onAddTile: () -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            repeat(2) { index ->
+            repeat(3) { index ->
                 val isSelected = pagerState.currentPage == index
                 val size by animateDpAsState(if (isSelected) 8.dp else 5.dp, label = "dot")
                 Box(
