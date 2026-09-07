@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import com.cyprienbrisset.fukkatsunop.ui.airplay.AirPlayActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -22,17 +23,23 @@ class AirPlayService : Service() {
         super.onCreate()
         createChannel()
         startForeground(NOTIF_ID, buildNotification("En attente de connexion"))
-        // JmDNS.create() does a network call (DNS lookup) — must run off main thread.
         scope.launch(Dispatchers.IO) { AirPlayReceiver.start(this@AirPlayService) }
         AirPlayReceiver.state.onEach { state ->
             val text = when (state) {
-                is AirPlayState.Streaming -> "Mac connecté ● Live"
+                is AirPlayState.Streaming -> if (state.isExtended) "Écran étendu Mac ● Live" else "Recopie Mac ● Live"
                 is AirPlayState.Connecting -> "Connexion en cours…"
                 is AirPlayState.Error -> "Erreur : ${state.msg}"
                 else -> "En attente de connexion"
             }
-            val nm = getSystemService(NotificationManager::class.java)
-            nm.notify(NOTIF_ID, buildNotification(text))
+            (getSystemService(NotificationManager::class.java)).notify(NOTIF_ID, buildNotification(text))
+            // Auto-launch AirPlayActivity for extended display when macOS initiates
+            if (state is AirPlayState.Streaming && state.isExtended) {
+                startActivity(
+                    Intent(this@AirPlayService, AirPlayActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        .putExtra(AirPlayActivity.EXTRA_EXTENDED, true)
+                )
+            }
         }.launchIn(scope)
     }
 
@@ -47,7 +54,7 @@ class AirPlayService : Service() {
 
     private fun createChannel() {
         val ch = NotificationChannel(CHANNEL, "Écran Mac", NotificationManager.IMPORTANCE_LOW)
-        getSystemService(NotificationManager::class.java).createNotificationChannel(ch)
+        (getSystemService(NotificationManager::class.java)).createNotificationChannel(ch)
     }
 
     private fun buildNotification(text: String): Notification =

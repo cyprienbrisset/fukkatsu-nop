@@ -13,16 +13,18 @@ private val BPLIST_MAGIC = "bplist00".toByteArray().toList()
 
 private const val TAG = "AirPlayServer"
 
-data class AirPlaySession(
-    val aesKey: ByteArray,
-    val aesIv: ByteArray,
-    val rtpPort: Int,
-)
+private const val W = 1920
+private const val H = 1080
+
+// Kept for AirPlay 1 / RtpVideoReceiver compatibility
+data class AirPlaySession(val aesKey: ByteArray, val aesIv: ByteArray, val rtpPort: Int)
 
 class AirPlayHttpServer(
     private val onConnecting: () -> Unit,
-    private val onSession: (AirPlaySession) -> Unit,
+    private val onSession: (isExtended: Boolean) -> Unit,
     private val onDisconnect: () -> Unit,
+    private val onVideoNal: (ByteArray) -> Unit = {},
+    private val onReconfigureCsd: (sps: ByteArray, pps: ByteArray) -> Unit = { _, _ -> },
 ) {
     private var serverSocket: ServerSocket? = null
     @Volatile private var running = false
@@ -30,10 +32,21 @@ class AirPlayHttpServer(
     fun start() {
         running = true
         Thread({
-            serverSocket = ServerSocket(7000)
+            // SO_REUSEADDR pour survivre aux TIME_WAIT après restart
+            val ss = java.net.ServerSocket()
+            ss.reuseAddress = true
+            var bound = false
+            repeat(8) {
+                if (bound) return@repeat
+                runCatching { ss.bind(java.net.InetSocketAddress(7000)) }.onSuccess { bound = true }
+                    .onFailure { Log.w(TAG, "Port 7000 busy, retry in 1s: ${it.message}"); Thread.sleep(1_000) }
+            }
+            if (!bound) { Log.e(TAG, "Failed to bind port 7000 — giving up"); return@Thread }
+            serverSocket = ss
+            Log.d(TAG, "AirPlay HTTP server listening on :7000")
             while (running) {
                 runCatching {
-                    val client = serverSocket?.accept() ?: return@runCatching
+                    val client = ss.accept()
                     Thread({ handleClient(client) }, "airplay-client").start()
                 }
             }
@@ -60,10 +73,8 @@ class AirPlayHttpServer(
             var pairVerifyClientLtEdPub: ByteArray? = null    // from M1[36:68]
             var pairVerifyServerX25519Pub: ByteArray? = null  // generated at M1
 
-            var aesKey: ByteArray? = null
-            var aesIv: ByteArray? = null
             var cseq = "0"
-            var rtpPort = 0
+            val isExtendedRef = java.util.concurrent.atomic.AtomicBoolean(false)
             val eventOutRef = java.util.concurrent.atomic.AtomicReference<java.io.OutputStream?>(null)
 
             while (running && !socket.isClosed) {
@@ -89,20 +100,35 @@ class AirPlayHttpServer(
 
                 when {
                     method == "GET" && (path == "/info" || path == "/server-info") -> {
-                        // pk = server's long-term Ed25519 public key, base64 encoded (required by macOS)
                         val pkB64 = Base64.encodeToString(AirPlayPairing.edPublicKeyBytes, Base64.NO_WRAP)
                         val plist = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>deviceid</key><string>${AirPlayPairing.deviceId}</string>
-<key>features</key><string>0x5A7FFFF7,0x1E</string>
+<key>features</key><string>0x5A7FFFF7,0x3E</string>
 <key>model</key><string>AppleTV6,2</string>
 <key>srcvers</key><string>550.10</string>
 <key>vv</key><integer>2</integer>
 <key>pk</key><data>$pkB64</data>
 <key>pi</key><string>${AirPlayPairing.deviceId}</string>
+<key>protovers</key><string>1.1</string>
+<key>statusFlags</key><integer>68</integer>
+<key>displays</key><array><dict>
+<key>UUID</key><string>e5f7a68d-7b0f-4305-a332-e3cfd84b0a8e</string>
+<key>features</key><integer>14</integer>
+<key>width</key><integer>$W</integer>
+<key>height</key><integer>$H</integer>
+<key>widthPixels</key><integer>$W</integer>
+<key>heightPixels</key><integer>$H</integer>
+<key>widthPhysical</key><integer>0</integer>
+<key>heightPhysical</key><integer>0</integer>
+<key>rotation</key><false/>
+<key>refreshRate</key><real>0.016666666666666666</real>
+<key>maxFPS</key><integer>60</integer>
+<key>overscanned</key><false/>
+</dict></array>
 </dict></plist>""".toByteArray(Charsets.UTF_8)
-                        Log.d(TAG, "GET /info pk=${AirPlayPairing.edPublicKeyBytes.toHex()}")
+                        Log.d(TAG, "GET /info")
                         out.writeHttp("HTTP/1.1 200 OK", "text/x-apple-plist+xml", plist)
                     }
 
@@ -184,7 +210,7 @@ class AirPlayHttpServer(
                     method == "SETUP" -> {
                         Log.d(TAG, "SETUP body[${bodyBytes.size}]=${bodyBytes.take(8).toHex()}")
                         if (bodyBytes.size > 8 && bodyBytes.take(8) == BPLIST_MAGIC) {
-                            handleAirPlay2Setup(out, cseq, bodyBytes, macAddress, timingLportRef, eventOutRef)
+                            handleAirPlay2Setup(out, cseq, bodyBytes, macAddress, timingLportRef, isExtendedRef, onVideoNal, onReconfigureCsd, eventOutRef)
                         } else {
                             // AirPlay 1 legacy
                             val clientPort = headers["Transport"]
@@ -210,12 +236,14 @@ class AirPlayHttpServer(
                     }
 
                     method == "RECORD" -> {
-                        Log.d(TAG, "RECORD")
+                        val isExtendedSession = isExtendedRef.get()
+                        Log.d(TAG, "RECORD isExtended=$isExtendedSession")
                         out.writeRtsp(cseq, mapOf(
                             "Session" to "1",
                             "Audio-Latency" to "0",
                             "Audio-Jack-Status" to "connected; type=analog",
                         ))
+                        onSession(isExtendedSession)
                     }
 
                     method == "TEARDOWN" -> {
@@ -264,10 +292,13 @@ class AirPlayHttpServer(
 
 // ---- AirPlay 2 RTSP SETUP (binary plist) ----
 
-private fun AirPlayHttpServer.handleAirPlay2Setup(
+private fun handleAirPlay2Setup(
     out: OutputStream, cseq: String, bodyBytes: ByteArray,
     macAddress: java.net.InetAddress?,
     timingLportRef: java.util.concurrent.atomic.AtomicInteger,
+    isExtendedRef: java.util.concurrent.atomic.AtomicBoolean,
+    onVideoNal: (ByteArray) -> Unit,
+    onReconfigureCsd: (ByteArray, ByteArray) -> Unit,
     eventOutRef: java.util.concurrent.atomic.AtomicReference<java.io.OutputStream?> = java.util.concurrent.atomic.AtomicReference()
 ) {
     runCatching {
@@ -278,6 +309,10 @@ private fun AirPlayHttpServer.handleAirPlay2Setup(
             val s = when (v) { is ByteArray -> "data[${v.size}]"; is List<*> -> "array"; is Map<*,*> -> "dict"; else -> v.toString() }
             Log.d(TAG, "  SETUP[$k]=$s")
         }
+        // Detect extended display vs mirroring: false = extended, true = mirror
+        val isMirror = plist["isScreenMirroringSession"] as? Boolean ?: true
+        isExtendedRef.set(!isMirror)
+        Log.d(TAG, "SETUP: isMirror=$isMirror isExtended=${!isMirror}")
 
         if ("streams" in plist) {
             // Second SETUP : macOS sends streams to open
@@ -289,7 +324,7 @@ private fun AirPlayHttpServer.handleAirPlay2Setup(
                 val type = (stream["type"] as? Long)?.toInt() ?: 0
                 Log.d(TAG, "SETUP #2 stream[$i] type=$type")
                 when (type) {
-                    110 -> mapOf("type" to type, "dataPort" to openVideoTcpServer())
+                    110 -> mapOf("type" to type, "dataPort" to openVideoTcpServer(onVideoNal, onReconfigureCsd))
                     96, 103 -> {
                         val dport = openAudioUdpServer()
                         val cport = openAudioUdpServer()
@@ -318,7 +353,7 @@ private fun AirPlayHttpServer.handleAirPlay2Setup(
 
             // combinedGetInfoWithControlSetup=true → macOS sends ONE SETUP only.
             // We must include stream ports in this response so macOS knows where to connect after RECORD.
-            val videoPort = openVideoTcpServer()
+            val videoPort = openVideoTcpServer(onVideoNal, onReconfigureCsd)
             val audioDataPort = openAudioUdpServer()
             val audioCtrlPort = openAudioUdpServer()
 
@@ -330,10 +365,10 @@ private fun AirPlayHttpServer.handleAirPlay2Setup(
                     "uuid" to "e5f7a68d-7b0f-4305-a332-e3cfd84b0a8e",
                     "widthPhysical" to 0L,
                     "heightPhysical" to 0L,
-                    "width" to 1280L,
-                    "height" to 800L,
-                    "widthPixels" to 1280L,
-                    "heightPixels" to 800L,
+                    "width" to W.toLong(),
+                    "height" to H.toLong(),
+                    "widthPixels" to W.toLong(),
+                    "heightPixels" to H.toLong(),
                     "rotation" to false,
                     "refreshRate" to (1.0 / 60.0),
                     "maxFPS" to 60L,
@@ -466,30 +501,56 @@ private fun openAudioUdpServer(): Int {
     }.getOrElse { e -> Log.e(TAG, "openAudioUdpServer failed: ${e.message}"); 6001 }
 }
 
-private fun openVideoTcpServer(): Int {
+private fun openVideoTcpServer(
+    onVideoNal: (ByteArray) -> Unit,
+    onReconfigureCsd: (ByteArray, ByteArray) -> Unit,
+): Int {
     return runCatching {
-        // Bind sur :: pour accepter aussi bien IPv4-mapped que IPv6 natif
         val ss = java.net.ServerSocket()
         ss.bind(java.net.InetSocketAddress("::", 0))
         val port = ss.localPort
-        Log.d(TAG, "Video TCP server bound on port $port, waiting for macOS connection")
+        Log.d(TAG, "Video TCP server bound on port $port")
         Thread({
             runCatching {
                 val client = ss.accept()
                 Log.d(TAG, "Video TCP client CONNECTED from ${client.remoteSocketAddress}")
                 val inp = client.getInputStream()
                 val hdr = ByteArray(128)
+                var pendingSps: ByteArray? = null
+                var pendingPps: ByteArray? = null
                 while (true) {
                     var off = 0
-                    while (off < 128) { val r = inp.read(hdr, off, 128 - off); if (r < 0) break; off += r }
+                    while (off < 128) {
+                        val r = inp.read(hdr, off, 128 - off)
+                        if (r < 0) { off = -1; break }
+                        off += r
+                    }
                     if (off < 128) break
-                    val payloadSize = ((hdr[0].toInt() and 0xFF) shl 24) or
-                        ((hdr[1].toInt() and 0xFF) shl 16) or
-                        ((hdr[2].toInt() and 0xFF) shl 8) or
-                        (hdr[3].toInt() and 0xFF)
+                    val payloadSize = hdr.int32BE(0)
                     val pktType = hdr[4].toInt() and 0xFF
-                    Log.d(TAG, "Video pkt type=0x${"%02x".format(pktType)} size=$payloadSize")
-                    if (payloadSize > 0) inp.readExact(payloadSize)
+                    val payload = if (payloadSize > 0) inp.readExact(payloadSize) else ByteArray(0)
+                    when (pktType) {
+                        0x00 -> { // codec data: avcC extradata → SPS + PPS
+                            val nals = extractAvccExtradata(payload)
+                            val sps = nals.firstOrNull { it.size > 4 && (it[4].toInt() and 0x1F) == 7 }
+                            val pps = nals.firstOrNull { it.size > 4 && (it[4].toInt() and 0x1F) == 8 }
+                            if (sps != null && pps != null) {
+                                pendingSps = sps; pendingPps = pps
+                                onReconfigureCsd(sps, pps)
+                            }
+                            nals.forEach { onVideoNal(it) }
+                        }
+                        0x01 -> { // video frame: AVCC format
+                            if (pendingSps != null && pendingPps != null) {
+                                onVideoNal(pendingSps!!)
+                                onVideoNal(pendingPps!!)
+                                pendingSps = null; pendingPps = null
+                            }
+                            avccFrameToAnnexB(payload) { nal -> onVideoNal(nal) }
+                        }
+                        0x05 -> {} // nop / keepalive
+                        else -> Log.d(TAG, "Video pkt type=0x${"%02x".format(pktType)} size=$payloadSize")
+                    }
                 }
                 client.close()
             }.onFailure { Log.e(TAG, "Video TCP error: ${it.message}") }
@@ -498,6 +559,57 @@ private fun openVideoTcpServer(): Int {
         port
     }.getOrElse { e -> Log.e(TAG, "openVideoTcpServer failed: ${e.message}"); 7100 }
 }
+
+// Parse avcC extradata box → list of Annex-B NAL units (start code + NALU bytes)
+private fun extractAvccExtradata(data: ByteArray): List<ByteArray> {
+    val result = mutableListOf<ByteArray>()
+    if (data.size < 7) return result
+    var off = 5 // skip configVersion, profile, compat, level, NAL length-1
+    val spsCount = data[off++].toInt() and 0x1F
+    repeat(spsCount) {
+        if (off + 2 > data.size) return result
+        val len = ((data[off].toInt() and 0xFF) shl 8) or (data[off + 1].toInt() and 0xFF)
+        off += 2
+        if (off + len > data.size) return result
+        result += annexBWrap(data, off, len)
+        off += len
+    }
+    if (off >= data.size) return result
+    val ppsCount = data[off++].toInt() and 0xFF
+    repeat(ppsCount) {
+        if (off + 2 > data.size) return result
+        val len = ((data[off].toInt() and 0xFF) shl 8) or (data[off + 1].toInt() and 0xFF)
+        off += 2
+        if (off + len > data.size) return result
+        result += annexBWrap(data, off, len)
+        off += len
+    }
+    return result
+}
+
+// Convert AVCC video frame payload (length-prefixed NALUs) to Annex-B NAL units
+private inline fun avccFrameToAnnexB(data: ByteArray, emit: (ByteArray) -> Unit) {
+    var off = 0
+    while (off + 4 <= data.size) {
+        val len = data.int32BE(off); off += 4
+        if (len <= 0 || off + len > data.size) break
+        emit(annexBWrap(data, off, len))
+        off += len
+    }
+}
+
+private fun annexBWrap(src: ByteArray, srcOff: Int, len: Int): ByteArray {
+    val nal = ByteArray(4 + len)
+    nal[0] = 0; nal[1] = 0; nal[2] = 0; nal[3] = 1
+    src.copyInto(nal, 4, srcOff, srcOff + len)
+    return nal
+}
+
+private fun ByteArray.int32BE(off: Int): Int =
+    ((this[off].toInt() and 0xFF) shl 24) or
+    ((this[off + 1].toInt() and 0xFF) shl 16) or
+    ((this[off + 2].toInt() and 0xFF) shl 8) or
+    (this[off + 3].toInt() and 0xFF)
 
 // ---- Helpers ----
 

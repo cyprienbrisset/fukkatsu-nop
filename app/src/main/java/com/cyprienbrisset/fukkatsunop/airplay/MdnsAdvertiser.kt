@@ -28,8 +28,8 @@ class MdnsAdvertiser(private val context: Context) {
             serviceType = "_airplay._tcp"
             port = 7000
             setAttribute("deviceid", deviceId)
-            setAttribute("features", "0x5A7FFFF7,0x1E")
-            setAttribute("flags", "0x4")
+            setAttribute("features", "0x5A7FFFF7,0x3E")
+            setAttribute("flags", "0x0")
             setAttribute("model", "AppleTV6,2")
             setAttribute("srcvers", "550.10")
             setAttribute("pk", pkHex)

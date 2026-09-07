@@ -11,7 +11,6 @@ object AirPlayReceiver {
 
     private var mdns: MdnsAdvertiser? = null
     private var server: AirPlayHttpServer? = null
-    private var rtp: RtpVideoReceiver? = null
     private val renderer = H264Renderer()
 
     fun start(context: Context) {
@@ -19,23 +18,19 @@ object AirPlayReceiver {
         mdns = MdnsAdvertiser(context).also { it.start() }
         server = AirPlayHttpServer(
             onConnecting = { _state.value = AirPlayState.Connecting },
-            onSession = { session ->
-                rtp?.stop()
-                rtp = RtpVideoReceiver(session) { nal -> renderer.pushNalUnit(nal) }
-                    .also { it.start() }
-                _state.value = AirPlayState.Streaming
+            onSession = { isExtended ->
+                _state.value = AirPlayState.Streaming(isExtended)
             },
             onDisconnect = {
-                rtp?.stop()
-                rtp = null
                 renderer.detachSurface()
                 _state.value = AirPlayState.Waiting
             },
+            onVideoNal = { nal -> renderer.pushNalUnit(nal) },
+            onReconfigureCsd = { sps, pps -> renderer.reconfigureCsd(sps, pps) },
         ).also { it.start() }
     }
 
     fun stop() {
-        rtp?.stop(); rtp = null
         server?.stop(); server = null
         mdns?.stop(); mdns = null
         renderer.stopCodec()
@@ -46,9 +41,7 @@ object AirPlayReceiver {
     fun detachSurface() = renderer.detachSurface()
 
     fun disconnect() {
-        rtp?.stop(); rtp = null
         renderer.detachSurface()
         _state.value = AirPlayState.Waiting
-        // Server keeps listening for next connection.
     }
 }

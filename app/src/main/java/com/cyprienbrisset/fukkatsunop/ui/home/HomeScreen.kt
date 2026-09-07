@@ -87,9 +87,12 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, vm: HomeViewMo
     val saverMode by vm.saverMode.collectAsStateWithLifecycle()
 
     LaunchedEffect(airPlayState) {
-        if (airPlayState is AirPlayState.Streaming) {
+        // Mirror mode only — extended display is auto-launched by AirPlayService
+        val st = airPlayState
+        if (st is AirPlayState.Streaming && !st.isExtended) {
             ctx.startActivity(Intent(ctx, AirPlayActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                putExtra(AirPlayActivity.EXTRA_EXTENDED, false)
             })
         }
     }
@@ -109,7 +112,8 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, vm: HomeViewMo
             TileType.AIRPLAY -> {
                 val st = vm.airPlayState.value
                 if (st is AirPlayState.Streaming) {
-                    ctx.startActivity(Intent(ctx, AirPlayActivity::class.java))
+                    ctx.startActivity(Intent(ctx, AirPlayActivity::class.java)
+                        .putExtra(AirPlayActivity.EXTRA_EXTENDED, st.isExtended))
                 }
                 if (st is AirPlayState.Error) {
                     ctx.startService(Intent(ctx, AirPlayService::class.java))
