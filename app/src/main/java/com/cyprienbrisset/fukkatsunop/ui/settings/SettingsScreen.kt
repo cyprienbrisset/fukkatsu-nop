@@ -37,9 +37,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cyprienbrisset.fukkatsunop.BuildConfig
+import com.cyprienbrisset.fukkatsunop.alarm.SunriseForegroundService
 import com.cyprienbrisset.fukkatsunop.overlay.OverlayService
+import com.cyprienbrisset.fukkatsunop.ui.alarm.SunriseActivity
 import com.cyprienbrisset.fukkatsunop.system.DarkModeManager
 import com.cyprienbrisset.fukkatsunop.system.FirmwareWatcher
+import com.cyprienbrisset.fukkatsunop.system.UpdateChecker
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceModelManager
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
 import com.cyprienbrisset.fukkatsunop.ui.sumi.HankoSeal
@@ -65,6 +69,7 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     val homeVm: HomeViewModel = viewModel()
     val weatherEffects by homeVm.weatherEffectsEnabled.collectAsState()
+    val saverMode by homeVm.saverMode.collectAsState()
     var voiceEnabled by remember { mutableStateOf(VoiceService.isEnabled(ctx)) }
     var modelReady by remember { mutableStateOf(VoiceModelManager.isModelReady(ctx)) }
     var downloading by remember { mutableStateOf(false) }
@@ -76,6 +81,7 @@ fun SettingsScreen(
             }.getOrDefault(false)
         )
     }
+    var updateAvailable by remember { mutableStateOf(UpdateChecker.availableVersionName(ctx)) }
 
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 32.dp)) {
         Row(Modifier.fillMaxWidth().padding(vertical = 24.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -122,6 +128,20 @@ fun SettingsScreen(
         }
 
         SettingRow("Surveillance firmware", subtitle = FirmwareWatcher.currentBuild(), chevron = false) {}
+        if (updateAvailable != null) {
+            SettingRow(
+                text = "Mise à jour disponible : $updateAvailable",
+                subtitle = "Version installée : ${BuildConfig.VERSION_NAME} — Appuyer pour installer",
+            ) {
+                UpdateChecker.startUpdate(ctx)
+            }
+        } else {
+            SettingRow(
+                text = "Version ${BuildConfig.VERSION_NAME}",
+                subtitle = "À jour",
+                chevron = false,
+            ) {}
+        }
         SettingRow("Réglages système") {
             ctx.startActivity(Intent(Settings.ACTION_SETTINGS))
         }
@@ -229,6 +249,41 @@ fun SettingsScreen(
             Switch(
                 checked = weatherEffects,
                 onCheckedChange = { homeVm.setWeatherEffectsEnabled(it) },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = AccentShu,
+                    checkedTrackColor = AccentShu.copy(alpha = 0.4f),
+                ),
+            )
+        }
+        Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+
+        // ── Lever de soleil ──────────────────────────────────────────────────────
+        SettingRow("Tester le lever de soleil (60 s)") {
+            ctx.startActivity(
+                android.content.Intent(ctx, SunriseActivity::class.java)
+                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    .putExtra(SunriseActivity.EXTRA_DURATION_MS, 60_000L)
+            )
+        }
+
+        // ── Écran de veille Sumi-e ───────────────────────────────────────────────
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 68.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text("Écran de veille Sumi-e", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
+                Text(
+                    if (saverMode) "Bouton veille → encre de Chine générative" else "Bouton veille → verrouille l'écran",
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                    fontSize = 12.sp,
+                    fontFamily = Mincho,
+                )
+            }
+            Switch(
+                checked = saverMode,
+                onCheckedChange = { homeVm.setSaverMode(it) },
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = AccentShu,
                     checkedTrackColor = AccentShu.copy(alpha = 0.4f),

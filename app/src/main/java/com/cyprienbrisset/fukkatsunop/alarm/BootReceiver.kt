@@ -7,6 +7,8 @@ import com.cyprienbrisset.fukkatsunop.data.AppDatabase
 import com.cyprienbrisset.fukkatsunop.data.alarm.AlarmRepository
 import com.cyprienbrisset.fukkatsunop.system.DarkModeManager
 import com.cyprienbrisset.fukkatsunop.system.FirmwareWatcher
+import com.cyprienbrisset.fukkatsunop.system.UpdateCheckReceiver
+import com.cyprienbrisset.fukkatsunop.system.UpdateChecker
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +20,7 @@ class BootReceiver : BroadcastReceiver() {
         DarkModeManager.reschedule(context)
         FirmwareWatcher.init(context)
         FirmwareWatcher.scheduleDaily(context)
+        UpdateChecker.scheduleDaily(context)
         VoiceService.start(context)
         context.startForegroundService(
             Intent(context, com.cyprienbrisset.fukkatsunop.airplay.AirPlayService::class.java)
@@ -28,6 +31,7 @@ class BootReceiver : BroadcastReceiver() {
                 val repo = AlarmRepository(AppDatabase.get(context).alarmDao())
                 val scheduler = AlarmScheduler(context)
                 repo.enabled().forEach { scheduler.schedule(it) }
+                UpdateChecker.check(context)
             } finally {
                 pending.finish()
             }

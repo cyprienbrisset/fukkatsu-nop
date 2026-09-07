@@ -154,6 +154,25 @@
         </service>
 
         <receiver android:name=".alarm.AlarmReceiver" android:exported="false" />
+
+        <receiver android:name=".alarm.SunriseReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="com.cyprienbrisset.fukkatsunop.SUNRISE_FIRE" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".alarm.SunriseForegroundService"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.alarm.SunriseActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:keepScreenOn="true"
+            android:theme="@style/Theme.MyPortal" />
         <receiver android:name=".system.DarkModeReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="com.cyprienbrisset.fukkatsunop.DARK_MODE_ON" />
@@ -165,6 +184,16 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <receiver android:name=".system.UpdateCheckReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="com.cyprienbrisset.fukkatsunop.UPDATE_CHECK" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".system.AppUpdateService"
+            android:exported="false" />
 
         <service
             android:name=".overlay.OverlayService"
@@ -185,6 +214,15 @@
             android:exported="false"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="landscape"
+            android:theme="@style/Theme.MyPortal" />
+
+        <activity
+            android:name=".ui.screensaver.SumiSaverActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:showWhenLocked="true"
             android:theme="@style/Theme.MyPortal" />
     </application>
 

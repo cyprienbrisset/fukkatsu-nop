@@ -63,6 +63,7 @@ import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import com.cyprienbrisset.fukkatsunop.airplay.AirPlayService
 import com.cyprienbrisset.fukkatsunop.airplay.AirPlayState
 import com.cyprienbrisset.fukkatsunop.ui.airplay.AirPlayActivity
+import com.cyprienbrisset.fukkatsunop.ui.screensaver.SumiSaverActivity
 import com.cyprienbrisset.fukkatsunop.web.WebAppActivity
 
 @Composable
@@ -83,6 +84,7 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, vm: HomeViewMo
     var quickActionsTile by remember { mutableStateOf<TileEntity?>(null) }
     var reorderMode by remember { mutableStateOf(false) }
     val isDark by DarkModeManager.isDarkFlow.collectAsState()
+    val saverMode by vm.saverMode.collectAsStateWithLifecycle()
 
     LaunchedEffect(airPlayState) {
         if (airPlayState is AirPlayState.Streaming) {
@@ -210,7 +212,10 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, vm: HomeViewMo
                         SealIconButton(
                             icon = Icons.Rounded.PowerSettingsNew,
                             contentDescription = "Éteindre l'écran",
-                            onClick = { ScreenLock.lockOrRequest(ctx) },
+                            onClick = {
+                                if (saverMode) ctx.startActivity(Intent(ctx, SumiSaverActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                                else ScreenLock.lockOrRequest(ctx)
+                            },
                         )
                         SealIconButton(
                             icon = Icons.Rounded.Settings,

@@ -47,9 +47,10 @@ fun WeatherOverlay(weather: Weather?, isDark: Boolean, modifier: Modifier = Modi
 
     val particleColor = if (isDark) Kinari.copy(alpha = 0.18f) else Ink.copy(alpha = 0.10f)
     val fogBase       = if (isDark) SumiMuted else InkMuted
+    val cloudColor    = if (isDark) Color(0xFFDDD8CC) else Color(0xFFF5F2EE)
 
     when (effect) {
-        WeatherEffect.CLOUDY -> CloudCanvas(fogBase, modifier)
+        WeatherEffect.CLOUDY -> CloudCanvas(cloudColor, modifier)
         WeatherEffect.RAIN   -> RainCanvas(particleColor, modifier)
         WeatherEffect.STORM  -> StormCanvas(particleColor, modifier)
         WeatherEffect.SNOW   -> SnowCanvas(particleColor, modifier)
@@ -60,42 +61,56 @@ fun WeatherOverlay(weather: Weather?, isDark: Boolean, modifier: Modifier = Modi
 
 // ── Cloudy ───────────────────────────────────────────────────────────────────
 
-private val CLOUD_LAYERS = arrayOf(
-    // yFrac, widthFrac, heightFrac, alpha, speedFrac (1 = plein écran / cycle)
-    floatArrayOf(0.12f, 0.55f, 0.09f, 0.07f, 0.018f),
-    floatArrayOf(0.28f, 0.70f, 0.11f, 0.09f, 0.012f),
-    floatArrayOf(0.45f, 0.45f, 0.08f, 0.06f, 0.022f),
-    floatArrayOf(0.60f, 0.65f, 0.12f, 0.08f, 0.009f),
-    floatArrayOf(0.78f, 0.50f, 0.09f, 0.05f, 0.015f),
+private data class CloudDef(
+    val yFrac: Float,   // position verticale (0=haut, 1=bas)
+    val wFrac: Float,   // largeur relative à l'écran
+    val alpha: Float,   // opacité de chaque bosse
+    val speed: Float,   // nb de traversées / cycle de 30s
+    val phase: Float,   // décalage initial
 )
 
+private val CLOUDS = listOf(
+    CloudDef(0.08f, 0.28f, 0.72f, 1.00f, 0.00f),
+    CloudDef(0.22f, 0.38f, 0.60f, 0.65f, 0.40f),
+    CloudDef(0.10f, 0.20f, 0.65f, 1.30f, 0.68f),
+    CloudDef(0.32f, 0.32f, 0.55f, 0.78f, 0.20f),
+    CloudDef(0.16f, 0.24f, 0.62f, 1.10f, 0.55f),
+    CloudDef(0.28f, 0.34f, 0.50f, 0.52f, 0.83f),
+)
+
+// Nuage = base plate + 5 bosses qui se chevauchent (radii en w → overlap garanti)
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCloud(
+    cx: Float, cy: Float, w: Float, alpha: Float, color: Color,
+) {
+    val c = color.copy(alpha = alpha)
+    val r = w * 0.22f  // rayon bosse = 22% largeur ; spacing = 18% → large overlap
+
+    // Base plate (fond plat du nuage)
+    drawOval(c, topLeft = Offset(cx - w * 0.50f, cy - w * 0.08f), size = Size(w, w * 0.28f))
+    // 5 bosses en quinconce, toutes en coordonnées *w* pour rester rondes
+    drawCircle(c, radius = r * 0.75f, center = Offset(cx - w * 0.30f, cy + w * 0.04f))
+    drawCircle(c, radius = r * 0.90f, center = Offset(cx - w * 0.12f, cy - w * 0.18f))
+    drawCircle(c, radius = r * 1.00f, center = Offset(cx + w * 0.06f, cy - w * 0.26f))
+    drawCircle(c, radius = r * 0.85f, center = Offset(cx + w * 0.24f, cy - w * 0.16f))
+    drawCircle(c, radius = r * 0.72f, center = Offset(cx + w * 0.38f, cy + w * 0.03f))
+}
+
 @Composable
-private fun CloudCanvas(baseColor: Color, modifier: Modifier) {
-    val tr = rememberInfiniteTransition(label = "cloud")
-    // Slow global time 0→1 over 20s — each layer uses its own speed factor
+private fun CloudCanvas(cloudColor: Color, modifier: Modifier) {
+    val tr = rememberInfiniteTransition(label = "clouds")
     val t by tr.animateFloat(
         initialValue = 0f, targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(20_000, easing = LinearEasing)),
+        animationSpec = infiniteRepeatable(tween(30_000, easing = LinearEasing)),
         label = "cloud-t",
     )
-    val offsets = remember { Array(CLOUD_LAYERS.size) { Math.random().toFloat() } }
 
     Canvas(modifier.fillMaxSize()) {
-        CLOUD_LAYERS.forEachIndexed { i, layer ->
-            val (yFrac, wFrac, hFrac, alpha, speed) = layer
-            val phase = offsets[i]
-            // x oscillates: starts off-screen left (-w), exits right (+w)
-            val xFrac = ((t * speed * 3f + phase) % 1.5f) - 0.25f
-            val w = size.width * wFrac
-            val h = size.height * hFrac
-            val cx = xFrac * size.width + w / 2f
-            val cy = yFrac * size.height
-
-            drawOval(
-                color = baseColor.copy(alpha = alpha),
-                topLeft = Offset(cx - w / 2f, cy - h / 2f),
-                size = Size(w, h),
-            )
+        CLOUDS.forEach { cloud ->
+            val cloudW = size.width * cloud.wFrac
+            val xFrac = (t * cloud.speed + cloud.phase) % 1.2f
+            val cx = -cloudW + xFrac * (size.width + cloudW * 2f)
+            val cy = cloud.yFrac * size.height
+            drawCloud(cx, cy, cloudW, cloud.alpha, cloudColor)
         }
     }
 }
