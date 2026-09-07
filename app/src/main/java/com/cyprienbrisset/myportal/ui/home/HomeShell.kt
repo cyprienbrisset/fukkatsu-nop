@@ -80,7 +80,7 @@ fun HomeShell(onOpenSettings: () -> Unit, onAddTile: () -> Unit) {
             }
         }
 
-        // Two-dot page indicator
+        // Three-dot page indicator
         Row(
             Modifier
                 .align(Alignment.BottomCenter)

@@ -58,7 +58,9 @@ fun GoogleScreen(modifier: Modifier = Modifier) {
                 .padding(horizontal = 8.dp, vertical = 4.dp),
         ) {
             Row(
-                Modifier.fillMaxWidth(),
+                Modifier
+                    .fillMaxWidth()
+                    .padding(end = 44.dp),
                 horizontalArrangement = Arrangement.SpaceAround,
             ) {
                 tabs.forEachIndexed { index, label ->
