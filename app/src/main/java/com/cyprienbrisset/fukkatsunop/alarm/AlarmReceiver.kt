@@ -22,7 +22,8 @@ class AlarmReceiver : BroadcastReceiver() {
                 val scheduler = AlarmScheduler(context)
                 val alarm = repo.byId(alarmId)
                 val videoEnabled = alarm?.videoEnabled ?: false
-                AlarmForegroundService.start(context, alarmId, alarm?.label ?: "", alarm?.ringtoneUri, videoEnabled)
+                val volumeProgressive = alarm?.volumeProgressive ?: true
+                AlarmForegroundService.start(context, alarmId, alarm?.label ?: "", alarm?.ringtoneUri, videoEnabled, volumeProgressive)
                 // Lancement explicite de l'activité : le fullScreenIntent de la notif
                 // ne déclenche pas l'écran automatiquement sur certains appareils (Gen 1).
                 context.startActivity(

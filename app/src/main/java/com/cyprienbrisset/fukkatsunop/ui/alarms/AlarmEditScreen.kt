@@ -45,6 +45,7 @@ fun AlarmEditScreen(onDone: () -> Unit, alarmId: Long = 0L, vm: AlarmsViewModel 
     var snooze by remember { mutableStateOf(10) }
     var ringtoneUri by remember { mutableStateOf<String?>(null) }
     var videoEnabled by remember { mutableStateOf(false) }
+    var volumeProgressive by remember { mutableStateOf(true) }
 
     LaunchedEffect(alarmId) {
         if (alarmId > 0L) {
@@ -55,6 +56,7 @@ fun AlarmEditScreen(onDone: () -> Unit, alarmId: Long = 0L, vm: AlarmsViewModel 
                 snooze = a.snoozeMinutes
                 ringtoneUri = a.ringtoneUri
                 videoEnabled = a.videoEnabled
+                volumeProgressive = a.volumeProgressive
             }
         }
     }
@@ -112,9 +114,32 @@ fun AlarmEditScreen(onDone: () -> Unit, alarmId: Long = 0L, vm: AlarmsViewModel 
         }
         Spacer(Modifier.height(16.dp))
         RingtonePicker(selectedUri = ringtoneUri, onSelect = { ringtoneUri = it })
+        Spacer(Modifier.height(24.dp))
+        SectionLabel("音量", "VOLUME AU RÉVEIL")
+        Spacer(Modifier.height(8.dp))
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 52.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                if (volumeProgressive) "Montée progressive (30 s)" else "Volume fixe (immédiat)",
+                color = SumiMuted,
+                fontFamily = Mincho,
+                fontSize = 13.sp,
+            )
+            Switch(
+                checked = volumeProgressive,
+                onCheckedChange = { volumeProgressive = it },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = AccentShu,
+                    checkedTrackColor = AccentShu.copy(alpha = 0.4f),
+                ),
+            )
+        }
         Spacer(Modifier.weight(1f))
         SumiPrimaryButton("保存 · Enregistrer", onClick = {
-            vm.save(hour, minute, days, "", ringtoneUri, snooze, videoEnabled, id = alarmId)
+            vm.save(hour, minute, days, "", ringtoneUri, snooze, videoEnabled, volumeProgressive, id = alarmId)
             onDone()
         })
         Spacer(Modifier.height(20.dp))

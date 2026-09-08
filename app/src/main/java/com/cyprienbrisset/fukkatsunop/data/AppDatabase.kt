@@ -17,7 +17,7 @@ class Converters {
     @TypeConverter fun tileTypeToString(v: TileType): String = v.name
 }
 
-@Database(entities = [TileEntity::class, AlarmEntity::class], version = 4, exportSchema = false)
+@Database(entities = [TileEntity::class, AlarmEntity::class], version = 5, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun tileDao(): TileDao

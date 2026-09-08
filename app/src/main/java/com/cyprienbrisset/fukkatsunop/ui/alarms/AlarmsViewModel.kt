@@ -16,11 +16,11 @@ class AlarmsViewModel(app: Application) : AndroidViewModel(app) {
     private val scheduler = AlarmScheduler(app)
     val alarms = repo.observeAll().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun save(hour: Int, minute: Int, repeatDays: Int, label: String, ringtoneUri: String?, snoozeMinutes: Int, videoEnabled: Boolean = false, id: Long = 0) = viewModelScope.launch {
+    fun save(hour: Int, minute: Int, repeatDays: Int, label: String, ringtoneUri: String?, snoozeMinutes: Int, videoEnabled: Boolean = false, volumeProgressive: Boolean = true, id: Long = 0) = viewModelScope.launch {
         val newId = repo.upsert(AlarmEntity(
             id = id, hour = hour, minute = minute, repeatDays = repeatDays, label = label,
             enabled = true, ringtoneUri = ringtoneUri, snoozeMinutes = snoozeMinutes,
-            videoEnabled = videoEnabled,
+            videoEnabled = videoEnabled, volumeProgressive = volumeProgressive,
         ))
         repo.byId(newId)?.let { scheduler.schedule(it) }
     }

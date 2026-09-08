@@ -3,6 +3,9 @@ package com.cyprienbrisset.fukkatsunop.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -66,7 +69,14 @@ fun AppNav() {
     val updating = updatePct in 0..100
 
     Box(Modifier.fillMaxSize()) {
-        NavHost(navController = nav, startDestination = Routes.HOME) {
+        NavHost(
+            navController = nav,
+            startDestination = Routes.HOME,
+            enterTransition = { fadeIn(tween(280)) + slideInHorizontally(tween(280)) { it / 8 } },
+            exitTransition = { fadeOut(tween(220)) + slideOutHorizontally(tween(220)) { -it / 8 } },
+            popEnterTransition = { fadeIn(tween(220)) + slideInHorizontally(tween(220)) { -it / 8 } },
+            popExitTransition = { fadeOut(tween(280)) + slideOutHorizontally(tween(280)) { it / 8 } },
+        ) {
             composable(Routes.HOME) {
                 com.cyprienbrisset.fukkatsunop.ui.home.HomeShell(
                     onOpenSettings = { nav.navigate(Routes.SETTINGS) },

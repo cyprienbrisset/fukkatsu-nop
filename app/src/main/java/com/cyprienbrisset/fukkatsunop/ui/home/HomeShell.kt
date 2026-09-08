@@ -5,7 +5,11 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import android.app.Activity
+import android.view.WindowManager
 import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -21,14 +25,18 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
@@ -47,10 +55,46 @@ fun HomeShell(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: (
     val pagerState = rememberPagerState(initialPage = 1) { 3 }
     val scope = rememberCoroutineScope()
     val voiceState by VoiceService.state.collectAsState()
+    val activity = LocalContext.current as? Activity
+
+    // Idle dim: track last interaction, dim after 3 min
+    var lastInteractionMs by remember { mutableStateOf(System.currentTimeMillis()) }
+    var isDimmed by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(15_000L)
+            if (!isDimmed && System.currentTimeMillis() - lastInteractionMs > 3 * 60_000L) {
+                isDimmed = true
+            }
+        }
+    }
+
+    LaunchedEffect(isDimmed) {
+        val window = activity?.window ?: return@LaunchedEffect
+        if (isDimmed) {
+            val from = window.attributes.screenBrightness.let { if (it <= 0) 1f else it }
+            dimBrightness(window, from, 0.25f, 3000L, 60)
+        } else {
+            val from = window.attributes.screenBrightness.let { if (it <= 0) 1f else it }
+            if (from < 0.98f) dimBrightness(window, from, 1f, 700L, 28)
+            window.attributes = window.attributes.apply {
+                screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+            }
+        }
+    }
 
     Box(
         Modifier
             .fillMaxSize()
+            // Reset idle timer on any touch
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    awaitPointerEvent(PointerEventPass.Initial)
+                    lastInteractionMs = System.currentTimeMillis()
+                    if (isDimmed) isDimmed = false
+                }
+            }
             .pointerInput(pagerState.currentPage) {
                 val threshold = 60.dp.toPx()
                 awaitEachGesture {
@@ -144,5 +188,14 @@ fun HomeShell(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: (
                 )
             }
         }
+    }
+}
+
+private suspend fun dimBrightness(window: android.view.Window, from: Float, to: Float, durationMs: Long, steps: Int) {
+    repeat(steps) { i ->
+        val t = (i + 1f) / steps
+        val v = from + (to - from) * t
+        window.attributes = window.attributes.apply { screenBrightness = v }
+        delay(durationMs / steps)
     }
 }
