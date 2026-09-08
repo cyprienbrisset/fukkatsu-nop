@@ -2,13 +2,14 @@
 
 # 復活 Fukkatsu No P
 
-**Launcher maison pour Meta Portal Plus (1ère & 2ème génération)**
+**Launcher maison pour Meta Portal — Portal Plus, Portal Go et Portal Mini**
 
 *Encre japonaise · Ambiant permanent · Sans Google Services*
 
 ---
 
 [![Android 9/10](https://img.shields.io/badge/Android-9%20%2F%2010-3DDC84?style=flat-square&logo=android&logoColor=white)](https://github.com/cyprienbrisset/fukkatsu-nop)
+[![Portal Plus · Go · Mini](https://img.shields.io/badge/Meta%20Portal-Plus%20%7C%20Go%20%7C%20Mini-4267B2?style=flat-square)](https://github.com/cyprienbrisset/fukkatsu-nop)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://github.com/cyprienbrisset/fukkatsu-nop)
 [![Licence MIT](https://img.shields.io/badge/Licence-MIT-C1272D?style=flat-square)](LICENSE)
 
@@ -16,13 +17,13 @@
 
 ---
 
-**復活** (*fukkatsu no p*, « renaissance ») transforme un Meta Portal en hub maison permanent. Testé sur le **Portal Plus 1ère génération** (Android 9, API 28) et le **Portal 2ème génération** (Android 10, API 29). L'interface s'inspire de la papeterie japonaise : encre Sumi profonde la nuit, parchemin Washi chaud le jour.
+**復活** (*fukkatsu no p*, « renaissance ») transforme un Meta Portal en hub maison permanent. Testé sur le **Portal Plus 1ère génération** (Android 9, API 28), le **Portal 2ème génération** (Android 10, API 29), le **Portal Go** et le **Portal Mini** (1280×800 dp, mode compact automatique). L'interface s'inspire de la papeterie japonaise : encre Sumi profonde la nuit, parchemin Washi chaud le jour.
 
 ---
 
 ## Ce que vous voyez au quotidien
 
-**Une horloge ambiante** occupe la gauche de l'écran en permanence — heure, date, météo en direct et prochain réveil d'un seul coup d'œil. Quand de la musique joue, la pochette et les commandes apparaissent dessous. Les six derniers contacts Messenger ou WhatsApp avec qui vous avez échangé sont également affichés.
+**Une horloge ambiante** occupe la gauche de l'écran en permanence — heure, date, météo en direct et prochain réveil d'un seul coup d'œil. Si plusieurs villes sont configurées, le nom de la ville et un indicateur de points s'affichent sous la température ; un swipe gauche/droite change de ville. Quand de la musique joue, la pochette et les commandes apparaissent dessous. Les six derniers contacts Messenger ou WhatsApp avec qui vous avez échangé sont également affichés.
 
 **La grille d'apps** à droite regroupe vos raccourcis en médaillons. Un tap lance l'app. Un badge rouge indique le nombre de notifications non lues. Appui long sur une tuile = actions rapides ; appui long dans la zone vide = mode réorganisation par glisser-déposer.
 
@@ -38,6 +39,7 @@ Le thème bascule automatiquement entre mode nuit (Sumi) et mode jour (Washi) se
 | Glisser **vers le bas** sur le logo | Activer / couper le mode Ne Pas Déranger |
 | **Écarter deux doigts** (pinch-out) | Vue multitâche : cartes des apps récentes, glisser vers le haut pour fermer |
 | **Glisser le bord droit** de l'écran | Régler la luminosité (curseur vertical) |
+| **Glisser gauche/droite** sur la météo | Passer à la ville suivante / précédente (si multi-villes configurées) |
 | **Appui long** sur une tuile | Actions rapides : raccourcis, déplacer, supprimer |
 | **Appui long** dans la zone vide du grid | Entrer en mode réorganisation — glisser pour déplacer, « Terminé » pour quitter |
 
@@ -51,6 +53,12 @@ Un troisième écran (glisser vers la droite depuis l'accueil) connecte le Porta
 - **Meet** : réunions Google Meet des 48 prochaines heures avec compte à rebours en direct et bouton « Rejoindre ».
 
 Scope limité à `calendar` (lecture/écriture). Aucune dépendance Gmail. Tokens stockés localement via DataStore.
+
+---
+
+## Mode compact — Portal Go &amp; Mini
+
+Sur les appareils à résolution 1280×800 dp (Portal Go 10,1" et Portal Mini 8"), le launcher détecte automatiquement la taille d'écran et active un mode compact : horloge et kanjis réduits, espacement serré, grille avec tuiles plus petites. Aucune configuration manuelle requise.
 
 ---
 
@@ -96,6 +104,7 @@ Le Portal n'a pas de Play Store. FukkaStore comble ce manque : connectez votre c
 - Filtre automatique des apps incompatibles avec le Portal
 - Filtre ABI automatique : seuls les splits compatibles avec le processeur de l'appareil sont installés
 - **Portal 1ère génération** : installation silencieuse via AccessibilityService (l'interface système du Portal masque la fenêtre de confirmation standard)
+- **Avertissement GMS** : les apps nécessitant exclusivement les Google Mobile Services sont signalées — elles peuvent ne pas fonctionner sur le Portal
 
 ---
 
@@ -133,7 +142,7 @@ Typographie **Noto Serif JP** (Mincho).
 
 ## Réveil intégré
 
-Un gestionnaire de réveils complet : création par heure et jours de la semaine, sonnerie personnalisable, montée en volume progressive. Le prochain réveil est affiché en permanence sur l'écran ambiant.
+Un gestionnaire de réveils complet : création par heure et jours de la semaine, sonnerie personnalisable, montée en volume progressive. Le prochain réveil est affiché en permanence sur l'écran ambiant. Trois sonneries disponibles : Standard, Zen et **Asie/Japon** (musique d'ambiance japonaise — *Tunetank / Pixabay Content License*).
 
 ---
 

@@ -300,13 +300,13 @@
   <div class="hero-kanji" aria-hidden="true">復</div>
   <div class="hero-inner">
     <div class="hero-text">
-      <p class="hero-eyebrow">Meta Portal Plus 1ère &amp; 2ème Gen · Android 9 / 10 · Sans GMS</p>
+      <p class="hero-eyebrow">Meta Portal Plus · Go · Mini · Android 9 / 10 · Sans GMS</p>
       <h1>
         <span class="jp">復活 fukkatsu no p</span>
         Un hub maison qui s'éveille au quotidien
       </h1>
       <p class="hero-desc">
-        Remplace l'interface stock du Portal par un launcher permanent — horloge ambiante, météo, contacts, musique, FukkaStore et contrôles système. Esthétique encre japonaise, mode nuit automatique, zéro dépendance Google.
+        Remplace l'interface stock du Portal par un launcher permanent — horloge ambiante, météo multi-villes, contacts, musique, FukkaStore et contrôles système. Esthétique encre japonaise, mode nuit automatique, mode compact automatique sur Portal Go/Mini, zéro dépendance Google.
       </p>
       <div class="hero-btns">
         <a class="btn-prim" href="https://github.com/cyprienbrisset/fukkatsu-nop/releases" target="_blank" rel="noopener">Télécharger</a>
@@ -459,6 +459,18 @@
         <span class="feat-new">Nouveau</span>
         <h3>Commandes vocales locales</h3>
         <p>Wake word « Portal » détecté en continu par Vosk — 100% embarqué, zéro cloud. Commandes : ouvre une app, mode nuit/jour, éteins l'écran. Le micro-réseau du Portal reprend vie, sans Alexa.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-map"/></svg></div>
+        <span class="feat-new">Nouveau</span>
+        <h3>Météo multi-villes</h3>
+        <p>Jusqu'à 5 villes configurables dans les réglages. Swipe gauche/droite sur le bloc météo pour changer de ville — nom de la ville et indicateur de points sous la température.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-layers"/></svg></div>
+        <span class="feat-new">Nouveau</span>
+        <h3>Mode compact — Portal Go &amp; Mini</h3>
+        <p>Sur Portal Go (10,1") et Portal Mini (8"), le launcher détecte automatiquement l'écran 1280×800 dp et active un mode compact : polices et espacement réduits, grille resserrée. Zéro configuration.</p>
       </div>
     </div>
   </div>
@@ -730,6 +742,14 @@
           <p>Appui long entre les tuiles pour entrer en mode réorganisation, puis glissez pour déplacer. Bouton « Terminé » pour quitter.</p>
         </div>
       </div>
+      <div class="gesture-card">
+        <div class="gesture-icon"><svg class="icon icon-lg"><use href="#i-map"/></svg></div>
+        <div class="gesture-body">
+          <p class="gesture-trigger">Bloc météo · Glisser gauche ou droite</p>
+          <h3>Changer de ville météo</h3>
+          <p>Swipe horizontal sur la zone température pour passer à la ville suivante ou précédente. L'indicateur de points montre la position dans la liste.</p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -881,7 +901,7 @@ bash scripts/provision-portal.sh --set-launcher
     <div class="footer-brand" aria-hidden="true">墨</div>
     <div class="footer-info">
       <p>MIT — Copyright © 2024–2026 <a href="https://github.com/cyprienbrisset" target="_blank" rel="noopener">Cyprien Brisset</a></p>
-      <p style="margin-top:4px">Testé sur le <strong style="color:var(--muted)">Meta Portal Plus 1ère &amp; 2ème Gen</strong> · Android 9 / 10 · Jetpack Compose</p>
+      <p style="margin-top:4px">Testé sur <strong style="color:var(--muted)">Meta Portal Plus · Portal Go · Portal Mini</strong> · Android 9 / 10 · Jetpack Compose</p>
     </div>
     <div class="footer-links">
       <a href="https://github.com/cyprienbrisset/fukkatsu-nop" target="_blank" rel="noopener">
