@@ -15,9 +15,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.unit.dp
 import com.cyprienbrisset.fukkatsunop.data.weather.Weather
 import com.cyprienbrisset.fukkatsunop.ui.theme.Ink
@@ -78,21 +79,43 @@ private val CLOUDS = listOf(
     CloudDef(0.28f, 0.34f, 0.50f, 0.52f, 0.83f),
 )
 
-// Nuage = base plate + 5 bosses qui se chevauchent (radii en w → overlap garanti)
+// ── Nuage SVG-style ──────────────────────────────────────────────────────────
+// Silhouette cumulus en courbes de Bézier cubiques — CC0, dessinée à la main.
+// Espace de référence : 242 × 84 (rapport ~3:1). Centre visuel vertical ≈ y 38.
+private val CLOUD_PATH: Path by lazy {
+    Path().apply {
+        moveTo(10f,  80f)
+        cubicTo(  0f, 80f,   0f,  55f,  15f,  48f)  // flanc gauche montant
+        cubicTo( 10f, 22f,  30f,  12f,  50f,  25f)  // bosse gauche
+        cubicTo( 65f, 32f,  72f,  38f,  80f,  35f)  // creux centre-gauche
+        cubicTo( 78f,  5f, 118f,  -4f, 140f,  18f)  // bosse centrale (plus haute)
+        cubicTo(155f,  8f, 180f,   8f, 195f,  28f)  // bosse droite
+        cubicTo(210f, 18f, 230f,  35f, 228f,  55f)  // pente droite
+        cubicTo(238f, 58f, 242f,  72f, 232f,  80f)  // flanc droit descendant
+        close()
+    }
+}
+private const val CLOUD_W  = 242f
+private const val CLOUD_CY =  38f  // centre vertical dans l'espace du path
+
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCloud(
     cx: Float, cy: Float, w: Float, alpha: Float, color: Color,
 ) {
-    val c = color.copy(alpha = alpha)
-    val r = w * 0.22f  // rayon bosse = 22% largeur ; spacing = 18% → large overlap
-
-    // Base plate (fond plat du nuage)
-    drawOval(c, topLeft = Offset(cx - w * 0.50f, cy - w * 0.08f), size = Size(w, w * 0.28f))
-    // 5 bosses en quinconce, toutes en coordonnées *w* pour rester rondes
-    drawCircle(c, radius = r * 0.75f, center = Offset(cx - w * 0.30f, cy + w * 0.04f))
-    drawCircle(c, radius = r * 0.90f, center = Offset(cx - w * 0.12f, cy - w * 0.18f))
-    drawCircle(c, radius = r * 1.00f, center = Offset(cx + w * 0.06f, cy - w * 0.26f))
-    drawCircle(c, radius = r * 0.85f, center = Offset(cx + w * 0.24f, cy - w * 0.16f))
-    drawCircle(c, radius = r * 0.72f, center = Offset(cx + w * 0.38f, cy + w * 0.03f))
+    val s = w / CLOUD_W
+    // Halo doux : même forme, légèrement agrandie et plus transparente
+    withTransform({
+        translate(cx - w * 0.52f, cy - CLOUD_CY * s * 1.04f)
+        scale(s * 1.04f, s * 1.04f)
+    }) {
+        drawPath(CLOUD_PATH, color.copy(alpha = alpha * 0.25f))
+    }
+    // Corps principal
+    withTransform({
+        translate(cx - w * 0.50f, cy - CLOUD_CY * s)
+        scale(s, s)
+    }) {
+        drawPath(CLOUD_PATH, color.copy(alpha = alpha))
+    }
 }
 
 @Composable
