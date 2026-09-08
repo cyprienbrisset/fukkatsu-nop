@@ -159,8 +159,11 @@ fun SettingsScreen(
             // ── Right panel — content ────────────────────────────────────────
             Column(Modifier.weight(1f).fillMaxHeight()) {
                 if (selected == Cat.HOME) {
-                    // TileEditScreen a ses propres LazyVerticalGrid — on l'embarque directement.
+                    // TileEditScreen a ses propres LazyVerticalGrid — embarqué directement.
                     TileEditScreen(onBack = {})
+                } else if (selected == Cat.APPS) {
+                    // InstalledAppsScreen a une LazyColumn — embarquée directement.
+                    InstalledAppsScreen(onBack = {})
                 } else {
                 // Panel title
                 val title = CATS.first { it.id == selected }.label
@@ -205,7 +208,7 @@ fun SettingsScreen(
                                     )
                                 },
                             )
-                            Cat.APPS    -> AppsPanelContent(onStore, onInstalledApps)
+                            Cat.APPS    -> {} // handled above (InstalledAppsScreen embedded)
                             Cat.SYSTEM  -> SystemPanelContent(
                                 overlayRunning, airPlayName, voiceEnabled, modelReady, downloading, downloadProgress,
                                 onOverlay = {
@@ -339,12 +342,6 @@ private fun DisplayPanelContent(
         onCheckedChange = onSaverMode,
     )
     SettingRow("Tester le lever de soleil", subtitle = "Simulation 60 secondes") { onSunrise() }
-}
-
-@Composable
-private fun AppsPanelContent(onStore: () -> Unit, onInstalledApps: () -> Unit) {
-    SettingRow("FukkaStore", subtitle = "Télécharger et installer des apps") { onStore() }
-    SettingRow("Applications installées", subtitle = "Voir et désinstaller des apps") { onInstalledApps() }
 }
 
 @Composable
