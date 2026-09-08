@@ -17,11 +17,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cyprienbrisset.fukkatsunop.airplay.AirPlayPrefs
 import com.cyprienbrisset.fukkatsunop.BuildConfig
 import com.cyprienbrisset.fukkatsunop.alarm.SunriseForegroundService
 import com.cyprienbrisset.fukkatsunop.overlay.OverlayService
@@ -82,8 +88,11 @@ fun SettingsScreen(
         )
     }
     var updateAvailable by remember { mutableStateOf(UpdateChecker.availableVersionName(ctx)) }
+    var airPlayName by remember { mutableStateOf(AirPlayPrefs.getName(ctx)) }
+    var showAirPlayNameDialog by remember { mutableStateOf(false) }
+    var editingAirPlayName by remember { mutableStateOf("") }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 32.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).statusBarsPadding().padding(horizontal = 32.dp)) {
         Row(Modifier.fillMaxWidth().padding(vertical = 24.dp), verticalAlignment = Alignment.CenterVertically) {
             HankoSeal("朱", size = 40.dp, onClick = onBack)
             Spacer(Modifier.width(14.dp))
@@ -127,6 +136,36 @@ fun SettingsScreen(
             }
         }
 
+        SettingRow("Nom AirPlay : $airPlayName", subtitle = "Visible sur Mac dans Réglages Système → Écrans") {
+            editingAirPlayName = airPlayName
+            showAirPlayNameDialog = true
+        }
+        if (showAirPlayNameDialog) {
+            AlertDialog(
+                onDismissRequest = { showAirPlayNameDialog = false },
+                modifier = Modifier.fillMaxWidth(0.6f),
+                title = { Text("Nom AirPlay", fontFamily = Mincho) },
+                text = {
+                    OutlinedTextField(
+                        value = editingAirPlayName,
+                        onValueChange = { editingAirPlayName = it },
+                        singleLine = true,
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        val n = editingAirPlayName.trim().ifBlank { "Portal" }
+                        AirPlayPrefs.setName(ctx, n)
+                        airPlayName = n
+                        showAirPlayNameDialog = false
+                    }) { Text("OK", color = Shu) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showAirPlayNameDialog = false }) { Text("Annuler") }
+                },
+                containerColor = MaterialTheme.colorScheme.surface,
+            )
+        }
         SettingRow("Surveillance firmware", subtitle = FirmwareWatcher.currentBuild(), chevron = false) {}
         if (updateAvailable != null) {
             SettingRow(

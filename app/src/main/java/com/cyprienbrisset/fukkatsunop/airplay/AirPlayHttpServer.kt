@@ -75,7 +75,6 @@ class AirPlayHttpServer(
 
             var cseq = "0"
             val isExtendedRef = java.util.concurrent.atomic.AtomicBoolean(false)
-            val eventOutRef = java.util.concurrent.atomic.AtomicReference<java.io.OutputStream?>(null)
 
             while (running && !socket.isClosed) {
                 val requestLine = inp.readHttpLine() ?: run {
@@ -97,9 +96,14 @@ class AirPlayHttpServer(
                 val method = requestLine.substringBefore(' ')
                 val path   = requestLine.substringAfter(' ').substringBefore(' ')
                 Log.d(TAG, ">>> $method $path | body[${bodyBytes.size}]: ${bodyBytes.take(16).toHex()}")
+                headers.forEach { (k, v) -> Log.d(TAG, "  hdr $k: $v") }
 
                 when {
                     method == "GET" && (path == "/info" || path == "/server-info") -> {
+                        if (bodyBytes.isNotEmpty()) {
+                            val ascii = bodyBytes.toString(Charsets.ISO_8859_1).replace(Regex("[\\x00-\\x08\\x0E-\\x1F\\x7F]"), ".")
+                            Log.d(TAG, "GET /info body[${bodyBytes.size}] hex=${bodyBytes.take(32).toHex()} txt=$ascii")
+                        }
                         val pkB64 = Base64.encodeToString(AirPlayPairing.edPublicKeyBytes, Base64.NO_WRAP)
                         val plist = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -112,7 +116,7 @@ class AirPlayHttpServer(
 <key>pk</key><data>$pkB64</data>
 <key>pi</key><string>${AirPlayPairing.deviceId}</string>
 <key>protovers</key><string>1.1</string>
-<key>statusFlags</key><integer>68</integer>
+<key>statusFlags</key><integer>4</integer>
 <key>displays</key><array><dict>
 <key>UUID</key><string>e5f7a68d-7b0f-4305-a332-e3cfd84b0a8e</string>
 <key>features</key><integer>14</integer>
@@ -210,7 +214,9 @@ class AirPlayHttpServer(
                     method == "SETUP" -> {
                         Log.d(TAG, "SETUP body[${bodyBytes.size}]=${bodyBytes.take(8).toHex()}")
                         if (bodyBytes.size > 8 && bodyBytes.take(8) == BPLIST_MAGIC) {
-                            handleAirPlay2Setup(out, cseq, bodyBytes, macAddress, timingLportRef, isExtendedRef, onVideoNal, onReconfigureCsd, eventOutRef)
+                            handleAirPlay2Setup(out, cseq, bodyBytes, macAddress, timingLportRef, isExtendedRef, onVideoNal, onReconfigureCsd) { isExtended ->
+                                onSession(isExtended)
+                            }
                         } else {
                             // AirPlay 1 legacy
                             val clientPort = headers["Transport"]
@@ -236,18 +242,18 @@ class AirPlayHttpServer(
                     }
 
                     method == "RECORD" -> {
-                        val isExtendedSession = isExtendedRef.get()
-                        Log.d(TAG, "RECORD isExtended=$isExtendedSession")
+                        Log.d(TAG, "RECORD")
                         out.writeRtsp(cseq, mapOf(
-                            "Session" to "1",
-                            "Audio-Latency" to "0",
+                            "Server" to "AirTunes/550.10",
+                            "Session" to "BABE0001;timeout=90",
+                            "Audio-Latency" to "11025",
                             "Audio-Jack-Status" to "connected; type=analog",
                         ))
-                        onSession(isExtendedSession)
                     }
 
                     method == "TEARDOWN" -> {
-                        Log.d(TAG, "TEARDOWN body[${bodyBytes.size}] full=${bodyBytes.toHex()}")
+                        val tdAscii = bodyBytes.toString(Charsets.ISO_8859_1).replace(Regex("[\\x00-\\x08\\x0E-\\x1F\\x7F]"), ".")
+                        Log.d(TAG, "TEARDOWN body[${bodyBytes.size}] hex=${bodyBytes.toHex()} txt=$tdAscii")
                         out.writeRtsp(cseq)
                         onDisconnect()
                         break
@@ -291,6 +297,11 @@ class AirPlayHttpServer(
 }
 
 // ---- AirPlay 2 RTSP SETUP (binary plist) ----
+//
+// combinedGetInfoWithControlSetup=true (macOS 27) = ONE SETUP containing streams.
+// Previous hypothesis of two-SETUP was wrong: macOS never sends a second SETUP.
+// The real prior failure was video TCP bound IPv4-only; macOS connects via IPv6.
+// Both branches handled: if "streams" already in plist → second SETUP fallback.
 
 private fun handleAirPlay2Setup(
     out: OutputStream, cseq: String, bodyBytes: ByteArray,
@@ -299,100 +310,84 @@ private fun handleAirPlay2Setup(
     isExtendedRef: java.util.concurrent.atomic.AtomicBoolean,
     onVideoNal: (ByteArray) -> Unit,
     onReconfigureCsd: (ByteArray, ByteArray) -> Unit,
-    eventOutRef: java.util.concurrent.atomic.AtomicReference<java.io.OutputStream?> = java.util.concurrent.atomic.AtomicReference()
+    onStreamsReady: (isExtended: Boolean) -> Unit = {},
 ) {
     runCatching {
         val plist = BinaryPlist.decode(bodyBytes)
         Log.d(TAG, "SETUP plist keys: ${plist.keys}")
-        listOf("combinedGetInfoWithControlSetup", "timingProtocol", "updateSessionRequest", "timingPort", "et", "eiv", "isScreenMirroringSession").forEach { k ->
-            val v = plist[k]
-            val s = when (v) { is ByteArray -> "data[${v.size}]"; is List<*> -> "array"; is Map<*,*> -> "dict"; else -> v.toString() }
-            Log.d(TAG, "  SETUP[$k]=$s")
-        }
-        // Detect extended display vs mirroring: false = extended, true = mirror
-        val isMirror = plist["isScreenMirroringSession"] as? Boolean ?: true
-        isExtendedRef.set(!isMirror)
-        Log.d(TAG, "SETUP: isMirror=$isMirror isExtended=${!isMirror}")
 
         if ("streams" in plist) {
-            // Second SETUP : macOS sends streams to open
+            // ── Fallback: unexpected second SETUP with streams ─────────────────
             @Suppress("UNCHECKED_CAST")
             val streams = plist["streams"] as? List<Map<String, Any?>> ?: emptyList()
-            Log.d(TAG, "SETUP #2 streams[${streams.size}]")
-
+            Log.d(TAG, "SETUP #2 (fallback) streams[${streams.size}]")
             val responseStreams = streams.mapIndexed { i, stream ->
                 val type = (stream["type"] as? Long)?.toInt() ?: 0
-                Log.d(TAG, "SETUP #2 stream[$i] type=$type")
+                val connId = stream["streamConnectionID"]
+                Log.d(TAG, "  stream[$i] type=$type connId=$connId")
                 when (type) {
-                    110 -> mapOf("type" to type, "dataPort" to openVideoTcpServer(onVideoNal, onReconfigureCsd))
+                    110 -> mapOf("type" to type.toLong(), "dataPort" to openVideoTcpServer(onVideoNal, onReconfigureCsd).toLong())
                     96, 103 -> {
-                        val dport = openAudioUdpServer()
-                        val cport = openAudioUdpServer()
-                        mapOf("type" to type, "dataPort" to dport, "controlPort" to cport)
+                        val d = openAudioUdpServer(); val c = openAudioUdpServer()
+                        mapOf("type" to type.toLong(), "dataPort" to d.toLong(), "controlPort" to c.toLong())
                     }
-                    else -> mapOf("type" to type)
+                    else -> mapOf("type" to type.toLong())
                 }
             }
+            val rb = BinaryPlist.encode(mapOf("streams" to responseStreams))
+            out.writeRtspWithBody(cseq, "application/x-apple-binary-plist", rb)
+            onStreamsReady(isExtendedRef.get())
 
-            val timingLport = timingLportRef.get()
-            val responseBytes = BinaryPlist.encode(mapOf(
-                "timingPort" to timingLport,
-                "eventPort" to 0,
-                "streams" to responseStreams
-            ))
-            Log.d(TAG, "SETUP #2 response: timingLport=$timingLport streams=${responseStreams.size} bytes=${responseBytes.size}")
-            out.writeRtspWithBody(cseq, "application/x-apple-binary-plist", responseBytes, mapOf("Session" to "1"))
         } else {
-            // First SETUP (has eiv+ekey) : start RAOP timing client, return display info
-            val macTimingPort = (plist["timingPort"] as? Long)?.toInt() ?: 0
-            Log.d(TAG, "SETUP init timingPort=$macTimingPort → starting RAOP timing client")
+            // ── SETUP (combinedGetInfoWithControlSetup) ───────────────────────
+            // macOS sends ONE SETUP; expects timingPort + streams in one response.
+            listOf("combinedGetInfoWithControlSetup", "timingProtocol", "timingPort", "et",
+                   "eiv", "ekey", "isScreenMirroringSession", "osVersion", "sourceVersion",
+                   "macAddress", "sessionUUID").forEach { k ->
+                val v = plist[k]
+                val s = when (v) { is ByteArray -> "data[${v.size}]"; is List<*> -> "list"; is Map<*,*> -> "dict"; else -> v?.toString() ?: "null" }
+                Log.d(TAG, "  SETUP[$k]=$s")
+            }
 
-            // Open local UDP socket, send Apple RAOP timing packets TO macOS:macTimingPort
+            val isMirror = plist["isScreenMirroringSession"] as? Boolean ?: true
+            isExtendedRef.set(!isMirror)
+            Log.d(TAG, "SETUP: isMirror=$isMirror isExtended=${!isMirror}")
+
+            val macTimingPort = (plist["timingPort"] as? Long)?.toInt() ?: 0
             val timingLport = openRaopTimingClient(macAddress, macTimingPort)
             timingLportRef.set(timingLport)
 
-            // combinedGetInfoWithControlSetup=true → macOS sends ONE SETUP only.
-            // We must include stream ports in this response so macOS knows where to connect after RECORD.
+            // Allocate video port only. Video TCP must bind IPv6 (macOS connects via IPv6).
             val videoPort = openVideoTcpServer(onVideoNal, onReconfigureCsd)
-            val audioDataPort = openAudioUdpServer()
-            val audioCtrlPort = openAudioUdpServer()
 
-            // eventPort=0 : no event channel in mirror mode (confirmed UxPlay raop_handlers.h)
-            val responseBytes = BinaryPlist.encode(mapOf(
-                "timingPort" to timingLport,
-                "eventPort" to 0,
-                "displays" to listOf(mapOf(
-                    "uuid" to "e5f7a68d-7b0f-4305-a332-e3cfd84b0a8e",
-                    "widthPhysical" to 0L,
-                    "heightPhysical" to 0L,
-                    "width" to W.toLong(),
-                    "height" to H.toLong(),
-                    "widthPixels" to W.toLong(),
-                    "heightPixels" to H.toLong(),
-                    "rotation" to false,
-                    "refreshRate" to (1.0 / 60.0),
-                    "maxFPS" to 60L,
-                    "overscanned" to false,
-                    "features" to 14L
-                )),
-                "audioFormats" to listOf(
-                    mapOf("audioInputFormats" to 0x3FC00000L, "audioOutputFormats" to 0x3FC00000L)
-                ),
-                "audioLatencies" to listOf(
-                    mapOf("audioType" to 100L, "inputLatencyMicros" to 0L, "outputLatencyMicros" to 79000L)
-                ),
+            val responseMap = mutableMapOf<String, Any>(
+                "timingPort" to timingLport.toLong(),
+                "eventPort" to 0L,
                 "statusFlags" to 4L,
                 "streams" to listOf(
-                    mapOf("type" to 110L, "dataPort" to videoPort),
-                    mapOf("type" to 96L, "dataPort" to audioDataPort, "controlPort" to audioCtrlPort)
-                )
-            ))
-            Log.d(TAG, "SETUP init: timingLport=$timingLport videoTcp=$videoPort audio=$audioDataPort/$audioCtrlPort bytes=${responseBytes.size}")
-            out.writeRtspWithBody(cseq, "application/x-apple-binary-plist", responseBytes, mapOf("Session" to "1"))
+                    mapOf("type" to 110L, "dataPort" to videoPort.toLong()),
+                ),
+            )
+            if (!isMirror) {
+                responseMap["displays"] = listOf(mapOf(
+                    "uuid" to "e5f7a68d-7b0f-4305-a332-e3cfd84b0a8e",
+                    "widthPhysical" to 0L, "heightPhysical" to 0L,
+                    "width" to W.toLong(), "height" to H.toLong(),
+                    "widthPixels" to W.toLong(), "heightPixels" to H.toLong(),
+                    "rotation" to false, "refreshRate" to (1.0 / 60.0),
+                    "maxFPS" to 60L, "overscanned" to false, "features" to 14L,
+                ))
+            }
+            val responseBytes = BinaryPlist.encode(responseMap)
+            Log.d(TAG, "SETUP: timingLport=$timingLport videoTcp=$videoPort bytes=${responseBytes.size}")
+            Log.d(TAG, "SETUP response hex: ${responseBytes.toHex()}")
+            out.writeRtspWithBody(cseq, "application/x-apple-binary-plist", responseBytes,
+                mapOf("Server" to "AirTunes/550.10", "Session" to "BABE0001;timeout=90"))
+            onStreamsReady(isExtendedRef.get())
         }
     }.onFailure { e ->
-        Log.e(TAG, "SETUP plist error: ${e.message}", e)
-        out.writeRtsp(cseq, mapOf("Session" to "1"))
+        Log.e(TAG, "SETUP error: ${e.message}", e)
+        out.writeRtsp(cseq)
     }
 }
 
@@ -450,37 +445,6 @@ private fun ntpPutTs(buf: ByteArray, off: Int, ms: Long) {
     for (i in 0..7) buf[off + i] = ((ntp ushr (56 - i * 8)) and 0xFF).toByte()
 }
 
-private fun openEventTcpServer(onConnected: (java.io.OutputStream) -> Unit = {}): Int {
-    return runCatching {
-        val ss = java.net.ServerSocket()
-        ss.bind(java.net.InetSocketAddress("::", 0))
-        val port = ss.localPort
-        Log.d(TAG, "Event TCP server bound on port $port")
-        Thread({
-            runCatching {
-                val client = ss.accept()
-                Log.d(TAG, "Event TCP client CONNECTED from ${client.remoteSocketAddress}")
-                onConnected(client.getOutputStream())
-                val inp = client.getInputStream()
-                val buf = ByteArray(4096)
-                while (true) {
-                    val n = inp.read(buf)
-                    if (n < 0) break
-                    // Loguer en ASCII pour voir ce que macOS envoie
-                    val hex = buf.copyOf(n).toHex()
-                    val ascii = buf.copyOf(n).toString(Charsets.ISO_8859_1).replace(Regex("[\\x00-\\x1F\\x7F]"), ".")
-                    Log.d(TAG, "Event data[${n}] hex=$hex")
-                    Log.d(TAG, "Event data[${n}] txt=$ascii")
-                }
-                Log.d(TAG, "Event TCP client DISCONNECTED")
-                client.close()
-            }.onFailure { Log.d(TAG, "Event TCP: ${it.message}") }
-            ss.close()
-        }, "airplay-event").start()
-        port
-    }.getOrElse { e -> Log.e(TAG, "openEventTcpServer failed: ${e.message}"); 0 }
-}
-
 private fun openAudioUdpServer(): Int {
     return runCatching {
         // Bind sur :: pour accepter aussi bien IPv4-mapped que IPv6 natif
@@ -507,12 +471,20 @@ private fun openVideoTcpServer(
 ): Int {
     return runCatching {
         val ss = java.net.ServerSocket()
-        ss.bind(java.net.InetSocketAddress("::", 0))
+        ss.reuseAddress = true
+        ss.bind(java.net.InetSocketAddress("::", 0))  // IPv6 wildcard → dual-stack, macOS connects via IPv6
         val port = ss.localPort
-        Log.d(TAG, "Video TCP server bound on port $port")
+        Log.d(TAG, "Video TCP server bound on port $port (IPv6 dual-stack via ::)")
         Thread({
             runCatching {
-                val client = ss.accept()
+                ss.soTimeout = 10_000
+                val client = try {
+                    ss.accept()
+                } catch (e: java.net.SocketTimeoutException) {
+                    Log.e(TAG, "Video TCP TIMEOUT — macOS n'a pas connecté après 10s (port $port)")
+                    ss.close(); return@runCatching
+                }
+                ss.soTimeout = 0
                 Log.d(TAG, "Video TCP client CONNECTED from ${client.remoteSocketAddress}")
                 val inp = client.getInputStream()
                 val hdr = ByteArray(128)
@@ -657,26 +629,6 @@ private fun OutputStream.writeRtspWithBody(cseq: String, contentType: String, bo
     write(sb.toString().toByteArray())
     write(body)
     flush()
-}
-
-private fun sendRecordingEvent(eventOut: java.io.OutputStream?) {
-    if (eventOut == null) { Log.d(TAG, "Event: no client, skipping"); return }
-    runCatching {
-        // state=4 = RPPlaybackStatePlaying
-        val body = BinaryPlist.encode(mapOf(
-            "type" to "playbackChange",
-            "params" to mapOf("state" to 4L)
-        ))
-        val header = "POST /event RTSP/1.0\r\n" +
-            "CSeq: 1\r\n" +
-            "Content-Type: application/x-apple-binary-plist\r\n" +
-            "Content-Length: ${body.size}\r\n" +
-            "\r\n"
-        eventOut.write(header.toByteArray(Charsets.US_ASCII))
-        eventOut.write(body)
-        eventOut.flush()
-        Log.d(TAG, "Event: sent playbackChange state=4 body[${body.size}]")
-    }.onFailure { Log.e(TAG, "Event write failed: ${it.message}") }
 }
 
 private fun ByteArray.toHex() = joinToString("") { "%02x".format(it) }

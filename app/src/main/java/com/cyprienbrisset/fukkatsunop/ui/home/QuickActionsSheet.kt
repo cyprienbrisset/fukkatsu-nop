@@ -69,6 +69,7 @@ fun QuickActionsSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
+        modifier = Modifier.fillMaxWidth(0.6f),
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Column(

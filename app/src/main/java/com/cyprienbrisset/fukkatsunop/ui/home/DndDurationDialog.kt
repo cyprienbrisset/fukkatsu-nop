@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -28,6 +29,8 @@ fun DndDurationDialog(onDismiss: () -> Unit, onPick: (Long) -> Unit) {
     var hours by remember { mutableIntStateOf(2) }
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.fillMaxWidth(0.6f),
+        containerColor = MaterialTheme.colorScheme.surface,
         confirmButton = {
             if (custom) TextButton(onClick = { onPick(hours * 60L * 60L * 1000L) }) { Text("Activer ${hours}h") }
         },

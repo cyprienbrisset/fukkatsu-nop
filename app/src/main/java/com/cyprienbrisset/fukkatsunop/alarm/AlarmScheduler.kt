@@ -27,8 +27,6 @@ fun nextTriggerTime(alarm: AlarmEntity, from: LocalDateTime): LocalDateTime {
     return todayAt.plusWeeks(1)
 }
 
-private const val SUNRISE_LEAD_MS = 20 * 60 * 1000L   // 20 min avant l'alarme
-
 private fun DayOfWeek.bitIndex(): Int = this.value - 1 // MONDAY(1)->0 .. SUNDAY(7)->6
 
 class AlarmScheduler(private val context: Context) {
@@ -40,36 +38,16 @@ class AlarmScheduler(private val context: Context) {
         val triggerMillis = trigger.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val show = PendingIntent.getActivity(
             context, alarm.id.toInt(),
-            Intent(context, AlarmRingActivity::class.java).putExtra(AlarmReceiver.EXTRA_ALARM_ID, alarm.id),
+            Intent(context, AlarmRingActivity::class.java)
+                .putExtra(AlarmReceiver.EXTRA_ALARM_ID, alarm.id)
+                .putExtra(AlarmForegroundService.EXTRA_VIDEO_ENABLED, alarm.videoEnabled),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         am.setAlarmClock(AlarmManager.AlarmClockInfo(triggerMillis, show), firePendingIntent(alarm.id))
-
-        // Réveil progressif : lever de soleil 20 min avant l'alarme
-        val sunriseTriggerMs = triggerMillis - SUNRISE_LEAD_MS
-        if (sunriseTriggerMs > System.currentTimeMillis()) {
-            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, sunriseTriggerMs, sunrisePendingIntent(alarm.id))
-        } else {
-            cancelSunrise(alarm.id)
-        }
     }
 
     fun cancel(alarmId: Long) {
         am.cancel(firePendingIntent(alarmId))
-        cancelSunrise(alarmId)
-    }
-
-    fun cancelSunrise(alarmId: Long) = am.cancel(sunrisePendingIntent(alarmId))
-
-    private fun sunrisePendingIntent(alarmId: Long): PendingIntent {
-        val intent = Intent(context, SunriseReceiver::class.java).apply {
-            action = SunriseReceiver.ACTION_FIRE
-            putExtra(AlarmReceiver.EXTRA_ALARM_ID, alarmId)
-        }
-        return PendingIntent.getBroadcast(
-            context, (alarmId + 100_000L).toInt(), intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
     }
 
     private fun firePendingIntent(alarmId: Long): PendingIntent {

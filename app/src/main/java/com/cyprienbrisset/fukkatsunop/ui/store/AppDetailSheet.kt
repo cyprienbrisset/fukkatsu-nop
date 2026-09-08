@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -33,13 +34,9 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.cyprienbrisset.fukkatsunop.store.AppDetail
 import com.cyprienbrisset.fukkatsunop.store.StoreApp
-import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.OnShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
-import com.cyprienbrisset.fukkatsunop.ui.theme.SumiLine
-import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
-import com.cyprienbrisset.fukkatsunop.ui.theme.SumiSurface
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +51,8 @@ fun AppDetailSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = SumiSurface,
+        modifier = Modifier.fillMaxWidth(0.6f),
+        containerColor = MaterialTheme.colorScheme.surface,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
         Column(
@@ -74,9 +72,9 @@ fun AppDetailSheet(
                 )
                 Spacer(Modifier.width(16.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(app.title, color = Kinari, fontSize = 19.sp, fontFamily = Mincho)
+                    Text(app.title, color = MaterialTheme.colorScheme.onSurface, fontSize = 19.sp, fontFamily = Mincho)
                     Spacer(Modifier.height(4.dp))
-                    Text(app.developer, color = SumiMuted, fontSize = 14.sp)
+                    Text(app.developer, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
                     val d = detail
                     if (d != null && d.ratingAverage > 0f) {
                         Spacer(Modifier.height(6.dp))
@@ -90,7 +88,7 @@ fun AppDetailSheet(
                                 color = Shu, fontSize = 14.sp,
                             )
                             Spacer(Modifier.width(6.dp))
-                            Text("%.1f".format(d.ratingAverage), color = SumiMuted, fontSize = 13.sp)
+                            Text("%.1f".format(d.ratingAverage), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
                         }
                     }
                 }
@@ -111,7 +109,7 @@ fun AppDetailSheet(
 
             if (d.shortDescription.isNotBlank()) {
                 Spacer(Modifier.height(20.dp))
-                Text(d.shortDescription, color = Kinari, fontSize = 15.sp, lineHeight = 22.sp)
+                Text(d.shortDescription, color = MaterialTheme.colorScheme.onSurface, fontSize = 15.sp, lineHeight = 22.sp)
             }
 
             if (d.screenshotUrls.isNotEmpty()) {
@@ -129,9 +127,9 @@ fun AppDetailSheet(
 
             if (d.description.isNotBlank()) {
                 Spacer(Modifier.height(20.dp))
-                HorizontalDivider(color = SumiLine)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline)
                 Spacer(Modifier.height(16.dp))
-                Text(d.description, color = SumiMuted, fontSize = 14.sp, lineHeight = 22.sp)
+                Text(d.description, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp, lineHeight = 22.sp)
             }
         }
     }
@@ -145,18 +143,18 @@ private fun DetailInstallButton(pct: Int?, onInstall: () -> Unit, onOpen: () -> 
             contentAlignment = Alignment.Center,
         ) { Text("Installer", color = OnShu, fontFamily = Mincho, fontSize = 16.sp) }
         pct in 0..99 -> Box(
-            modifier.clip(RoundedCornerShape(14.dp)).background(SumiLine).padding(vertical = 14.dp),
+            modifier.clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceVariant).padding(vertical = 14.dp),
             contentAlignment = Alignment.Center,
-        ) { Text("Téléchargement $pct %", color = Kinari, fontSize = 16.sp) }
+        ) { Text("Téléchargement $pct %", color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp) }
         pct == InstallProgress.INSTALLING -> Box(
             modifier.padding(vertical = 14.dp), contentAlignment = Alignment.Center,
-        ) { Text("Installation…", color = SumiMuted, fontSize = 16.sp) }
+        ) { Text("Installation…", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 16.sp) }
         pct == InstallProgress.INSTALLED -> Box(
-            modifier.clip(RoundedCornerShape(14.dp)).background(SumiLine).clickable { onOpen() }.padding(vertical = 14.dp),
+            modifier.clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceVariant).clickable { onOpen() }.padding(vertical = 14.dp),
             contentAlignment = Alignment.Center,
-        ) { Text("Ouvrir", color = Kinari, fontFamily = Mincho, fontSize = 16.sp) }
+        ) { Text("Ouvrir", color = MaterialTheme.colorScheme.onSurface, fontFamily = Mincho, fontSize = 16.sp) }
         else -> Box(
-            modifier.clip(RoundedCornerShape(14.dp)).background(SumiLine).clickable { onInstall() }.padding(vertical = 14.dp),
+            modifier.clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceVariant).clickable { onInstall() }.padding(vertical = 14.dp),
             contentAlignment = Alignment.Center,
         ) { Text("Réessayer", color = Shu, fontFamily = Mincho, fontSize = 16.sp) }
     }

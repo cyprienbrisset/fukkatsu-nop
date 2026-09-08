@@ -30,13 +30,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.MaterialTheme
+import com.cyprienbrisset.fukkatsunop.R
 import com.cyprienbrisset.fukkatsunop.ui.sumi.SectionLabel
-import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
-import com.cyprienbrisset.fukkatsunop.ui.theme.SumiLine
-import com.cyprienbrisset.fukkatsunop.ui.theme.SumiSurface
 
-private data class Tone(val title: String, val uri: String)
+private data class Tone(val title: String, val uri: String, val custom: Boolean = false)
 
 @Composable
 fun RingtonePicker(selectedUri: String?, onSelect: (String?) -> Unit, modifier: Modifier = Modifier) {
@@ -45,6 +44,12 @@ fun RingtonePicker(selectedUri: String?, onSelect: (String?) -> Unit, modifier: 
         val mgr = RingtoneManager(ctx).apply { setType(RingtoneManager.TYPE_ALARM) }
         val cur = mgr.cursor
         buildList {
+            // Sonneries apaisantes intégrées en premier
+            add(Tone("Bol tibétain", "android.resource://${ctx.packageName}/${R.raw.alarm_bol}", custom = true))
+            add(Tone("Cloche zen", "android.resource://${ctx.packageName}/${R.raw.alarm_zen}", custom = true))
+            add(Tone("Oiseaux du matin", "android.resource://${ctx.packageName}/${R.raw.alarm_oiseaux}", custom = true))
+            add(Tone("Temple Zenko-ji", "android.resource://${ctx.packageName}/${R.raw.alarm_temple}", custom = true))
+            add(Tone("Carillon", "android.resource://${ctx.packageName}/${R.raw.alarm_carillon}", custom = true))
             add(Tone("Par défaut", ""))
             var pos = 0
             while (cur.moveToNext()) {
@@ -65,8 +70,9 @@ fun RingtonePicker(selectedUri: String?, onSelect: (String?) -> Unit, modifier: 
             items(tones) { t ->
                 val on = (selectedUri ?: "") == t.uri
                 Row(
-                    Modifier.height(60.dp).clip(RoundedCornerShape(14.dp)).background(SumiSurface)
-                        .border(BorderStroke(1.dp, if (on) Shu else SumiLine), RoundedCornerShape(14.dp))
+                    Modifier.height(60.dp).clip(RoundedCornerShape(14.dp))
+                        .background(if (t.custom && on) Shu.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant)
+                        .border(BorderStroke(if (on) 1.5.dp else 1.dp, if (on) Shu else MaterialTheme.colorScheme.outline), RoundedCornerShape(14.dp))
                         .clickable {
                             onSelect(if (t.uri.isEmpty()) null else t.uri)
                             preview?.stop()
@@ -76,9 +82,9 @@ fun RingtonePicker(selectedUri: String?, onSelect: (String?) -> Unit, modifier: 
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("▶", color = Shu, fontSize = 12.sp)
+                    Text(if (t.custom) "♪" else "▶", color = Shu, fontSize = 12.sp)
                     Spacer(Modifier.width(10.dp))
-                    Text(t.title, color = Kinari, fontSize = 14.sp)
+                    Text(t.title, color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp)
                 }
             }
         }

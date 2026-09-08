@@ -43,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.cyprienbrisset.fukkatsunop.system.DarkModeManager
 import com.cyprienbrisset.fukkatsunop.ui.sumi.HankoSeal
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
@@ -158,9 +159,13 @@ fun DarkModeScheduleScreen(onBack: () -> Unit) {
     val which = pickerFor
     if (which != null) {
         val state = if (which == "dark") darkPickerState else lightPickerState
-        Dialog(onDismissRequest = { pickerFor = null }) {
+        Dialog(
+            onDismissRequest = { pickerFor = null },
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
             Column(
                 Modifier
+                    .fillMaxWidth(0.6f)
                     .clip(RoundedCornerShape(20.dp))
                     .background(MaterialTheme.colorScheme.surface)
                     .padding(24.dp),

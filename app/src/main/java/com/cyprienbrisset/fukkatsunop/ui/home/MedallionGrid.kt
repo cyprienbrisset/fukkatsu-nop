@@ -1,5 +1,10 @@
 package com.cyprienbrisset.fukkatsunop.ui.home
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -97,6 +102,16 @@ fun MedallionGrid(
             val airPlayState by AirPlayReceiver.state.collectAsState()
             val isAirPlayLive = tile.type == TileType.AIRPLAY && airPlayState is AirPlayState.Streaming
             val isDragging = reorderMode && draggingKey == tile.id
+            val jiggleTransition = rememberInfiniteTransition(label = "jiggle_${tile.id}")
+            val jiggleAngle by jiggleTransition.animateFloat(
+                initialValue = if (tile.id % 2 == 0L) -1.8f else 1.8f,
+                targetValue = if (tile.id % 2 == 0L) 1.8f else -1.8f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 110 + (tile.id % 3).toInt() * 25),
+                    repeatMode = RepeatMode.Reverse,
+                ),
+                label = "jiggle",
+            )
             Box(
                 modifier = Modifier.then(
                     if (isAirPlayLive)
@@ -114,6 +129,8 @@ fun MedallionGrid(
                             alpha = 0.8f
                             scaleX = 1.08f
                             scaleY = 1.08f
+                        } else if (reorderMode) {
+                            rotationZ = jiggleAngle
                         }
                     }
                     .then(if (reorderMode) Modifier.animateItemPlacement() else Modifier),

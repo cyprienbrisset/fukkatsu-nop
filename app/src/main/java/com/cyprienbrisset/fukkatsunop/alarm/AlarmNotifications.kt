@@ -27,13 +27,14 @@ object AlarmNotifications {
     }
 
     /** Full-screen-intent notification that opens the ring screen. */
-    fun buildRinging(context: Context, alarmId: Long, label: String): Notification {
+    fun buildRinging(context: Context, alarmId: Long, label: String, videoEnabled: Boolean = false): Notification {
         ensureChannel(context)
         val fullScreen = PendingIntent.getActivity(
             context, alarmId.toInt(),
             Intent(context, AlarmRingActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .putExtra(AlarmReceiver.EXTRA_ALARM_ID, alarmId),
+                .putExtra(AlarmReceiver.EXTRA_ALARM_ID, alarmId)
+                .putExtra(AlarmForegroundService.EXTRA_VIDEO_ENABLED, videoEnabled),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         return NotificationCompat.Builder(context, CHANNEL_ID)

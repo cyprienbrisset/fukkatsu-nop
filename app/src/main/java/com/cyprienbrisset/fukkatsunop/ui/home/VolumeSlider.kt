@@ -36,6 +36,7 @@ import androidx.compose.material.icons.rounded.SpeakerPhone
 import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -57,7 +58,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
-import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
@@ -202,9 +202,9 @@ private fun BluetoothDevicePicker(
     ) {
         Column(
             Modifier
-                .widthIn(min = 480.dp, max = 640.dp)
+                .fillMaxWidth(0.6f)
                 .clip(RoundedCornerShape(24.dp))
-                .background(Color(0xFF141418)),
+                .background(MaterialTheme.colorScheme.surface),
         ) {
             // Header
             Row(
@@ -216,7 +216,7 @@ private fun BluetoothDevicePicker(
                 Text(
                     "Sortie audio",
                     fontFamily = Mincho,
-                    color = Kinari,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.weight(1f),
@@ -233,13 +233,13 @@ private fun BluetoothDevicePicker(
                 }
             }
 
-            HorizontalDivider(color = Color(0xFF2A2A2E))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
             if (sorted.isEmpty()) {
                 Text(
                     "Aucun appareil jumelé",
                     fontFamily = Mincho,
-                    color = SumiMuted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 16.sp,
                     modifier = Modifier.padding(28.dp),
                 )
@@ -257,7 +257,7 @@ private fun BluetoothDevicePicker(
                 }
             }
 
-            HorizontalDivider(color = Color(0xFF2A2A2E))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
             Row(
                 Modifier
@@ -267,11 +267,11 @@ private fun BluetoothDevicePicker(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                Icon(Icons.Rounded.OpenInNew, null, tint = SumiMuted, modifier = Modifier.size(20.dp))
+                Icon(Icons.Rounded.OpenInNew, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
                 Text(
                     "Paramètres Bluetooth",
                     fontFamily = Mincho,
-                    color = SumiMuted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 15.sp,
                     modifier = Modifier.weight(1f),
                 )
@@ -302,7 +302,7 @@ private fun DeviceRow(name: String, isConnected: Boolean, isActive: Boolean) {
             Text(
                 name,
                 fontFamily = Mincho,
-                color = if (isActive) Shu else Kinari,
+                color = if (isActive) Shu else MaterialTheme.colorScheme.onSurface,
                 fontSize = 17.sp,
                 fontWeight = if (isActive) FontWeight.Medium else FontWeight.Normal,
             )

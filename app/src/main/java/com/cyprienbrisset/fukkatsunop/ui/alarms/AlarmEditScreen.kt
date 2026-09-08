@@ -7,9 +7,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,6 +31,7 @@ import com.cyprienbrisset.fukkatsunop.ui.sumi.SumiChoiceChip
 import com.cyprienbrisset.fukkatsunop.ui.sumi.SumiPrimaryButton
 import com.cyprienbrisset.fukkatsunop.ui.sumi.stepHour
 import com.cyprienbrisset.fukkatsunop.ui.sumi.stepMinute
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
@@ -39,6 +43,7 @@ fun AlarmEditScreen(onDone: () -> Unit, vm: AlarmsViewModel = viewModel()) {
     var days by remember { mutableStateOf(0) }
     var snooze by remember { mutableStateOf(10) }
     var ringtoneUri by remember { mutableStateOf<String?>(null) }
+    var videoEnabled by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 32.dp).padding(top = 28.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -69,9 +74,35 @@ fun AlarmEditScreen(onDone: () -> Unit, vm: AlarmsViewModel = viewModel()) {
             }
         }
         Spacer(Modifier.height(24.dp))
+        SectionLabel("映像", "RÉVEIL AVEC VIDÉO")
+        Spacer(Modifier.height(8.dp))
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 52.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                if (videoEnabled) "Vidéo au réveil" else "Réveil sans vidéo",
+                color = SumiMuted,
+                fontFamily = Mincho,
+                fontSize = 13.sp,
+            )
+            Switch(
+                checked = videoEnabled,
+                onCheckedChange = { videoEnabled = it },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = AccentShu,
+                    checkedTrackColor = AccentShu.copy(alpha = 0.4f),
+                ),
+            )
+        }
+        Spacer(Modifier.height(16.dp))
         RingtonePicker(selectedUri = ringtoneUri, onSelect = { ringtoneUri = it })
         Spacer(Modifier.weight(1f))
-        SumiPrimaryButton("保存 · Enregistrer", onClick = { vm.save(hour, minute, days, "", ringtoneUri, snooze); onDone() })
+        SumiPrimaryButton("保存 · Enregistrer", onClick = {
+            vm.save(hour, minute, days, "", ringtoneUri, snooze, videoEnabled)
+            onDone()
+        })
         Spacer(Modifier.height(20.dp))
     }
 }

@@ -17,6 +17,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -151,9 +152,10 @@ private fun NewEventDialog(
 
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = com.cyprienbrisset.fukkatsunop.ui.theme.SumiSurface,
+        modifier = Modifier.fillMaxWidth(0.6f),
+        containerColor = MaterialTheme.colorScheme.surface,
         title = {
-            Text("Nouvel événement", fontFamily = Mincho, color = Kinari, fontSize = 18.sp)
+            Text("Nouvel événement", fontFamily = Mincho, color = MaterialTheme.colorScheme.onSurface, fontSize = 18.sp)
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -188,7 +190,7 @@ private fun NewEventDialog(
         },
         dismissButton = {
             androidx.compose.material3.TextButton(onClick = onDismiss) {
-                Text("Annuler", color = SumiMuted, fontFamily = Mincho)
+                Text("Annuler", color = MaterialTheme.colorScheme.onSurfaceVariant, fontFamily = Mincho)
             }
         },
     )
@@ -197,17 +199,17 @@ private fun NewEventDialog(
 @Composable
 private fun LabeledField(label: String, value: String, placeholder: String, onValue: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(label, color = SumiMuted, fontFamily = Mincho, fontSize = 12.sp)
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontFamily = Mincho, fontSize = 12.sp)
         androidx.compose.material3.OutlinedTextField(
             value = value,
             onValueChange = onValue,
-            placeholder = { Text(placeholder, color = SumiMuted, fontSize = 14.sp) },
+            placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp) },
             singleLine = true,
             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Shu,
-                unfocusedBorderColor = com.cyprienbrisset.fukkatsunop.ui.theme.SumiLine,
-                focusedTextColor = Kinari,
-                unfocusedTextColor = Kinari,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                 cursorColor = Shu,
             ),
         )

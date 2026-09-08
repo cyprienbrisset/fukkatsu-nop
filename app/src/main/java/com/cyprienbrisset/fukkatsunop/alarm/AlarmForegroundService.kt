@@ -25,7 +25,8 @@ class AlarmForegroundService : Service() {
         // Become foreground first on EVERY start path to satisfy the O+ startForegroundService contract.
         val alarmId = intent?.getLongExtra(AlarmReceiver.EXTRA_ALARM_ID, -1) ?: -1
         val label = intent?.getStringExtra(EXTRA_LABEL) ?: ""
-        startForeground(AlarmNotifications.NOTIF_ID, AlarmNotifications.buildRinging(this, alarmId, label))
+        val videoEnabled = intent?.getBooleanExtra(EXTRA_VIDEO_ENABLED, false) ?: false
+        startForeground(AlarmNotifications.NOTIF_ID, AlarmNotifications.buildRinging(this, alarmId, label, videoEnabled))
 
         when (intent?.action) {
             ACTION_STOP -> { stopEverything(); return START_NOT_STICKY }
@@ -105,14 +106,16 @@ class AlarmForegroundService : Service() {
         const val EXTRA_LABEL = "label"
         const val EXTRA_RINGTONE = "ringtone"
         const val EXTRA_SNOOZE_MIN = "snooze_min"
+        const val EXTRA_VIDEO_ENABLED = "video_enabled"
         const val RAMP_STEPS = 30
         const val RAMP_INTERVAL_MS = 1000L
 
-        fun start(context: Context, alarmId: Long, label: String, ringtoneUri: String?) {
+        fun start(context: Context, alarmId: Long, label: String, ringtoneUri: String?, videoEnabled: Boolean = false) {
             val i = Intent(context, AlarmForegroundService::class.java)
                 .putExtra(AlarmReceiver.EXTRA_ALARM_ID, alarmId)
                 .putExtra(EXTRA_LABEL, label)
                 .putExtra(EXTRA_RINGTONE, ringtoneUri)
+                .putExtra(EXTRA_VIDEO_ENABLED, videoEnabled)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(i)
             else context.startService(i)
         }

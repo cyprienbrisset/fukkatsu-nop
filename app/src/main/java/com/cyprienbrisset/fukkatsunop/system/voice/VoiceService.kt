@@ -84,14 +84,23 @@ class VoiceService : Service() {
     private fun startListening() {
         listenJob = scope.launch {
             val sampleRate = 16000
-            val bufferSize = AudioRecord.getMinBufferSize(
+            val minBuf = AudioRecord.getMinBufferSize(
                 sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT
-            ) * 2
+            )
+            if (minBuf <= 0) {
+                // Mic unavailable — stop cleanly rather than crashing in a START_STICKY loop
+                stopSelf(); return@launch
+            }
+            val bufferSize = minBuf * 2
             val recorder = AudioRecord(
                 MediaRecorder.AudioSource.MIC,
                 sampleRate, AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT, bufferSize,
             )
+            if (recorder.state != AudioRecord.STATE_INITIALIZED) {
+                recorder.release()
+                stopSelf(); return@launch
+            }
             val commandGrammar = VoiceCommandDispatcher.buildCommandGrammar(this@VoiceService)
             val wakeRecognizer = Recognizer(model, sampleRate.toFloat(), """["portal", "[unk]"]""")
             val cmdRecognizer = Recognizer(model, sampleRate.toFloat(), commandGrammar)

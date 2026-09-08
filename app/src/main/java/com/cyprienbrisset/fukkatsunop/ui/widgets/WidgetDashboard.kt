@@ -72,7 +72,7 @@ import androidx.compose.ui.zIndex
 import androidx.core.graphics.drawable.toBitmap
 import com.cyprienbrisset.fukkatsunop.ui.sumi.SectionLabel
 import com.cyprienbrisset.fukkatsunop.ui.sumi.WatermarkKanji
-import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
+import androidx.compose.material3.MaterialTheme
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.OnShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
@@ -83,10 +83,10 @@ private const val PREFS_KEY = "widget_layouts_v3"
 private const val DEFAULT_H = 160
 private const val DEFAULT_W = 100
 
-// widthPct: 50, 67, 100 — width as percent of available parent width
+// widthPct: 33, 50, 67, 75, 100 — width as percent of available parent width
 data class WidgetLayout(val id: Int, val heightDp: Int = DEFAULT_H, val widthPct: Int = DEFAULT_W)
 
-private val WIDTH_STEPS = listOf(50, 67, 100)
+private val WIDTH_STEPS = listOf(33, 50, 67, 75, 100)
 
 private fun loadLayouts(ctx: Context): List<WidgetLayout> {
     val raw = ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -207,7 +207,7 @@ fun WidgetDashboard() {
         }
     }
 
-    Box(Modifier.fillMaxSize().background(Color(0xFF0E0E0E))) {
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         WatermarkKanji("風", Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 60.dp))
 
         Column(
@@ -226,7 +226,7 @@ fun WidgetDashboard() {
                 SectionLabel("ウィジェット", "MES WIDGETS", modifier = Modifier.weight(1f))
                 if (editMode) {
                     Box(
-                        Modifier.size(36.dp).clip(CircleShape).background(Color(0xFF2A2A2A))
+                        Modifier.size(36.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant)
                             .clickable { editMode = false },
                         contentAlignment = Alignment.Center,
                     ) {
@@ -246,9 +246,9 @@ fun WidgetDashboard() {
             if (layouts.isEmpty()) {
                 Box(Modifier.fillMaxWidth().padding(vertical = 80.dp), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Aucun widget", color = Kinari.copy(alpha = 0.35f), fontFamily = Mincho, fontSize = 16.sp)
+                        Text("Aucun widget", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f), fontFamily = Mincho, fontSize = 16.sp)
                         Spacer(Modifier.height(6.dp))
-                        Text("Appuie sur + pour en ajouter", color = Kinari.copy(alpha = 0.2f), fontFamily = Mincho, fontSize = 12.sp)
+                        Text("Appuie sur + pour en ajouter", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f), fontFamily = Mincho, fontSize = 12.sp)
                     }
                 }
             } else {
@@ -309,6 +309,7 @@ fun WidgetDashboard() {
         if (pendingDeleteId != null) {
             AlertDialog(
                 onDismissRequest = { pendingDeleteId = null },
+                modifier = Modifier.fillMaxWidth(0.6f),
                 title = { Text("Supprimer ce widget ?", fontFamily = Mincho, fontWeight = FontWeight.SemiBold) },
                 confirmButton = {
                     TextButton(onClick = {
@@ -321,11 +322,11 @@ fun WidgetDashboard() {
                 },
                 dismissButton = {
                     TextButton(onClick = { pendingDeleteId = null }) {
-                        Text("Annuler", color = Kinari.copy(alpha = 0.6f), fontFamily = Mincho)
+                        Text("Annuler", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), fontFamily = Mincho)
                     }
                 },
-                containerColor = Color(0xFF1E1E1E),
-                titleContentColor = Kinari,
+                containerColor = MaterialTheme.colorScheme.surface,
+                titleContentColor = MaterialTheme.colorScheme.onSurface,
             )
         }
     }
@@ -379,7 +380,7 @@ private fun WidgetCard(
             .fillMaxWidth(widthPct / 100f)
             .shadow(if (editMode) 14.dp else 2.dp, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF1A1A1A))
+            .background(MaterialTheme.colorScheme.surface)
             .pointerInput(editMode) {
                 if (!editMode) detectTapGestures(onLongPress = { onLongPress() })
             },
@@ -389,7 +390,7 @@ private fun WidgetCard(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF202020))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
                     .then(
                         if (editMode) Modifier.pointerInput(Unit) {
                             detectDragGestures(
@@ -405,25 +406,25 @@ private fun WidgetCard(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 if (editMode) {
-                    Icon(Icons.Rounded.DragHandle, contentDescription = "Réorganiser", tint = Kinari.copy(alpha = 0.3f), modifier = Modifier.size(20.dp))
+                    Icon(Icons.Rounded.DragHandle, contentDescription = "Réorganiser", tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), modifier = Modifier.size(20.dp))
                 }
                 if (appIcon != null) {
                     Image(BitmapPainter(appIcon), contentDescription = null, modifier = Modifier.size(26.dp).clip(RoundedCornerShape(6.dp)))
                 }
                 Column(Modifier.weight(1f)) {
                     if (widgetLabel.isNotBlank()) {
-                        Text(widgetLabel, color = Kinari, fontFamily = Mincho, fontWeight = FontWeight.Medium, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(widgetLabel, color = MaterialTheme.colorScheme.onSurface, fontFamily = Mincho, fontWeight = FontWeight.Medium, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     if (appName.isNotBlank() && appName != widgetLabel) {
-                        Text(appName, color = Kinari.copy(alpha = 0.38f), fontFamily = Mincho, fontSize = 11.sp, maxLines = 1)
+                        Text(appName, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f), fontFamily = Mincho, fontSize = 11.sp, maxLines = 1)
                     }
                 }
                 if (editMode) {
                     Box(
-                        Modifier.size(26.dp).clip(CircleShape).background(Color(0xFF3D1515)).clickable { onDelete() },
+                        Modifier.size(26.dp).clip(CircleShape).background(MaterialTheme.colorScheme.errorContainer).clickable { onDelete() },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Rounded.Close, contentDescription = "Supprimer", tint = Color(0xFFFF6B6B), modifier = Modifier.size(14.dp))
+                        Icon(Icons.Rounded.Close, contentDescription = "Supprimer", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(14.dp))
                     }
                 }
             }
@@ -447,17 +448,17 @@ private fun WidgetCard(
                     Modifier
                         .fillMaxWidth()
                         .height(28.dp)
-                        .background(Color(0xFF1D1D1D))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .pointerInput(minHeightDp) {
                             detectDragGestures { _, dragAmount ->
                                 val delta = with(density) { dragAmount.y.toDp().value.toInt() }
-                                heightDp = (heightDp + delta).coerceIn(minHeightDp, 600)
+                                heightDp = (heightDp + delta).coerceIn(minHeightDp, 900)
                                 onResizeH(heightDp)
                             }
                         },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Rounded.DragHandle, contentDescription = "Hauteur", tint = Kinari.copy(alpha = 0.18f), modifier = Modifier.size(16.dp))
+                    Icon(Icons.Rounded.DragHandle, contentDescription = "Hauteur", tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f), modifier = Modifier.size(16.dp))
                 }
             }
         }
@@ -469,7 +470,7 @@ private fun WidgetCard(
                     .width(22.dp)
                     .fillMaxHeight()
                     .align(Alignment.CenterEnd)
-                    .background(Color(0xFF2A2A2A).copy(alpha = 0.85f))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f))
                     .pointerInput(widthPct) {
                         detectDragGestures(
                             onDragStart = { showWidthHint = true; widthDragAccum = 0f },
@@ -495,7 +496,7 @@ private fun WidgetCard(
                 Icon(
                     Icons.Rounded.DragHandle,
                     contentDescription = "Largeur",
-                    tint = Kinari.copy(alpha = 0.35f),
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
                     modifier = Modifier.size(14.dp),
                 )
             }
@@ -506,10 +507,10 @@ private fun WidgetCard(
                     Modifier
                         .align(Alignment.Center)
                         .clip(RoundedCornerShape(50))
-                        .background(Color(0xFF000000).copy(alpha = 0.75f))
+                        .background(Color.Black.copy(alpha = 0.75f))
                         .padding(horizontal = 14.dp, vertical = 6.dp),
                 ) {
-                    Text("$widthPct%", color = Kinari, fontFamily = Mincho, fontWeight = FontWeight.Medium, fontSize = 16.sp)
+                    Text("$widthPct%", color = Color.White, fontFamily = Mincho, fontWeight = FontWeight.Medium, fontSize = 16.sp)
                 }
             }
         }

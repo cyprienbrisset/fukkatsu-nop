@@ -32,7 +32,7 @@ val Washi        = Color(0xFFF2EDE3)
 val WashiSurface = Color(0xFFE6E1D6)
 val WashiLine    = Color(0xFFCCC7BC)
 val Ink          = Color(0xFF14161C)
-val InkMuted     = Color(0xFF6E6B61)
+val InkMuted     = Color(0xFF4A4640)
 
 // ── Theme-reactive palette ───────────────────────────────────────────────────
 // Backed by Compose State so any read during composition is tracked and
@@ -53,7 +53,7 @@ val SumiMuted:   Color get() = _sumiMuted.value
 
 // Light-mode card and sub-surface colors — distinctly lighter than the Washi page bg
 // so cards float visibly on the parchment background (same logic as white cards on gray in MD3)
-private val WashiCard    = Color(0xFFFAF8F4)  // near-white card surface
+val WashiCard    = Color(0xFFFAF8F4)  // near-white card surface
 private val WashiSubCard = Color(0xFFE0DBD0)  // darker slot (artwork placeholder, etc.)
 
 fun applyColorPalette(dark: Boolean) {

@@ -5,7 +5,23 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
 
-class MdnsAdvertiser(private val context: Context) {
+object AirPlayPrefs {
+    private const val PREFS = "airplay_prefs"
+    private const val KEY_NAME = "airplay_name"
+
+    fun getName(ctx: Context): String {
+        val saved = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_NAME, null)
+        if (saved != null) return saved
+        val deviceName = android.provider.Settings.Global.getString(ctx.contentResolver, "device_name")
+        return deviceName?.takeIf { it.isNotBlank() } ?: "Portal"
+    }
+
+    fun setName(ctx: Context, name: String) {
+        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_NAME, name.trim().ifBlank { "Portal" }).apply()
+    }
+}
+
+class MdnsAdvertiser(private val context: Context, private val name: String = AirPlayPrefs.getName(context)) {
     private var nsdManager: NsdManager? = null
     private var listener: NsdManager.RegistrationListener? = null
     private var multicastLock: WifiManager.MulticastLock? = null
@@ -24,7 +40,7 @@ class MdnsAdvertiser(private val context: Context) {
         val pkHex = pk.joinToString("") { "%02x".format(it) }
 
         val serviceInfo = NsdServiceInfo().apply {
-            serviceName = "Portal"
+            serviceName = name
             serviceType = "_airplay._tcp"
             port = 7000
             setAttribute("deviceid", deviceId)

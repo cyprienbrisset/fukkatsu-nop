@@ -1,5 +1,6 @@
 package com.cyprienbrisset.fukkatsunop.data.alarm
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -15,6 +16,7 @@ data class AlarmEntity(
     val repeatDays: Int = 0,
     val label: String = "",
     val enabled: Boolean = true,
-    val ringtoneUri: String? = null,   // null = default alarm sound
+    val ringtoneUri: String? = null,
     val snoozeMinutes: Int = 10,
+    @ColumnInfo(name = "sunriseEnabled") val videoEnabled: Boolean = false,
 )

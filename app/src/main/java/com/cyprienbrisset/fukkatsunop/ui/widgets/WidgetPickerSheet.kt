@@ -53,7 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
-import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
+import androidx.compose.material3.MaterialTheme
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 
@@ -113,10 +113,10 @@ fun WidgetPickerSheet(
         ) {
             Column(
                 Modifier
-                    .width(620.dp)
+                    .fillMaxWidth(0.6f)
                     .heightIn(max = 680.dp)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(Color(0xFF111111))
+                    .background(MaterialTheme.colorScheme.surface)
                     .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
             ) {
                 // ── Header ──────────────────────────────────────────────────
@@ -127,14 +127,14 @@ fun WidgetPickerSheet(
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text("ウィジェット", color = Shu, fontFamily = Mincho, fontSize = 11.sp, fontWeight = FontWeight.Medium)
-                        Text("Choisir un widget", color = Kinari, fontFamily = Mincho, fontWeight = FontWeight.Medium, fontSize = 20.sp)
+                        Text("Choisir un widget", color = MaterialTheme.colorScheme.onSurface, fontFamily = Mincho, fontWeight = FontWeight.Medium, fontSize = 20.sp)
                     }
                     Box(
-                        Modifier.size(34.dp).clip(CircleShape).background(Color(0xFF232323))
+                        Modifier.size(34.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant)
                             .clickable { onDismiss() },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Rounded.Close, contentDescription = "Fermer", tint = Kinari.copy(alpha = 0.45f), modifier = Modifier.size(16.dp))
+                        Icon(Icons.Rounded.Close, contentDescription = "Fermer", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
                     }
                 }
 
@@ -145,48 +145,48 @@ fun WidgetPickerSheet(
                         .padding(horizontal = 20.dp)
                         .padding(bottom = 16.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFF1C1C1C))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(horizontal = 14.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    Icon(Icons.Rounded.Search, contentDescription = null, tint = Kinari.copy(alpha = 0.22f), modifier = Modifier.size(18.dp))
+                    Icon(Icons.Rounded.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
                     Box(Modifier.weight(1f)) {
                         if (query.isEmpty()) {
-                            Text("Rechercher un widget…", color = Kinari.copy(alpha = 0.18f), fontFamily = Mincho, fontSize = 14.sp)
+                            Text("Rechercher un widget…", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontFamily = Mincho, fontSize = 14.sp)
                         }
                         BasicTextField(
                             value = query,
                             onValueChange = { query = it },
                             singleLine = true,
-                            textStyle = TextStyle(color = Kinari, fontFamily = Mincho, fontSize = 14.sp),
+                            textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontFamily = Mincho, fontSize = 14.sp),
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
                     if (query.isNotEmpty()) {
                         Box(
-                            Modifier.size(20.dp).clip(CircleShape).background(Color(0xFF2A2A2A))
+                            Modifier.size(20.dp).clip(CircleShape).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
                                 .clickable { query = "" },
                             contentAlignment = Alignment.Center,
                         ) {
-                            Icon(Icons.Rounded.Close, contentDescription = "Effacer", tint = Kinari.copy(alpha = 0.4f), modifier = Modifier.size(11.dp))
+                            Icon(Icons.Rounded.Close, contentDescription = "Effacer", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(11.dp))
                         }
                     }
                 }
 
-                HorizontalDivider(color = Color(0xFF1A1A1A), thickness = 1.dp)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
 
                 // ── Widget list ──────────────────────────────────────────────
                 if (filtered.isEmpty()) {
                     Box(Modifier.fillMaxWidth().height(160.dp), contentAlignment = Alignment.Center) {
-                        Text("Aucun résultat", color = Kinari.copy(alpha = 0.25f), fontFamily = Mincho, fontSize = 14.sp)
+                        Text("Aucun résultat", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f), fontFamily = Mincho, fontSize = 14.sp)
                     }
                 } else {
                     LazyColumn(Modifier.fillMaxWidth()) {
                         filtered.forEach { group ->
                             stickyHeader(key = "h_${group.appLabel}") {
                                 Row(
-                                    Modifier.fillMaxWidth().background(Color(0xFF111111))
+                                    Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)
                                         .padding(horizontal = 24.dp, vertical = 6.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -200,7 +200,7 @@ fun WidgetPickerSheet(
                                     }
                                     Text(
                                         group.appLabel,
-                                        color = Kinari.copy(alpha = 0.35f),
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
                                         fontFamily = Mincho,
                                         fontWeight = FontWeight.Medium,
                                         fontSize = 10.sp,
@@ -255,7 +255,7 @@ private fun PickerItem(
             Modifier
                 .size(width = 92.dp, height = 66.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFF191919)),
+                .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center,
         ) {
             when {
@@ -275,7 +275,7 @@ private fun PickerItem(
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(
                 label,
-                color = Kinari,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontFamily = Mincho,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
@@ -284,7 +284,7 @@ private fun PickerItem(
             )
             Text(
                 "${info.minWidth} × ${info.minHeight} dp",
-                color = Kinari.copy(alpha = 0.22f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.22f),
                 fontFamily = Mincho,
                 fontSize = 11.sp,
             )
@@ -300,7 +300,7 @@ private fun PickerItem(
 
     HorizontalDivider(
         Modifier.padding(start = 128.dp, end = 20.dp),
-        color = Color(0xFF191919),
+        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
         thickness = 0.5.dp,
     )
 }
