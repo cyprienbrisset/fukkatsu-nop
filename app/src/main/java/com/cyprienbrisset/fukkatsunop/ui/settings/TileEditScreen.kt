@@ -44,6 +44,7 @@ import com.cyprienbrisset.fukkatsunop.ui.sumi.SegmentedChoice
 import com.cyprienbrisset.fukkatsunop.ui.sumi.SumiPrimaryButton
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
+import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
 
 @Composable
 fun TileEditScreen(onBack: () -> Unit, vm: TileEditViewModel = viewModel()) {
@@ -68,7 +69,13 @@ fun TileEditScreen(onBack: () -> Unit, vm: TileEditViewModel = viewModel()) {
         Spacer(Modifier.height(22.dp))
 
         if (mode == 2) {
-            // FukkaStore : rechercher et installer des apps sans passer par les Réglages.
+            Text(
+                "⚠ Les applications utilisant exclusivement les services Google (GMS) sont susceptibles de ne pas fonctionner sur Portal.",
+                fontFamily = Mincho,
+                color = SumiMuted,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp),
+            )
             StoreBody(Modifier.weight(1f))
             return@Column
         }

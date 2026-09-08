@@ -443,6 +443,7 @@ private data class LicenceItem(val name: String, val detail: String, val licence
 private val MUSIC = listOf(
     LicenceItem("Koto traditionnel japonais", "Amy (prettysleepy) — Pixabay", "Pixabay Content License"),
     LicenceItem("Bande originale anime japonaise", "Youssef Canar (yulius2tudio) — Pixabay", "Pixabay Content License"),
+    LicenceItem("Musique de fond Asie / Japon", "Tunetank — Pixabay", "Pixabay Content License"),
 )
 
 private val TECHNOLOGIES = listOf(
