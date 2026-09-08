@@ -150,7 +150,7 @@ fun SettingsScreen(
                 // Credits — séparé en bas
                 Spacer(Modifier.weight(1f))
                 Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
-                CatItem(CatDef("礼", "Crédits", Cat.HOME), false) { showCredits = true }
+                CatItem(CatDef("礼", "Licences", Cat.HOME), false) { showCredits = true }
             }
 
             // ── Separator ────────────────────────────────────────────────────
@@ -158,6 +158,10 @@ fun SettingsScreen(
 
             // ── Right panel — content ────────────────────────────────────────
             Column(Modifier.weight(1f).fillMaxHeight()) {
+                if (selected == Cat.HOME) {
+                    // TileEditScreen a ses propres LazyVerticalGrid — on l'embarque directement.
+                    TileEditScreen(onBack = {})
+                } else {
                 // Panel title
                 val title = CATS.first { it.id == selected }.label
                 Text(
@@ -186,7 +190,7 @@ fun SettingsScreen(
                             .padding(horizontal = 32.dp, vertical = 8.dp),
                     ) {
                         when (cat) {
-                            Cat.HOME    -> HomePanelContent(onTiles)
+                            Cat.HOME    -> {} // handled above
                             Cat.DISPLAY -> DisplayPanelContent(
                                 weatherEffects, saverMode,
                                 onWeatherEffects = { homeVm.setWeatherEffectsEnabled(it) },
@@ -249,6 +253,7 @@ fun SettingsScreen(
                         Spacer(Modifier.height(32.dp))
                     }
                 }
+                } // end else (not Cat.HOME)
             }
         }
 
@@ -308,11 +313,6 @@ private fun CatItem(cat: CatDef, active: Boolean, onClick: () -> Unit) {
 }
 
 // ── Panel contents ────────────────────────────────────────────────────────────
-
-@Composable
-private fun HomePanelContent(onTiles: () -> Unit) {
-    SettingRow("Tuiles", subtitle = "Ajouter ou retirer des raccourcis") { onTiles() }
-}
 
 @Composable
 private fun DisplayPanelContent(
@@ -439,24 +439,38 @@ private fun DevicePanelContent(
     SettingRow("Réglages système", subtitle = "Paramètres Android") { onSystem() }
 }
 
-// ── Credits full-screen ───────────────────────────────────────────────────────
+// ── Licences full-screen ─────────────────────────────────────────────────────
 
-private data class Credit(val name: String, val detail: String, val license: String)
+private data class LicenceItem(val name: String, val detail: String, val licence: String)
 
-private val CREDITS = listOf(
-    Credit("Musique Koto", "Amy — Pixabay", "Pixabay Content License"),
-    Credit("Jetpack Compose", "Google", "Apache 2.0"),
-    Credit("AndroidX Room", "Google", "Apache 2.0"),
-    Credit("AndroidX DataStore", "Google", "Apache 2.0"),
-    Credit("AndroidX Navigation", "Google", "Apache 2.0"),
-    Credit("OkHttp", "Square", "Apache 2.0"),
-    Credit("Coil", "Coil Contributors", "Apache 2.0"),
-    Credit("kotlinx.serialization", "JetBrains", "Apache 2.0"),
-    Credit("Vosk / vosk-android", "Alpha Cephei", "Apache 2.0"),
-    Credit("ZXing Core", "ZXing Authors", "Apache 2.0"),
-    Credit("JmDNS", "JmDNS Contributors", "LGPL 2.1"),
-    Credit("Bouncy Castle", "Legion of the Bouncy Castle", "MIT"),
-    Credit("Google Play API", "Aurora OSS", "GPL 3.0"),
+private val MUSIC = listOf(
+    LicenceItem("Koto traditionnel japonais", "Amy (prettysleepy) — Pixabay", "Pixabay Content License"),
+    LicenceItem("Bande originale anime japonaise", "Youssef Canar (yulius2tudio) — Pixabay", "Pixabay Content License"),
+)
+
+private val TECHNOLOGIES = listOf(
+    LicenceItem("Jetpack Compose", "Google", "Apache 2.0"),
+    LicenceItem("AndroidX Room", "Google", "Apache 2.0"),
+    LicenceItem("AndroidX DataStore", "Google", "Apache 2.0"),
+    LicenceItem("AndroidX Navigation", "Google", "Apache 2.0"),
+    LicenceItem("OkHttp", "Square, Inc.", "Apache 2.0"),
+    LicenceItem("Coil", "Coil Contributors", "Apache 2.0"),
+    LicenceItem("kotlinx.serialization", "JetBrains", "Apache 2.0"),
+    LicenceItem("Vosk / vosk-android", "Alpha Cephei", "Apache 2.0"),
+    LicenceItem("ZXing Core", "ZXing Authors", "Apache 2.0"),
+    LicenceItem("JmDNS", "JmDNS Contributors", "LGPL 2.1"),
+    LicenceItem("Bouncy Castle", "Legion of the Bouncy Castle", "MIT"),
+    LicenceItem("Google Play API", "Aurora OSS", "GPL 3.0"),
+)
+
+private val REPOS = listOf(
+    LicenceItem("Aurora Store", "Aurora OSS — inspiration FukkaStore", "GPL 3.0"),
+    LicenceItem("AirReceiver", "Félix C. — implémentation AirPlay", "GPL 3.0"),
+)
+
+private val AUTRES = listOf(
+    LicenceItem("Meta Portal (Android 9)", "Meta Platforms — matériel cible", "Propriétaire"),
+    LicenceItem("Material Design 3", "Google — système de design", "Apache 2.0"),
 )
 
 @Composable
@@ -467,7 +481,6 @@ private fun CreditsScreen(onBack: () -> Unit) {
             .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding(),
     ) {
-        // Header
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 22.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -475,9 +488,9 @@ private fun CreditsScreen(onBack: () -> Unit) {
             HankoSeal("礼", size = 40.dp, onClick = onBack)
             Spacer(Modifier.width(14.dp))
             Column {
-                Text("Crédits", fontFamily = Mincho, fontSize = 22.sp, color = MaterialTheme.colorScheme.onBackground)
+                Text("Licences & Crédits", fontFamily = Mincho, fontSize = 22.sp, color = MaterialTheme.colorScheme.onBackground)
                 Text(
-                    "Fukkatsu No P  v${BuildConfig.VERSION_NAME}",
+                    "Fukkatsu No P  v${BuildConfig.VERSION_NAME}  •  Cyprien Brisset",
                     fontFamily = Mincho, fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                 )
@@ -491,48 +504,13 @@ private fun CreditsScreen(onBack: () -> Unit) {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 48.dp, vertical = 24.dp),
         ) {
-            // App credit
-            Text(
-                "復活のP — Fukkatsu No P",
-                fontFamily = Mincho, fontSize = 18.sp, fontWeight = FontWeight.Medium,
-                color = Shu,
-            )
-            Text(
-                "Lanceur Android pour Meta Portal • Cyprien Brisset",
-                fontFamily = Mincho, fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                modifier = Modifier.padding(bottom = 32.dp),
-            )
-
-            // Libraries
-            Text(
-                "COMPOSANTS OPEN SOURCE",
-                fontSize = 10.sp, letterSpacing = 2.sp, fontFamily = Mincho,
-                color = Shu, modifier = Modifier.padding(bottom = 12.dp),
-            )
-
-            CREDITS.forEach { credit ->
-                Row(
-                    Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(credit.name, fontSize = 15.sp, color = MaterialTheme.colorScheme.onBackground)
-                        Text(
-                            credit.detail,
-                            fontSize = 12.sp, fontFamily = Mincho,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                        )
-                    }
-                    Text(
-                        credit.license,
-                        fontSize = 11.sp, fontFamily = Mincho,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
-                    )
-                }
-                Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)))
-            }
+            LicenceSection("MUSIQUE", MUSIC)
+            Spacer(Modifier.height(28.dp))
+            LicenceSection("TECHNOLOGIES", TECHNOLOGIES)
+            Spacer(Modifier.height(28.dp))
+            LicenceSection("REPOS & RÉFÉRENCES", REPOS)
+            Spacer(Modifier.height(28.dp))
+            LicenceSection("AUTRES", AUTRES)
 
             Spacer(Modifier.height(48.dp))
             Text(
@@ -541,6 +519,37 @@ private fun CreditsScreen(onBack: () -> Unit) {
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
         }
+    }
+}
+
+@Composable
+private fun LicenceSection(title: String, items: List<LicenceItem>) {
+    Text(
+        title,
+        fontSize = 10.sp, letterSpacing = 2.sp, fontFamily = Mincho,
+        color = Shu, modifier = Modifier.padding(bottom = 10.dp),
+    )
+    items.forEach { item ->
+        Row(
+            Modifier.fillMaxWidth().padding(vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(item.name, fontSize = 15.sp, color = MaterialTheme.colorScheme.onBackground)
+                Text(
+                    item.detail,
+                    fontSize = 12.sp, fontFamily = Mincho,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                )
+            }
+            Text(
+                item.licence,
+                fontSize = 11.sp, fontFamily = Mincho,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+            )
+        }
+        Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)))
     }
 }
 

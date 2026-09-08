@@ -44,6 +44,7 @@ fun RingtonePicker(selectedUri: String?, onSelect: (String?) -> Unit, modifier: 
     val tones = remember {
         listOf(
             Tone("Koto", "android.resource://${ctx.packageName}/${R.raw.alarm_koto}"),
+            Tone("Anime", "android.resource://${ctx.packageName}/${R.raw.alarm_anime}"),
         )
     }
     // Si l'URI stocké ne correspond plus à aucune sonnerie disponible, sélectionner le Koto.
