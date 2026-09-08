@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +46,11 @@ fun RingtonePicker(selectedUri: String?, onSelect: (String?) -> Unit, modifier: 
             Tone("Koto", "android.resource://${ctx.packageName}/${R.raw.alarm_koto}"),
         )
     }
+    // Si l'URI stocké ne correspond plus à aucune sonnerie disponible, sélectionner le Koto.
+    LaunchedEffect(selectedUri) {
+        if (tones.none { it.uri == selectedUri }) onSelect(tones.first().uri)
+    }
+
     var preview by remember { mutableStateOf<Ringtone?>(null) }
     DisposableEffect(Unit) { onDispose { preview?.stop() } }
 
