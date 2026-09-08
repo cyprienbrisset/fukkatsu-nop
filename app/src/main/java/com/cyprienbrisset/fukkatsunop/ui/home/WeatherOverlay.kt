@@ -65,14 +65,18 @@ fun WeatherOverlay(weather: Weather?, isDark: Boolean, modifier: Modifier = Modi
 // ── Cloudy ───────────────────────────────────────────────────────────────────
 
 private data class CloudDef(
-    val yFrac:    Float,  // position verticale (0=haut, 1=bas)
-    val wFrac:    Float,  // largeur relative à l'écran
-    val alpha:    Float,  // opacité du corps
-    val durationMs: Float, // durée d'une traversée complète (ms)
-    val phase:    Float,  // décalage initial dans le cycle [0,1[
+    val yFrac:      Float,  // position verticale (0=haut, 1=bas)
+    val wFrac:      Float,  // largeur relative à l'écran
+    val alpha:      Float,  // opacité du corps
+    val durationMs: Float,  // durée d'une traversée complète (ms)
+    val phase:      Float,  // décalage initial dans le cycle [0,1[
 )
 
-// durée en ms pour traverser l'écran (de hors-gauche à hors-droite)
+private fun randF(lo: Float, hi: Float) = (lo + Math.random() * (hi - lo)).toFloat()
+
+// Belly aléatoire par nuage (fond arrondi, pas plat).
+private fun randomBelly() = randF(6f, 16f)
+
 private val CLOUDS = listOf(
     CloudDef(0.12f, 0.30f, 0.22f, 30_000f, 0.00f),
     CloudDef(0.26f, 0.40f, 0.20f, 45_000f, 0.40f),
@@ -86,39 +90,96 @@ private val CLOUDS = listOf(
 private const val CLOUD_W  = 242f
 private const val CLOUD_CY =  38f
 
-// Construit le path directement en coordonnées écran — évite withTransform,
-// cassé pour drawPath sur Android 9 (Portal).
-private fun cloudPath(cx: Float, cy: Float, w: Float): Path {
+// 6 templates structurellement distincts (nb de bosses, proportions, asymétrie différents).
+// belly : fond arrondi aléatoire par nuage.  Pas de withTransform (cassé Android 9).
+private fun cloudPath(cx: Float, cy: Float, w: Float, template: Int, belly: Float): Path {
     val s  = w / CLOUD_W
     val tx = cx - w * 0.50f
     val ty = cy - CLOUD_CY * s
     fun x(v: Float) = tx + v * s
     fun y(v: Float) = ty + v * s
+    val b  = 76f                // y baseline côtés
+    val bm = b + belly          // y fond au centre (ventre)
     return Path().apply {
-        moveTo(x(10f),  y(80f))
-        cubicTo(x(0f),  y(80f),  x(0f),  y(55f),  x(15f), y(48f))
-        cubicTo(x(10f), y(22f),  x(30f), y(12f),  x(50f), y(25f))
-        cubicTo(x(65f), y(32f),  x(72f), y(38f),  x(80f), y(35f))
-        cubicTo(x(78f), y(5f),   x(118f),y(-4f),  x(140f),y(18f))
-        cubicTo(x(155f),y(8f),   x(180f),y(8f),   x(195f),y(28f))
-        cubicTo(x(210f),y(18f),  x(230f),y(35f),  x(228f),y(55f))
-        cubicTo(x(238f),y(58f),  x(242f),y(72f),  x(232f),y(80f))
-        close()
+        when (template) {
+            // ── 0 : 2 bosses symétriques, bas et large ────────────────────────
+            0 -> {
+                moveTo(x(10f), y(b))
+                cubicTo(x(0f),  y(b),      x(0f),  y(b-20f), x(16f), y(b-28f))
+                cubicTo(x(8f),  y(b-50f),  x(45f), y(b-58f), x(72f), y(b-40f))
+                cubicTo(x(88f), y(b-30f),  x(105f),y(b-28f), x(121f),y(b-32f))
+                cubicTo(x(136f),y(b-28f),  x(152f),y(b-30f), x(168f),y(b-40f))
+                cubicTo(x(195f),y(b-58f),  x(230f),y(b-48f), x(234f),y(b-24f))
+                cubicTo(x(240f),y(b-10f),  x(240f),y(b),     x(230f),y(b))
+            }
+            // ── 1 : 1 grosse bosse centrale, compact ─────────────────────────
+            1 -> {
+                moveTo(x(18f), y(b))
+                cubicTo(x(4f),  y(b),      x(0f),  y(b-32f), x(20f), y(b-52f))
+                cubicTo(x(30f), y(b-80f),  x(80f), y(b-90f), x(121f),y(b-88f))
+                cubicTo(x(162f),y(b-90f),  x(210f),y(b-78f), x(222f),y(b-50f))
+                cubicTo(x(240f),y(b-30f),  x(240f),y(b),     x(224f),y(b))
+            }
+            // ── 2 : 3 bosses classique cumulus ────────────────────────────────
+            2 -> {
+                moveTo(x(10f), y(b))
+                cubicTo(x(0f),  y(b),      x(0f),  y(b-26f), x(15f), y(b-36f))
+                cubicTo(x(8f),  y(b-58f),  x(42f), y(b-66f), x(65f), y(b-48f))
+                cubicTo(x(80f), y(b-38f),  x(92f), y(b-36f), x(100f),y(b-42f))
+                cubicTo(x(98f), y(b-72f),  x(132f),y(b-82f), x(155f),y(b-62f))
+                cubicTo(x(168f),y(b-52f),  x(185f),y(b-50f), x(200f),y(b-58f))
+                cubicTo(x(212f),y(b-44f),  x(236f),y(b-22f), x(232f),y(b))
+            }
+            // ── 3 : 4 bosses, nuage chargé ────────────────────────────────────
+            3 -> {
+                moveTo(x(6f),  y(b))
+                cubicTo(x(0f),  y(b),      x(0f),  y(b-18f), x(12f), y(b-26f))
+                cubicTo(x(4f),  y(b-46f),  x(35f), y(b-54f), x(55f), y(b-42f))
+                cubicTo(x(68f), y(b-34f),  x(76f), y(b-32f), x(84f), y(b-38f))
+                cubicTo(x(82f), y(b-58f),  x(108f),y(b-66f), x(128f),y(b-54f))
+                cubicTo(x(140f),y(b-46f),  x(150f),y(b-44f), x(162f),y(b-50f))
+                cubicTo(x(162f),y(b-66f),  x(190f),y(b-72f), x(208f),y(b-56f))
+                cubicTo(x(220f),y(b-44f),  x(234f),y(b-20f), x(236f),y(b))
+            }
+            // ── 4 : effilé à droite (queue de comète) ────────────────────────
+            4 -> {
+                moveTo(x(5f),  y(b))
+                cubicTo(x(0f),  y(b),      x(0f),  y(b-38f), x(18f), y(b-52f))
+                cubicTo(x(6f),  y(b-76f),  x(52f), y(b-86f), x(88f), y(b-62f))
+                cubicTo(x(102f),y(b-52f),  x(118f),y(b-46f), x(136f),y(b-54f))
+                cubicTo(x(142f),y(b-40f),  x(168f),y(b-32f), x(192f),y(b-26f))
+                cubicTo(x(212f),y(b-18f),  x(234f),y(b-8f),  x(234f),y(b))
+            }
+            // ── 5 : masse à gauche, queue vers droite ─────────────────────────
+            else -> {
+                moveTo(x(8f),  y(b))
+                cubicTo(x(0f),  y(b),      x(0f),  y(b-42f), x(20f), y(b-58f))
+                cubicTo(x(6f),  y(b-84f),  x(56f), y(b-92f), x(92f), y(b-68f))
+                cubicTo(x(110f),y(b-54f),  x(120f),y(b-50f), x(132f),y(b-58f))
+                cubicTo(x(132f),y(b-36f),  x(158f),y(b-26f), x(185f),y(b-22f))
+                cubicTo(x(208f),y(b-16f),  x(236f),y(b-8f),  x(236f),y(b))
+            }
+        }
+        // ── Fond arrondi commun (droite → gauche) ─────────────────────────────
+        cubicTo(x(215f), y(bm+2f), x(121f), y(bm+5f), x(28f), y(bm+2f))
+        cubicTo(x(10f),  y(bm),    x(2f),   y(b+2f),  x(8f),  y(b))
     }
 }
 
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCloud(
-    cx: Float, cy: Float, w: Float, alpha: Float, color: Color,
+    cx: Float, cy: Float, w: Float, alpha: Float, color: Color, template: Int, belly: Float,
 ) {
-    drawPath(cloudPath(cx, cy, w * 1.04f), color.copy(alpha = alpha * 0.25f))  // halo
-    drawPath(cloudPath(cx, cy, w),         color.copy(alpha = alpha))            // corps
+    drawPath(cloudPath(cx, cy, w * 1.04f, template, belly), color.copy(alpha = alpha * 0.25f))
+    drawPath(cloudPath(cx, cy, w,          template, belly), color.copy(alpha = alpha))
 }
 
 @Composable
 private fun CloudCanvas(cloudColor: Color, modifier: Modifier) {
+    // Belly aléatoire stable par nuage (fond arrondi, sans base plate).
+    val bellies = remember { CLOUDS.map { randomBelly() } }
+
     val tr = rememberInfiniteTransition(label = "clouds")
-    // Une animation par nuage : redémarre toujours hors-écran (xFrac=0 → off-gauche,
-    // xFrac=1 → off-droite), donc le wrap est invisible. Phase pour les distribuer d'emblée.
+    // Une animation par nuage : redémarre toujours hors-écran → boucle invisible.
     val t0 by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(CLOUDS[0].durationMs.toInt(), easing = LinearEasing)), "c0")
     val t1 by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(CLOUDS[1].durationMs.toInt(), easing = LinearEasing)), "c1")
     val t2 by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(CLOUDS[2].durationMs.toInt(), easing = LinearEasing)), "c2")
@@ -130,11 +191,10 @@ private fun CloudCanvas(cloudColor: Color, modifier: Modifier) {
     Canvas(modifier.fillMaxSize()) {
         CLOUDS.forEachIndexed { i, cloud ->
             val cloudW = size.width * cloud.wFrac
-            // % 1.0f : le wrap se produit quand cx passe de hors-droite à hors-gauche → invisible.
             val xFrac  = (ts[i] + cloud.phase) % 1.0f
             val cx     = -cloudW + xFrac * (size.width + cloudW * 2f)
             val cy     = cloud.yFrac * size.height
-            drawCloud(cx, cy, cloudW, cloud.alpha, cloudColor)
+            drawCloud(cx, cy, cloudW, cloud.alpha, cloudColor, i, bellies[i])
         }
     }
 }

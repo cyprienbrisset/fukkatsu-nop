@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -30,35 +31,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material3.MaterialTheme
 import com.cyprienbrisset.fukkatsunop.R
 import com.cyprienbrisset.fukkatsunop.ui.sumi.SectionLabel
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 
-private data class Tone(val title: String, val uri: String, val custom: Boolean = false)
+private data class Tone(val title: String, val uri: String)
 
 @Composable
 fun RingtonePicker(selectedUri: String?, onSelect: (String?) -> Unit, modifier: Modifier = Modifier) {
     val ctx = LocalContext.current
     val tones = remember {
-        val mgr = RingtoneManager(ctx).apply { setType(RingtoneManager.TYPE_ALARM) }
-        val cur = mgr.cursor
-        buildList {
-            // Sonneries apaisantes intégrées en premier
-            add(Tone("Bol tibétain", "android.resource://${ctx.packageName}/${R.raw.alarm_bol}", custom = true))
-            add(Tone("Cloche zen", "android.resource://${ctx.packageName}/${R.raw.alarm_zen}", custom = true))
-            add(Tone("Oiseaux du matin", "android.resource://${ctx.packageName}/${R.raw.alarm_oiseaux}", custom = true))
-            add(Tone("Temple Zenko-ji", "android.resource://${ctx.packageName}/${R.raw.alarm_temple}", custom = true))
-            add(Tone("Carillon", "android.resource://${ctx.packageName}/${R.raw.alarm_carillon}", custom = true))
-            add(Tone("Par défaut", ""))
-            var pos = 0
-            while (cur.moveToNext()) {
-                val title = runCatching { mgr.getRingtone(pos).getTitle(ctx) }.getOrNull() ?: "Sonnerie ${pos + 1}"
-                val uri = mgr.getRingtoneUri(pos).toString()
-                add(Tone(title, uri)); pos++
-                if (pos >= 20) break
-            }
-        }
+        listOf(
+            Tone("Koto", "android.resource://${ctx.packageName}/${R.raw.alarm_koto}"),
+        )
     }
     var preview by remember { mutableStateOf<Ringtone?>(null) }
     DisposableEffect(Unit) { onDispose { preview?.stop() } }
@@ -68,21 +53,20 @@ fun RingtonePicker(selectedUri: String?, onSelect: (String?) -> Unit, modifier: 
         Spacer(Modifier.height(12.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             items(tones) { t ->
-                val on = (selectedUri ?: "") == t.uri
+                val on = selectedUri == t.uri
                 Row(
                     Modifier.height(60.dp).clip(RoundedCornerShape(14.dp))
-                        .background(if (t.custom && on) Shu.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant)
+                        .background(if (on) Shu.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant)
                         .border(BorderStroke(if (on) 1.5.dp else 1.dp, if (on) Shu else MaterialTheme.colorScheme.outline), RoundedCornerShape(14.dp))
                         .clickable {
-                            onSelect(if (t.uri.isEmpty()) null else t.uri)
+                            onSelect(t.uri)
                             preview?.stop()
-                            val uri = if (t.uri.isEmpty()) RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM) else Uri.parse(t.uri)
-                            preview = RingtoneManager.getRingtone(ctx, uri)?.also { it.play() }
+                            preview = RingtoneManager.getRingtone(ctx, Uri.parse(t.uri))?.also { it.play() }
                         }
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(if (t.custom) "♪" else "▶", color = Shu, fontSize = 12.sp)
+                    Text("♪", color = Shu, fontSize = 12.sp)
                     Spacer(Modifier.width(10.dp))
                     Text(t.title, color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp)
                 }
