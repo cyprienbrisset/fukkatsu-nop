@@ -196,33 +196,58 @@ fun OverlayPanel(
             }
 
             // ── Tab handle ───────────────────────────────────────────────────
-            Box(
-                Modifier
-                    .width(40.dp)
-                    .height(96.dp)
-                    .clip(RoundedCornerShape(topStart = 14.dp, bottomStart = 14.dp))
-                    .background(BG_TAB)
-                    .clickable { expanded = !expanded }
-                    .pointerInput(Unit) {
-                        detectDragGestures { _, dragAmount ->
-                            overlayParams.y += dragAmount.y.toInt()
-                            runCatching { windowManager.updateViewLayout(overlayView(), overlayParams) }
-                        }
-                    },
-                contentAlignment = Alignment.Center,
+            Column(
+                Modifier.pointerInput(Unit) {
+                    detectDragGestures { _, dragAmount ->
+                        overlayParams.y += dragAmount.y.toInt()
+                        runCatching { windowManager.updateViewLayout(overlayView(), overlayParams) }
+                    }
+                },
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                horizontalAlignment = Alignment.End,
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                // Home button — always visible, tap to return to Fukkatsu.
+                Box(
+                    Modifier
+                        .width(40.dp)
+                        .height(44.dp)
+                        .clip(RoundedCornerShape(topStart = 14.dp))
+                        .background(BG_TAB)
+                        .clickable {
+                            ctx.startActivity(
+                                android.content.Intent(android.content.Intent.ACTION_MAIN).apply {
+                                    addCategory(android.content.Intent.CATEGORY_HOME)
+                                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                            )
+                        },
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        if (expanded) Icons.Rounded.ChevronRight else Icons.Rounded.ChevronLeft,
-                        contentDescription = null,
-                        tint = Kinari.copy(alpha = 0.5f),
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Icon(Icons.Rounded.WbSunny, contentDescription = null, tint = Kinari.copy(alpha = 0.3f), modifier = Modifier.size(12.dp))
-                    Icon(Icons.Rounded.VolumeUp, contentDescription = null, tint = Kinari.copy(alpha = 0.3f), modifier = Modifier.size(12.dp))
+                    Icon(Icons.Rounded.Home, contentDescription = "Accueil", tint = Shu, modifier = Modifier.size(20.dp))
+                }
+                // Expand/collapse handle
+                Box(
+                    Modifier
+                        .width(40.dp)
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(bottomStart = 14.dp))
+                        .background(BG_TAB)
+                        .clickable { expanded = !expanded },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(5.dp),
+                    ) {
+                        Icon(
+                            if (expanded) Icons.Rounded.ChevronRight else Icons.Rounded.ChevronLeft,
+                            contentDescription = null,
+                            tint = Kinari.copy(alpha = 0.5f),
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Icon(Icons.Rounded.WbSunny, contentDescription = null, tint = Kinari.copy(alpha = 0.3f), modifier = Modifier.size(11.dp))
+                        Icon(Icons.Rounded.VolumeUp, contentDescription = null, tint = Kinari.copy(alpha = 0.3f), modifier = Modifier.size(11.dp))
+                    }
                 }
             }
         }

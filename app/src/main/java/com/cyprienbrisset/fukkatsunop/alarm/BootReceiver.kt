@@ -3,8 +3,10 @@ package com.cyprienbrisset.fukkatsunop.alarm
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.provider.Settings
 import com.cyprienbrisset.fukkatsunop.data.AppDatabase
 import com.cyprienbrisset.fukkatsunop.data.alarm.AlarmRepository
+import com.cyprienbrisset.fukkatsunop.overlay.OverlayService
 import com.cyprienbrisset.fukkatsunop.system.DarkModeManager
 import com.cyprienbrisset.fukkatsunop.system.FirmwareWatcher
 import com.cyprienbrisset.fukkatsunop.system.UpdateCheckReceiver
@@ -25,6 +27,10 @@ class BootReceiver : BroadcastReceiver() {
         context.startForegroundService(
             Intent(context, com.cyprienbrisset.fukkatsunop.airplay.AirPlayService::class.java)
         )
+        // Auto-restart overlay on boot if the user already granted the permission.
+        if (Settings.canDrawOverlays(context)) {
+            context.startForegroundService(Intent(context, OverlayService::class.java))
+        }
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
