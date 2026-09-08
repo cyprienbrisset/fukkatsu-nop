@@ -18,7 +18,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.unit.dp
 import com.cyprienbrisset.fukkatsunop.data.weather.Weather
 import com.cyprienbrisset.fukkatsunop.ui.theme.Ink
@@ -43,8 +42,8 @@ private fun descToEffect(description: String): WeatherEffect = when (description
 fun WeatherOverlay(weather: Weather?, isDark: Boolean, modifier: Modifier = Modifier) {
     val particleColor = if (isDark) Kinari.copy(alpha = 0.18f) else Ink.copy(alpha = 0.10f)
     val fogBase       = if (isDark) SumiMuted else InkMuted
-    // Nuit : beige clair sur fond sombre. Jour : gris-bleu visible sur fond crème Washi.
-    val cloudColor    = if (isDark) Color(0xFFDDD8CC) else Color(0xFFB8C4CC)
+    // Nuit : beige clair sur fond sombre. Jour : bleu-gris bien visible sur fond crème Washi.
+    val cloudColor    = if (isDark) Color(0xFFE0DBD0) else Color(0xFF8AAAC0)
 
     val effect = remember(weather?.description) {
         weather?.description?.let { descToEffect(it) } ?: WeatherEffect.NONE
@@ -66,76 +65,75 @@ fun WeatherOverlay(weather: Weather?, isDark: Boolean, modifier: Modifier = Modi
 // ── Cloudy ───────────────────────────────────────────────────────────────────
 
 private data class CloudDef(
-    val yFrac: Float,   // position verticale (0=haut, 1=bas)
-    val wFrac: Float,   // largeur relative à l'écran
-    val alpha: Float,   // opacité de chaque bosse
-    val speed: Float,   // nb de traversées / cycle de 30s
-    val phase: Float,   // décalage initial
+    val yFrac:    Float,  // position verticale (0=haut, 1=bas)
+    val wFrac:    Float,  // largeur relative à l'écran
+    val alpha:    Float,  // opacité du corps
+    val durationMs: Float, // durée d'une traversée complète (ms)
+    val phase:    Float,  // décalage initial dans le cycle [0,1[
 )
 
+// durée en ms pour traverser l'écran (de hors-gauche à hors-droite)
 private val CLOUDS = listOf(
-    CloudDef(0.08f, 0.28f, 0.72f, 1.00f, 0.00f),
-    CloudDef(0.22f, 0.38f, 0.60f, 0.65f, 0.40f),
-    CloudDef(0.10f, 0.20f, 0.65f, 1.30f, 0.68f),
-    CloudDef(0.32f, 0.32f, 0.55f, 0.78f, 0.20f),
-    CloudDef(0.16f, 0.24f, 0.62f, 1.10f, 0.55f),
-    CloudDef(0.28f, 0.34f, 0.50f, 0.52f, 0.83f),
+    CloudDef(0.12f, 0.30f, 0.22f, 30_000f, 0.00f),
+    CloudDef(0.26f, 0.40f, 0.20f, 45_000f, 0.40f),
+    CloudDef(0.14f, 0.22f, 0.21f, 22_000f, 0.68f),
+    CloudDef(0.36f, 0.34f, 0.18f, 38_000f, 0.20f),
+    CloudDef(0.20f, 0.26f, 0.20f, 27_000f, 0.55f),
+    CloudDef(0.32f, 0.36f, 0.17f, 50_000f, 0.83f),
 )
 
-// ── Nuage SVG-style ──────────────────────────────────────────────────────────
-// Silhouette cumulus en courbes de Bézier cubiques — CC0, dessinée à la main.
-// Espace de référence : 242 × 84 (rapport ~3:1). Centre visuel vertical ≈ y 38.
-private val CLOUD_PATH: Path by lazy {
-    Path().apply {
-        moveTo(10f,  80f)
-        cubicTo(  0f, 80f,   0f,  55f,  15f,  48f)  // flanc gauche montant
-        cubicTo( 10f, 22f,  30f,  12f,  50f,  25f)  // bosse gauche
-        cubicTo( 65f, 32f,  72f,  38f,  80f,  35f)  // creux centre-gauche
-        cubicTo( 78f,  5f, 118f,  -4f, 140f,  18f)  // bosse centrale (plus haute)
-        cubicTo(155f,  8f, 180f,   8f, 195f,  28f)  // bosse droite
-        cubicTo(210f, 18f, 230f,  35f, 228f,  55f)  // pente droite
-        cubicTo(238f, 58f, 242f,  72f, 232f,  80f)  // flanc droit descendant
+// Espace de référence : 242 × 84. Centre visuel vertical ≈ y 38.
+private const val CLOUD_W  = 242f
+private const val CLOUD_CY =  38f
+
+// Construit le path directement en coordonnées écran — évite withTransform,
+// cassé pour drawPath sur Android 9 (Portal).
+private fun cloudPath(cx: Float, cy: Float, w: Float): Path {
+    val s  = w / CLOUD_W
+    val tx = cx - w * 0.50f
+    val ty = cy - CLOUD_CY * s
+    fun x(v: Float) = tx + v * s
+    fun y(v: Float) = ty + v * s
+    return Path().apply {
+        moveTo(x(10f),  y(80f))
+        cubicTo(x(0f),  y(80f),  x(0f),  y(55f),  x(15f), y(48f))
+        cubicTo(x(10f), y(22f),  x(30f), y(12f),  x(50f), y(25f))
+        cubicTo(x(65f), y(32f),  x(72f), y(38f),  x(80f), y(35f))
+        cubicTo(x(78f), y(5f),   x(118f),y(-4f),  x(140f),y(18f))
+        cubicTo(x(155f),y(8f),   x(180f),y(8f),   x(195f),y(28f))
+        cubicTo(x(210f),y(18f),  x(230f),y(35f),  x(228f),y(55f))
+        cubicTo(x(238f),y(58f),  x(242f),y(72f),  x(232f),y(80f))
         close()
     }
 }
-private const val CLOUD_W  = 242f
-private const val CLOUD_CY =  38f  // centre vertical dans l'espace du path
 
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCloud(
     cx: Float, cy: Float, w: Float, alpha: Float, color: Color,
 ) {
-    val s = w / CLOUD_W
-    // Halo doux : même forme, légèrement agrandie et plus transparente
-    withTransform({
-        translate(cx - w * 0.52f, cy - CLOUD_CY * s * 1.04f)
-        scale(s * 1.04f, s * 1.04f)
-    }) {
-        drawPath(CLOUD_PATH, color.copy(alpha = alpha * 0.25f))
-    }
-    // Corps principal
-    withTransform({
-        translate(cx - w * 0.50f, cy - CLOUD_CY * s)
-        scale(s, s)
-    }) {
-        drawPath(CLOUD_PATH, color.copy(alpha = alpha))
-    }
+    drawPath(cloudPath(cx, cy, w * 1.04f), color.copy(alpha = alpha * 0.25f))  // halo
+    drawPath(cloudPath(cx, cy, w),         color.copy(alpha = alpha))            // corps
 }
 
 @Composable
 private fun CloudCanvas(cloudColor: Color, modifier: Modifier) {
     val tr = rememberInfiniteTransition(label = "clouds")
-    val t by tr.animateFloat(
-        initialValue = 0f, targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(30_000, easing = LinearEasing)),
-        label = "cloud-t",
-    )
+    // Une animation par nuage : redémarre toujours hors-écran (xFrac=0 → off-gauche,
+    // xFrac=1 → off-droite), donc le wrap est invisible. Phase pour les distribuer d'emblée.
+    val t0 by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(CLOUDS[0].durationMs.toInt(), easing = LinearEasing)), "c0")
+    val t1 by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(CLOUDS[1].durationMs.toInt(), easing = LinearEasing)), "c1")
+    val t2 by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(CLOUDS[2].durationMs.toInt(), easing = LinearEasing)), "c2")
+    val t3 by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(CLOUDS[3].durationMs.toInt(), easing = LinearEasing)), "c3")
+    val t4 by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(CLOUDS[4].durationMs.toInt(), easing = LinearEasing)), "c4")
+    val t5 by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(CLOUDS[5].durationMs.toInt(), easing = LinearEasing)), "c5")
+    val ts = listOf(t0, t1, t2, t3, t4, t5)
 
     Canvas(modifier.fillMaxSize()) {
-        CLOUDS.forEach { cloud ->
+        CLOUDS.forEachIndexed { i, cloud ->
             val cloudW = size.width * cloud.wFrac
-            val xFrac = (t * cloud.speed + cloud.phase) % 1.2f
-            val cx = -cloudW + xFrac * (size.width + cloudW * 2f)
-            val cy = cloud.yFrac * size.height
+            // % 1.0f : le wrap se produit quand cx passe de hors-droite à hors-gauche → invisible.
+            val xFrac  = (ts[i] + cloud.phase) % 1.0f
+            val cx     = -cloudW + xFrac * (size.width + cloudW * 2f)
+            val cy     = cloud.yFrac * size.height
             drawCloud(cx, cy, cloudW, cloud.alpha, cloudColor)
         }
     }

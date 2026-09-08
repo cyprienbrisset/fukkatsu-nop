@@ -160,10 +160,6 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, vm: HomeViewMo
         val landscape = maxWidth > maxHeight
         LaunchedEffect(now) { vm.refreshNowPlaying() }
         WatermarkKanji("墨", Modifier.align(Alignment.BottomEnd).offset(x = (-64).dp, y = (-10).dp))
-        val weatherEffects by vm.weatherEffectsEnabled.collectAsStateWithLifecycle()
-        if (weatherEffects) {
-            WeatherOverlay(weather = weather, isDark = isDark, modifier = Modifier.fillMaxSize())
-        }
         if (landscape) {
             Row(Modifier.fillMaxSize().padding(start = 46.dp, top = 44.dp, bottom = 40.dp, end = 40.dp)) {
                 Column(Modifier.fillMaxHeight().weight(0.38f)) {
@@ -289,6 +285,14 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, vm: HomeViewMo
                 )
             }
         }
+
+        // Nuages toujours visibles ; effets météo (pluie/neige…) seulement si activés.
+        val weatherEffects by vm.weatherEffectsEnabled.collectAsStateWithLifecycle()
+        WeatherOverlay(
+            weather = if (weatherEffects) weather else null,
+            isDark = isDark,
+            modifier = Modifier.fillMaxSize(),
+        )
 
         // Portrait overlay buttons
         if (!landscape) {
