@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -32,6 +33,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.cyprienbrisset.fukkatsunop.MainActivity
 import com.cyprienbrisset.fukkatsunop.system.UpdateProgress
 import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
@@ -53,6 +55,14 @@ object Routes {
 fun AppNav() {
     val nav = rememberNavController()
     val updatePct by UpdateProgress.pct.collectAsState()
+
+    // Retour à l'accueil quand l'utilisateur appuie sur Home (onNewIntent dans MainActivity).
+    val goHome by MainActivity.goHome.collectAsState()
+    LaunchedEffect(goHome) {
+        if (goHome > 0) nav.navigate(Routes.HOME) {
+            popUpTo(Routes.HOME) { inclusive = false }
+        }
+    }
     val updating = updatePct in 0..100
 
     Box(Modifier.fillMaxSize()) {

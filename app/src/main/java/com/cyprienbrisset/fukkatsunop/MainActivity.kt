@@ -5,6 +5,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -51,6 +53,17 @@ private val EaseOut = Easing { t -> 1f - (1f - t) * (1f - t) * (1f - t) }
 class MainActivity : ComponentActivity() {
     private val notifPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+    // Incrémenté à chaque appui sur Home (onNewIntent) pour que AppNav revienne à l'accueil.
+    companion object {
+        private val _goHome = MutableStateFlow(0)
+        val goHome: StateFlow<Int> = _goHome
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        _goHome.value++
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
