@@ -6,10 +6,11 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.content.FileProvider
 import com.cyprienbrisset.fukkatsunop.BuildConfig
 import com.cyprienbrisset.fukkatsunop.store.ApkDownloader
 import com.cyprienbrisset.fukkatsunop.store.ApkFile
-import com.cyprienbrisset.fukkatsunop.store.ApkInstaller
+import com.cyprienbrisset.fukkatsunop.store.InstallTrampolineActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -47,7 +48,21 @@ class AppUpdateService : Service() {
 
                 UpdateProgress.set(100)
                 updateNotif("Installation en cours…", 100)
-                ApkInstaller(this@AppUpdateService).install(BuildConfig.APPLICATION_ID, files)
+
+                // Sur Portal Android 9, la session PackageInstaller aboutit à un écran blanc.
+                // On passe par ACTION_INSTALL_PACKAGE via FileProvider (même chemin que FukkaStore).
+                val apk = files.first()
+                val contentUri = FileProvider.getUriForFile(
+                    this@AppUpdateService,
+                    "${BuildConfig.APPLICATION_ID}.fileprovider",
+                    apk,
+                )
+                startActivity(
+                    Intent(this@AppUpdateService, InstallTrampolineActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        .putExtra(InstallTrampolineActivity.EXTRA_APK_URI, contentUri.toString())
+                        .putExtra(InstallTrampolineActivity.EXTRA_PACKAGE, BuildConfig.APPLICATION_ID),
+                )
 
             } catch (e: Exception) {
                 UpdateProgress.set(-1)
