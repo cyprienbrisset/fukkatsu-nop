@@ -1,18 +1,24 @@
 package com.cyprienbrisset.fukkatsunop.ui.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,6 +26,7 @@ import com.cyprienbrisset.fukkatsunop.data.weather.Weather
 import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
+import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -31,40 +38,94 @@ fun AmbientBanner(
     modifier: Modifier = Modifier,
     nextAlarm: LocalDateTime? = null,
     portrait: Boolean = false,
+    compact: Boolean = false,
     onClockClick: () -> Unit = {},
+    cityName: String? = null,
+    cityIndex: Int = 0,
+    citiesCount: Int = 1,
+    onNextCity: () -> Unit = {},
+    onPrevCity: () -> Unit = {},
 ) {
     val time = now.format(DateTimeFormatter.ofPattern("HH:mm"))
     val date = now.format(DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.FRENCH))
+
+    val weatherSwipeModifier = if (citiesCount > 1) {
+        Modifier.pointerInput(Unit) {
+            var totalX = 0f
+            detectDragGestures(
+                onDragEnd = {
+                    when {
+                        totalX < -40f -> onNextCity()
+                        totalX > 40f -> onPrevCity()
+                    }
+                    totalX = 0f
+                },
+                onDragCancel = { totalX = 0f },
+            ) { _, delta -> totalX += delta.x }
+        }
+    } else Modifier
+
+    val clockSize = when { compact -> 60.sp; portrait -> 72.sp; else -> 92.sp }
+    val dateSize  = if (compact) 13.sp else 16.sp
+    val tempSize  = if (compact) 20.sp else 28.sp
+    val descSize  = if (compact) 12.sp else 14.sp
+
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.clickable { onClockClick() }) {
-        Text(
-            time,
-            fontFamily = Mincho,
-            fontWeight = FontWeight.Normal,
-            color = MaterialTheme.colorScheme.onBackground,
-            fontSize = if (portrait) 72.sp else 92.sp,
-        )
+            Text(
+                time,
+                fontFamily = Mincho,
+                fontWeight = FontWeight.Normal,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = clockSize,
+            )
         }
-        Spacer(Modifier.height(12.dp))
-        Text(date, color = MaterialTheme.colorScheme.onBackground, fontSize = 16.sp)
+        Spacer(Modifier.height(if (compact) 6.dp else 12.dp))
+        Text(date, color = MaterialTheme.colorScheme.onBackground, fontSize = dateSize)
         if (weather != null) {
-            Spacer(Modifier.height(8.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
+            Spacer(Modifier.height(if (compact) 4.dp else 8.dp))
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = weatherSwipeModifier,
             ) {
-                Text(
-                    "${weather.temperatureC}°",
-                    color = Shu,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Light,
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    weather.description,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 14.sp,
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        "${weather.temperatureC}°",
+                        color = Shu,
+                        fontSize = tempSize,
+                        fontWeight = FontWeight.Light,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        weather.description,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = descSize,
+                    )
+                }
+                if (cityName != null) {
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        cityName,
+                        color = SumiMuted,
+                        fontFamily = Mincho,
+                        fontSize = 12.sp,
+                    )
+                }
+                if (citiesCount > 1) {
+                    Spacer(Modifier.height(6.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        repeat(citiesCount) { i ->
+                            Box(
+                                Modifier.size(if (i == cityIndex) 6.dp else 4.dp)
+                                    .clip(CircleShape)
+                                    .background(if (i == cityIndex) AccentShu else SumiMuted.copy(alpha = 0.35f)),
+                            )
+                        }
+                    }
+                }
             }
         }
         if (nextAlarm != null) {
@@ -79,20 +140,21 @@ fun AmbientBanner(
 }
 
 @Composable
-fun HomeBranding(portrait: Boolean, modifier: Modifier = Modifier) {
+fun HomeBranding(portrait: Boolean, compact: Boolean = false, modifier: Modifier = Modifier) {
+    val kanjiSize = when { compact -> 80.sp; portrait -> 84.sp; else -> 120.sp }
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             "復活",
             fontFamily = Mincho,
             fontWeight = FontWeight.Medium,
             color = Shu,
-            fontSize = if (portrait) 84.sp else 120.sp,
+            fontSize = kanjiSize,
         )
         Text(
             "F U K K A T S U  N O  P",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontSize = 13.sp,
-            letterSpacing = 6.sp,
+            fontSize = if (compact) 11.sp else 13.sp,
+            letterSpacing = if (compact) 4.sp else 6.sp,
         )
     }
 }

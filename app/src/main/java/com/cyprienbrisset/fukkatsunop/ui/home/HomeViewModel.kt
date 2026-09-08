@@ -19,6 +19,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import com.cyprienbrisset.fukkatsunop.airplay.AirPlayReceiver
 import com.cyprienbrisset.fukkatsunop.airplay.AirPlayState
+import com.cyprienbrisset.fukkatsunop.data.settings.WeatherLocation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -46,16 +47,37 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         while (true) { emit(LocalDateTime.now()); delay(1000) }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), LocalDateTime.now())
 
+    val weatherCities: StateFlow<List<WeatherLocation>> = settings.weatherCities
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _weatherIndex = MutableStateFlow(0)
+    val weatherIndex: StateFlow<Int> = _weatherIndex.asStateFlow()
+
+    val currentCity: StateFlow<WeatherLocation?> =
+        combine(settings.weatherCities, _weatherIndex) { cities, idx -> cities.getOrNull(idx) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    val weather: StateFlow<Weather?> = settings.weatherLocation
-        .flatMapLatest { loc ->
-            flow {
-                while (true) {
-                    emit(loc?.let { weatherRepo.currentWeather(it.lat, it.lon) })
-                    delay(15 * 60 * 1000)
+    val weather: StateFlow<Weather?> =
+        combine(settings.weatherCities, _weatherIndex) { cities, idx -> cities.getOrNull(idx) }
+            .flatMapLatest { loc ->
+                flow {
+                    while (true) {
+                        emit(loc?.let { weatherRepo.currentWeather(it.lat, it.lon) })
+                        delay(15 * 60 * 1000)
+                    }
                 }
-            }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    fun nextWeatherCity() {
+        val size = weatherCities.value.size
+        if (size > 1) _weatherIndex.value = (_weatherIndex.value + 1) % size
+    }
+
+    fun prevWeatherCity() {
+        val size = weatherCities.value.size
+        if (size > 1) _weatherIndex.value = (_weatherIndex.value - 1 + size) % size
+    }
 
     val nextAlarm: StateFlow<LocalDateTime?> =
         combine(alarmRepo.observeAll(), now) { list, current ->

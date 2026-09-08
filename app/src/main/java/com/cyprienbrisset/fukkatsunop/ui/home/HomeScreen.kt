@@ -73,6 +73,9 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
     val now by vm.now.collectAsStateWithLifecycle()
     val weather by vm.weather.collectAsStateWithLifecycle()
     val nextAlarm by vm.nextAlarm.collectAsStateWithLifecycle()
+    val currentCity by vm.currentCity.collectAsStateWithLifecycle()
+    val weatherCities by vm.weatherCities.collectAsStateWithLifecycle()
+    val weatherIndex by vm.weatherIndex.collectAsStateWithLifecycle()
     val nowPlaying by vm.nowPlaying.collectAsStateWithLifecycle()
     val recentContacts by vm.recentContacts.collectAsStateWithLifecycle()
     val badgeCounts by NotificationBadgeRepository.counts.collectAsStateWithLifecycle()
@@ -158,24 +161,42 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
             },
     ) {
         val landscape = maxWidth > maxHeight
+        val isCompact = maxWidth < 1500.dp   // Portal Go/Mini (1280dp) vs Portal+ 1st gen (1920dp)
         LaunchedEffect(now) { vm.refreshNowPlaying() }
         WatermarkKanji("墨", Modifier.align(Alignment.BottomEnd).offset(x = (-64).dp, y = (-10).dp))
         if (landscape) {
-            Row(Modifier.fillMaxSize().padding(start = 46.dp, top = 44.dp, bottom = 40.dp, end = 40.dp)) {
+            Row(Modifier.fillMaxSize().padding(
+                start = if (isCompact) 28.dp else 46.dp,
+                top = if (isCompact) 28.dp else 44.dp,
+                bottom = if (isCompact) 28.dp else 40.dp,
+                end = if (isCompact) 28.dp else 40.dp,
+            )) {
                 Column(Modifier.fillMaxHeight().weight(0.38f)) {
                     HomeBranding(
                         portrait = false,
+                        compact = isCompact,
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
                             .padding(top = 8.dp)
                             .then(swipeModifier),
                     )
-                    Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(if (isCompact) 12.dp else 20.dp))
                     Column(
                         Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        AmbientBanner(now, weather, nextAlarm = nextAlarm, portrait = false, onClockClick = onOpenAlarms)
+                        AmbientBanner(
+                            now, weather,
+                            nextAlarm = nextAlarm,
+                            portrait = false,
+                            compact = isCompact,
+                            onClockClick = onOpenAlarms,
+                            cityName = currentCity?.city,
+                            cityIndex = weatherIndex,
+                            citiesCount = weatherCities.size,
+                            onNextCity = { vm.nextWeatherCity() },
+                            onPrevCity = { vm.prevWeatherCity() },
+                        )
                         val np = nowPlaying
                         if (np != null) {
                             Spacer(Modifier.height(20.dp))
@@ -229,13 +250,13 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
                         )
                     }
                 }
-                VerticalVermilionRule(Modifier.align(Alignment.CenterVertically).padding(horizontal = 8.dp), length = 220.dp)
-                Column(Modifier.fillMaxHeight().weight(0.62f).padding(start = 30.dp), verticalArrangement = Arrangement.Center) {
+                VerticalVermilionRule(Modifier.align(Alignment.CenterVertically).padding(horizontal = 8.dp), length = if (isCompact) 160.dp else 220.dp)
+                Column(Modifier.fillMaxHeight().weight(0.62f).padding(start = if (isCompact) 18.dp else 30.dp), verticalArrangement = Arrangement.Center) {
                     SectionLabel("アプリ", "MES APPS")
-                    Spacer(Modifier.height(22.dp))
+                    Spacer(Modifier.height(if (isCompact) 14.dp else 22.dp))
                     MedallionGrid(
                         tiles = tiles,
-                        minCellWidth = 108.dp,
+                        minCellWidth = if (isCompact) 90.dp else 108.dp,
                         onTileClick = launch,
                         onLongClick = { tile -> quickActionsTile = tile },
                         onAddClick = onAddTile,
@@ -247,11 +268,22 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
                 }
             }
         } else {
-            Column(Modifier.fillMaxSize().padding(horizontal = 32.dp, vertical = 40.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Spacer(Modifier.height(20.dp))
-                HomeBranding(portrait = true, modifier = swipeModifier)
-                Spacer(Modifier.height(24.dp))
-                AmbientBanner(now, weather, nextAlarm = nextAlarm, portrait = true, onClockClick = onOpenAlarms)
+            Column(Modifier.fillMaxSize().padding(horizontal = if (isCompact) 20.dp else 32.dp, vertical = if (isCompact) 24.dp else 40.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Spacer(Modifier.height(if (isCompact) 10.dp else 20.dp))
+                HomeBranding(portrait = true, compact = isCompact, modifier = swipeModifier)
+                Spacer(Modifier.height(if (isCompact) 14.dp else 24.dp))
+                AmbientBanner(
+                    now, weather,
+                    nextAlarm = nextAlarm,
+                    portrait = true,
+                    compact = isCompact,
+                    onClockClick = onOpenAlarms,
+                    cityName = currentCity?.city,
+                    cityIndex = weatherIndex,
+                    citiesCount = weatherCities.size,
+                    onNextCity = { vm.nextWeatherCity() },
+                    onPrevCity = { vm.prevWeatherCity() },
+                )
                 val np = nowPlaying
                 if (np != null) {
                     Spacer(Modifier.height(18.dp))
@@ -268,12 +300,12 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
                     Spacer(Modifier.height(16.dp))
                     RecentContactsStrip(recentContacts)
                 }
-                Spacer(Modifier.height(28.dp))
+                Spacer(Modifier.height(if (isCompact) 16.dp else 28.dp))
                 SectionLabel("アプリ", "MES APPS")
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(if (isCompact) 10.dp else 18.dp))
                 MedallionGrid(
                     tiles = tiles,
-                    minCellWidth = 104.dp,
+                    minCellWidth = if (isCompact) 88.dp else 104.dp,
                     onTileClick = launch,
                     onLongClick = { tile -> quickActionsTile = tile },
                     onAddClick = onAddTile,
