@@ -15,6 +15,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,7 +38,7 @@ import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
 
 @Composable
-fun AlarmEditScreen(onDone: () -> Unit, vm: AlarmsViewModel = viewModel()) {
+fun AlarmEditScreen(onDone: () -> Unit, alarmId: Long = 0L, vm: AlarmsViewModel = viewModel()) {
     var hour by remember { mutableStateOf(7) }
     var minute by remember { mutableStateOf(0) }
     var days by remember { mutableStateOf(0) }
@@ -45,11 +46,24 @@ fun AlarmEditScreen(onDone: () -> Unit, vm: AlarmsViewModel = viewModel()) {
     var ringtoneUri by remember { mutableStateOf<String?>(null) }
     var videoEnabled by remember { mutableStateOf(false) }
 
+    LaunchedEffect(alarmId) {
+        if (alarmId > 0L) {
+            vm.getById(alarmId)?.let { a ->
+                hour = a.hour
+                minute = a.minute
+                days = a.repeatDays
+                snooze = a.snoozeMinutes
+                ringtoneUri = a.ringtoneUri
+                videoEnabled = a.videoEnabled
+            }
+        }
+    }
+
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 32.dp).padding(top = 28.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             HankoSeal("鈴", size = 40.dp, onClick = onDone)
             Spacer(Modifier.width(14.dp))
-            Text("Nouvelle alarme", fontFamily = Mincho, color = Kinari, fontSize = 22.sp)
+            Text(if (alarmId > 0L) "Modifier l'alarme" else "Nouvelle alarme", fontFamily = Mincho, color = Kinari, fontSize = 22.sp)
         }
         Spacer(Modifier.height(24.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
@@ -100,7 +114,7 @@ fun AlarmEditScreen(onDone: () -> Unit, vm: AlarmsViewModel = viewModel()) {
         RingtonePicker(selectedUri = ringtoneUri, onSelect = { ringtoneUri = it })
         Spacer(Modifier.weight(1f))
         SumiPrimaryButton("保存 · Enregistrer", onClick = {
-            vm.save(hour, minute, days, "", ringtoneUri, snooze, videoEnabled)
+            vm.save(hour, minute, days, "", ringtoneUri, snooze, videoEnabled, id = alarmId)
             onDone()
         })
         Spacer(Modifier.height(20.dp))

@@ -26,9 +26,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.cyprienbrisset.fukkatsunop.system.UpdateProgress
 import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
@@ -58,13 +60,13 @@ fun AppNav() {
                 com.cyprienbrisset.fukkatsunop.ui.home.HomeShell(
                     onOpenSettings = { nav.navigate(Routes.SETTINGS) },
                     onAddTile = { nav.navigate(Routes.TILE_EDIT) },
+                    onOpenAlarms = { nav.navigate(Routes.ALARMS) },
                 )
             }
             composable(Routes.SETTINGS) {
                 com.cyprienbrisset.fukkatsunop.ui.settings.SettingsScreen(
                     onBack = { nav.popBackStack() },
                     onTiles = { nav.navigate(Routes.TILE_EDIT) },
-                    onAlarms = { nav.navigate(Routes.ALARMS) },
                     onWeather = { nav.navigate(Routes.SETTINGS + "/weather") },
                     onStore = { nav.navigate(Routes.STORE) },
                     onInstalledApps = { nav.navigate(Routes.INSTALLED_APPS) },
@@ -87,10 +89,21 @@ fun AppNav() {
                 com.cyprienbrisset.fukkatsunop.ui.alarms.AlarmsScreen(
                     onBack = { nav.popBackStack() },
                     onAdd = { nav.navigate(Routes.ALARM_EDIT) },
+                    onEdit = { id -> nav.navigate("${Routes.ALARM_EDIT}?id=$id") },
                 )
             }
-            composable(Routes.ALARM_EDIT) {
-                com.cyprienbrisset.fukkatsunop.ui.alarms.AlarmEditScreen(onDone = { nav.popBackStack() })
+            composable(
+                route = "${Routes.ALARM_EDIT}?id={id}",
+                arguments = listOf(navArgument("id") {
+                    type = NavType.LongType
+                    defaultValue = 0L
+                }),
+            ) { backStackEntry ->
+                val alarmId = backStackEntry.arguments?.getLong("id") ?: 0L
+                com.cyprienbrisset.fukkatsunop.ui.alarms.AlarmEditScreen(
+                    alarmId = alarmId,
+                    onDone = { nav.popBackStack() },
+                )
             }
             composable(Routes.DARK_SCHEDULE) {
                 com.cyprienbrisset.fukkatsunop.ui.settings.DarkModeScheduleScreen(onBack = { nav.popBackStack() })

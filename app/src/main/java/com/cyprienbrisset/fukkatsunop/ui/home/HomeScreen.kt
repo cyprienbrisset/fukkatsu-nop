@@ -67,7 +67,7 @@ import com.cyprienbrisset.fukkatsunop.ui.screensaver.SumiSaverActivity
 import com.cyprienbrisset.fukkatsunop.web.WebAppActivity
 
 @Composable
-fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, vm: HomeViewModel = viewModel()) {
+fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: () -> Unit = {}, vm: HomeViewModel = viewModel()) {
     val ctx = LocalContext.current
     val tiles by vm.tiles.collectAsStateWithLifecycle()
     val now by vm.now.collectAsStateWithLifecycle()
@@ -175,7 +175,7 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, vm: HomeViewMo
                         Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        AmbientBanner(now, weather, nextAlarm = nextAlarm, portrait = false)
+                        AmbientBanner(now, weather, nextAlarm = nextAlarm, portrait = false, onClockClick = onOpenAlarms)
                         val np = nowPlaying
                         if (np != null) {
                             Spacer(Modifier.height(20.dp))
@@ -251,7 +251,7 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, vm: HomeViewMo
                 Spacer(Modifier.height(20.dp))
                 HomeBranding(portrait = true, modifier = swipeModifier)
                 Spacer(Modifier.height(24.dp))
-                AmbientBanner(now, weather, nextAlarm = nextAlarm, portrait = true)
+                AmbientBanner(now, weather, nextAlarm = nextAlarm, portrait = true, onClockClick = onOpenAlarms)
                 val np = nowPlaying
                 if (np != null) {
                     Spacer(Modifier.height(18.dp))

@@ -2,6 +2,13 @@ package com.cyprienbrisset.fukkatsunop.ui.settings
 
 import android.content.Intent
 import android.provider.Settings
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,318 +44,528 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.cyprienbrisset.fukkatsunop.ui.home.HomeViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.cyprienbrisset.fukkatsunop.airplay.AirPlayPrefs
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cyprienbrisset.fukkatsunop.BuildConfig
-import com.cyprienbrisset.fukkatsunop.alarm.SunriseForegroundService
+import com.cyprienbrisset.fukkatsunop.airplay.AirPlayPrefs
 import com.cyprienbrisset.fukkatsunop.overlay.OverlayService
-import com.cyprienbrisset.fukkatsunop.ui.alarm.SunriseActivity
-import com.cyprienbrisset.fukkatsunop.system.DarkModeManager
 import com.cyprienbrisset.fukkatsunop.system.FirmwareWatcher
 import com.cyprienbrisset.fukkatsunop.system.UpdateChecker
 import com.cyprienbrisset.fukkatsunop.system.UpdateProgress
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceModelManager
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
+import com.cyprienbrisset.fukkatsunop.ui.alarm.SunriseActivity
+import com.cyprienbrisset.fukkatsunop.ui.home.HomeViewModel
 import com.cyprienbrisset.fukkatsunop.ui.sumi.HankoSeal
-import com.cyprienbrisset.fukkatsunop.ui.sumi.SumiPrimaryButton
 import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
-import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
-import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
 import kotlinx.coroutines.launch
+
+// ── Catégories ───────────────────────────────────────────────────────────────
+
+private enum class Cat { HOME, DISPLAY, APPS, SYSTEM, DEVICE }
+
+private data class CatDef(val kanji: String, val label: String, val id: Cat)
+
+private val CATS = listOf(
+    CatDef("宅", "Écran d'accueil", Cat.HOME),
+    CatDef("映", "Affichage",       Cat.DISPLAY),
+    CatDef("庫", "Applications",    Cat.APPS),
+    CatDef("系", "Système",         Cat.SYSTEM),
+    CatDef("機", "Appareil",        Cat.DEVICE),
+)
+
+// ── SettingsScreen ────────────────────────────────────────────────────────────
 
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
     onTiles: () -> Unit,
-    onAlarms: () -> Unit,
     onWeather: () -> Unit,
     onStore: () -> Unit = {},
     onInstalledApps: () -> Unit = {},
     onDarkSchedule: () -> Unit = {},
 ) {
-    val ctx = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val ctx    = LocalContext.current
+    val scope  = rememberCoroutineScope()
     val homeVm: HomeViewModel = viewModel()
+
     val weatherEffects by homeVm.weatherEffectsEnabled.collectAsState()
-    val saverMode by homeVm.saverMode.collectAsState()
-    var voiceEnabled by remember { mutableStateOf(VoiceService.isEnabled(ctx)) }
-    var modelReady by remember { mutableStateOf(VoiceModelManager.isModelReady(ctx)) }
-    var downloading by remember { mutableStateOf(false) }
+    val saverMode      by homeVm.saverMode.collectAsState()
+
+    var voiceEnabled     by remember { mutableStateOf(VoiceService.isEnabled(ctx)) }
+    var modelReady       by remember { mutableStateOf(VoiceModelManager.isModelReady(ctx)) }
+    var downloading      by remember { mutableStateOf(false) }
     var downloadProgress by remember { mutableIntStateOf(0) }
+    var overlayRunning   by remember { mutableStateOf(OverlayService.isRunning) }
     var verifierDisabled by remember {
-        mutableStateOf(
-            runCatching {
-                Settings.Global.getInt(ctx.contentResolver, "package_verifier_enable", 1) == 0
-            }.getOrDefault(false)
-        )
+        mutableStateOf(runCatching {
+            Settings.Global.getInt(ctx.contentResolver, "package_verifier_enable", 1) == 0
+        }.getOrDefault(false))
     }
     var updateAvailable by remember { mutableStateOf(UpdateChecker.availableVersionName(ctx)) }
-    LaunchedEffect(Unit) {
-        UpdateChecker.check(ctx)
-        updateAvailable = UpdateChecker.availableVersionName(ctx)
-    }
-    var airPlayName by remember { mutableStateOf(AirPlayPrefs.getName(ctx)) }
-    var showAirPlayNameDialog by remember { mutableStateOf(false) }
-    var editingAirPlayName by remember { mutableStateOf("") }
+    LaunchedEffect(Unit) { UpdateChecker.check(ctx); updateAvailable = UpdateChecker.availableVersionName(ctx) }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).statusBarsPadding().padding(horizontal = 32.dp)) {
-        Row(Modifier.fillMaxWidth().padding(vertical = 24.dp), verticalAlignment = Alignment.CenterVertically) {
-            HankoSeal("朱", size = 40.dp, onClick = onBack)
-            Spacer(Modifier.width(14.dp))
-            Text("Réglages", fontFamily = Mincho, color = MaterialTheme.colorScheme.onBackground, fontSize = 22.sp)
-        }
-        SettingRow("Tuiles") { onTiles() }
-        SettingRow("Alarmes") { onAlarms() }
-        SettingRow("Ville météo") { onWeather() }
-        SettingRow("FukkaStore") { onStore() }
-        SettingRow("Applications installées") { onInstalledApps() }
-        SettingRow("Mode nuit automatique") { onDarkSchedule() }
-        SettingRow(
-            text = if (verifierDisabled) "Vérificateur désactivé ✓" else "Activer FukkaStore (vérificateur)",
-            chevron = !verifierDisabled,
-        ) {
-            if (!verifierDisabled) {
-                runCatching {
-                    Settings.Global.putInt(ctx.contentResolver, "package_verifier_enable", 0)
-                    Settings.Global.putInt(ctx.contentResolver, "verifier_verify_adb_installs", 0)
-                    Settings.Global.putInt(ctx.contentResolver, "package_verifier_user_consent", -1)
-                    verifierDisabled = true
-                }
-            }
-        }
-        // Overlay
-        var overlayRunning by remember { mutableStateOf(OverlayService.isRunning) }
-        SettingRow(
-            text = if (overlayRunning) "Contrôles flottants actifs ✓" else "Activer les contrôles flottants",
-            chevron = !overlayRunning,
-        ) {
-            if (overlayRunning) {
-                ctx.startService(Intent(ctx, OverlayService::class.java).apply { action = OverlayService.ACTION_STOP })
-                overlayRunning = false
-            } else {
-                if (!Settings.canDrawOverlays(ctx)) {
-                    ctx.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                } else {
-                    ctx.startForegroundService(Intent(ctx, OverlayService::class.java))
-                    overlayRunning = true
-                }
-            }
-        }
+    var airPlayName       by remember { mutableStateOf(AirPlayPrefs.getName(ctx)) }
+    var showAirPlayDialog by remember { mutableStateOf(false) }
+    var editingAirPlay    by remember { mutableStateOf("") }
 
-        SettingRow("Nom AirPlay : $airPlayName", subtitle = "Visible sur Mac dans Réglages Système → Écrans") {
-            editingAirPlayName = airPlayName
-            showAirPlayNameDialog = true
-        }
-        if (showAirPlayNameDialog) {
-            AlertDialog(
-                onDismissRequest = { showAirPlayNameDialog = false },
-                modifier = Modifier.fillMaxWidth(0.6f),
-                title = { Text("Nom AirPlay", fontFamily = Mincho) },
-                text = {
-                    OutlinedTextField(
-                        value = editingAirPlayName,
-                        onValueChange = { editingAirPlayName = it },
-                        singleLine = true,
-                    )
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        val n = editingAirPlayName.trim().ifBlank { "Portal" }
-                        AirPlayPrefs.setName(ctx, n)
-                        airPlayName = n
-                        showAirPlayNameDialog = false
-                    }) { Text("OK", color = Shu) }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showAirPlayNameDialog = false }) { Text("Annuler") }
-                },
-                containerColor = MaterialTheme.colorScheme.surface,
-            )
-        }
-        SettingRow("Surveillance firmware", subtitle = FirmwareWatcher.currentBuild(), chevron = false) {}
-        val updatePct by UpdateProgress.pct.collectAsState()
-        if (updateAvailable != null) {
-            val busy = updatePct in 0..100
-            val rowText = when {
-                updatePct in 0..99 -> "Téléchargement… $updatePct%"
-                updatePct == 100   -> "Installation en cours…"
-                else               -> "Mise à jour disponible : $updateAvailable"
-            }
-            SettingRow(
-                text = rowText,
-                subtitle = if (busy) "Ne pas quitter l'application"
-                           else "Version installée : ${BuildConfig.VERSION_NAME} — Appuyer pour installer",
-                chevron = !busy,
-            ) {
-                if (!busy) UpdateChecker.startUpdate(ctx)
-            }
-        } else {
-            SettingRow(
-                text = "Version ${BuildConfig.VERSION_NAME}",
-                subtitle = "À jour",
-                chevron = false,
-            ) {}
-        }
-        SettingRow("Réglages système") {
-            ctx.startActivity(Intent(Settings.ACTION_SETTINGS))
-        }
+    var selected     by remember { mutableStateOf(Cat.HOME) }
+    var showCredits  by remember { mutableStateOf(false) }
 
-        // ── Commandes vocales ────────────────────────────────────────────────────
-        if (!modelReady) {
-            // Download prompt
-            Row(
+    Box(Modifier.fillMaxSize()) {
+
+        // ── Two-panel layout ─────────────────────────────────────────────────
+        Row(Modifier.fillMaxSize().statusBarsPadding()) {
+
+            // ── Left panel — category list ───────────────────────────────────
+            Column(
                 Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 68.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
+                    .width(240.dp)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.surface),
             ) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        "Commandes vocales (modèle ~40 MB)",
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 17.sp,
-                    )
-                    Text(
-                        if (downloading) "Téléchargement… $downloadProgress%" else "Requis pour la reconnaissance hors-ligne",
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                        fontSize = 12.sp,
-                        fontFamily = Mincho,
-                    )
+                // Header
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 22.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    HankoSeal("朱", size = 36.dp, onClick = onBack)
+                    Spacer(Modifier.width(12.dp))
+                    Text("Réglages", fontFamily = Mincho, fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground)
                 }
-                Spacer(Modifier.width(10.dp))
-                if (!downloading) {
-                    Box(
-                        Modifier
-                            .clickable {
-                                downloading = true
-                                scope.launch {
-                                    val ok = VoiceModelManager.downloadAndExtract(ctx) { p -> downloadProgress = p }
-                                    modelReady = ok
-                                    downloading = false
-                                }
-                            }
-                    ) {
-                        Text("Télécharger", color = Shu, fontSize = 15.sp, fontFamily = Mincho)
-                    }
-                } else {
-                    CircularProgressIndicator(
-                        color = AccentShu,
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp,
-                    )
+                Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+
+                CATS.forEach { cat ->
+                    CatItem(cat, selected == cat.id) { selected = cat.id }
                 }
+
+                // Credits — séparé en bas
+                Spacer(Modifier.weight(1f))
+                Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+                CatItem(CatDef("礼", "Crédits", Cat.HOME), false) { showCredits = true }
             }
-            Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
-        } else {
-            // Toggle
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 68.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        "Commandes vocales",
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 17.sp,
-                    )
-                    Text(
-                        if (voiceEnabled) "Actif — dites « Portal » pour parler" else "Désactivé",
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                        fontSize = 12.sp,
-                        fontFamily = Mincho,
-                    )
-                }
-                Switch(
-                    checked = voiceEnabled,
-                    onCheckedChange = { enabled ->
-                        voiceEnabled = enabled
-                        VoiceService.setEnabled(ctx, enabled)
+
+            // ── Separator ────────────────────────────────────────────────────
+            Box(Modifier.width(1.dp).fillMaxHeight().background(MaterialTheme.colorScheme.outline))
+
+            // ── Right panel — content ────────────────────────────────────────
+            Column(Modifier.weight(1f).fillMaxHeight()) {
+                // Panel title
+                val title = CATS.first { it.id == selected }.label
+                Text(
+                    title,
+                    fontFamily = Mincho,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 22.dp),
+                )
+                Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+
+                // Animated panel content
+                AnimatedContent(
+                    targetState = selected,
+                    transitionSpec = {
+                        (fadeIn() + slideInHorizontally { it / 6 }) togetherWith
+                        (fadeOut() + slideOutHorizontally { -it / 6 })
                     },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = AccentShu,
-                        checkedTrackColor = AccentShu.copy(alpha = 0.4f),
-                    ),
-                )
+                    label = "settings-panel",
+                ) { cat ->
+                    Column(
+                        Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 32.dp, vertical = 8.dp),
+                    ) {
+                        when (cat) {
+                            Cat.HOME    -> HomePanelContent(onTiles)
+                            Cat.DISPLAY -> DisplayPanelContent(
+                                weatherEffects, saverMode,
+                                onWeatherEffects = { homeVm.setWeatherEffectsEnabled(it) },
+                                onSaverMode      = { homeVm.setSaverMode(it) },
+                                onWeather        = onWeather,
+                                onDarkSchedule   = onDarkSchedule,
+                                onSunrise        = {
+                                    ctx.startActivity(
+                                        Intent(ctx, SunriseActivity::class.java)
+                                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                            .putExtra(SunriseActivity.EXTRA_DURATION_MS, 60_000L)
+                                    )
+                                },
+                            )
+                            Cat.APPS    -> AppsPanelContent(onStore, onInstalledApps)
+                            Cat.SYSTEM  -> SystemPanelContent(
+                                overlayRunning, airPlayName, voiceEnabled, modelReady, downloading, downloadProgress,
+                                onOverlay = {
+                                    if (overlayRunning) {
+                                        ctx.startService(Intent(ctx, OverlayService::class.java).apply { action = OverlayService.ACTION_STOP })
+                                        overlayRunning = false
+                                    } else {
+                                        if (!Settings.canDrawOverlays(ctx)) {
+                                            ctx.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                                        } else {
+                                            ctx.startForegroundService(Intent(ctx, OverlayService::class.java))
+                                            overlayRunning = true
+                                        }
+                                    }
+                                },
+                                onAirPlay = { editingAirPlay = airPlayName; showAirPlayDialog = true },
+                                onVoiceToggle = { enabled ->
+                                    voiceEnabled = enabled; VoiceService.setEnabled(ctx, enabled)
+                                },
+                                onVoiceDownload = {
+                                    downloading = true
+                                    scope.launch {
+                                        val ok = VoiceModelManager.downloadAndExtract(ctx) { p -> downloadProgress = p }
+                                        modelReady = ok; downloading = false
+                                    }
+                                },
+                            )
+                            Cat.DEVICE  -> {
+                                val updatePct by UpdateProgress.pct.collectAsState()
+                                DevicePanelContent(
+                                    verifierDisabled, updateAvailable, updatePct,
+                                    onVerifier = {
+                                        runCatching {
+                                            Settings.Global.putInt(ctx.contentResolver, "package_verifier_enable", 0)
+                                            Settings.Global.putInt(ctx.contentResolver, "verifier_verify_adb_installs", 0)
+                                            Settings.Global.putInt(ctx.contentResolver, "package_verifier_user_consent", -1)
+                                            verifierDisabled = true
+                                        }
+                                    },
+                                    onUpdate = { UpdateChecker.startUpdate(ctx) },
+                                    onSystem  = { ctx.startActivity(Intent(Settings.ACTION_SETTINGS)) },
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(32.dp))
+                    }
+                }
             }
-            Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
         }
 
-        // ── Effets météo ─────────────────────────────────────────────────────────
-        Row(
-            Modifier.fillMaxWidth().heightIn(min = 68.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+        // ── Credits plein écran ──────────────────────────────────────────────
+        AnimatedVisibility(
+            visible = showCredits,
+            enter   = slideInHorizontally { it },
+            exit    = slideOutHorizontally { it },
         ) {
-            Column(Modifier.weight(1f)) {
-                Text("Effets météo", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
-                Text(
-                    if (weatherEffects) "Pluie, neige, brouillard animés sur l'écran d'accueil"
-                    else "Désactivés",
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                    fontSize = 12.sp,
-                    fontFamily = Mincho,
-                )
-            }
-            Switch(
-                checked = weatherEffects,
-                onCheckedChange = { homeVm.setWeatherEffectsEnabled(it) },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = AccentShu,
-                    checkedTrackColor = AccentShu.copy(alpha = 0.4f),
-                ),
-            )
+            CreditsScreen(onBack = { showCredits = false })
         }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+    }
 
-        // ── Lever de soleil ──────────────────────────────────────────────────────
-        SettingRow("Tester le lever de soleil (60 s)") {
-            ctx.startActivity(
-                android.content.Intent(ctx, SunriseActivity::class.java)
-                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                    .putExtra(SunriseActivity.EXTRA_DURATION_MS, 60_000L)
-            )
-        }
-
-        // ── Écran de veille Sumi-e ───────────────────────────────────────────────
-        Row(
-            Modifier.fillMaxWidth().heightIn(min = 68.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text("Écran de veille Sumi-e", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
-                Text(
-                    if (saverMode) "Bouton veille → encre de Chine générative" else "Bouton veille → verrouille l'écran",
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                    fontSize = 12.sp,
-                    fontFamily = Mincho,
+    // ── AirPlay dialog ───────────────────────────────────────────────────────
+    if (showAirPlayDialog) {
+        AlertDialog(
+            onDismissRequest = { showAirPlayDialog = false },
+            modifier = Modifier.fillMaxWidth(0.5f),
+            title = { Text("Nom AirPlay", fontFamily = Mincho) },
+            text = {
+                OutlinedTextField(
+                    value = editingAirPlay,
+                    onValueChange = { editingAirPlay = it },
+                    singleLine = true,
                 )
-            }
-            Switch(
-                checked = saverMode,
-                onCheckedChange = { homeVm.setSaverMode(it) },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = AccentShu,
-                    checkedTrackColor = AccentShu.copy(alpha = 0.4f),
-                ),
-            )
-        }
-        Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val n = editingAirPlay.trim().ifBlank { "Portal" }
+                    AirPlayPrefs.setName(ctx, n); airPlayName = n; showAirPlayDialog = false
+                }) { Text("OK", color = Shu) }
+            },
+            dismissButton = { TextButton(onClick = { showAirPlayDialog = false }) { Text("Annuler") } },
+            containerColor = MaterialTheme.colorScheme.surface,
+        )
     }
 }
 
+// ── Left panel item ───────────────────────────────────────────────────────────
+
+@Composable
+private fun CatItem(cat: CatDef, active: Boolean, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .background(if (active) Shu.copy(alpha = 0.08f) else Color.Transparent)
+            .clickable { onClick() },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.width(3.dp).height(36.dp).background(if (active) Shu else Color.Transparent))
+        Spacer(Modifier.width(16.dp))
+        Text(cat.kanji, fontFamily = Mincho, fontSize = 18.sp, color = if (active) Shu else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
+        Spacer(Modifier.width(14.dp))
+        Text(cat.label, fontSize = 15.sp, color = if (active) Shu else MaterialTheme.colorScheme.onBackground)
+    }
+}
+
+// ── Panel contents ────────────────────────────────────────────────────────────
+
+@Composable
+private fun HomePanelContent(onTiles: () -> Unit) {
+    SettingRow("Tuiles", subtitle = "Ajouter ou retirer des raccourcis") { onTiles() }
+}
+
+@Composable
+private fun DisplayPanelContent(
+    weatherEffects: Boolean,
+    saverMode: Boolean,
+    onWeatherEffects: (Boolean) -> Unit,
+    onSaverMode: (Boolean) -> Unit,
+    onWeather: () -> Unit,
+    onDarkSchedule: () -> Unit,
+    onSunrise: () -> Unit,
+) {
+    SettingSwitch(
+        text = "Effets météo",
+        subtitle = if (weatherEffects) "Pluie, neige, brouillard animés" else "Désactivés",
+        checked = weatherEffects,
+        onCheckedChange = onWeatherEffects,
+    )
+    SettingRow("Ville météo", subtitle = "Définir la ville pour la météo") { onWeather() }
+    SettingRow("Mode nuit automatique", subtitle = "Planifier le passage en mode sombre") { onDarkSchedule() }
+    SettingSwitch(
+        text = "Écran de veille Sumi-e",
+        subtitle = if (saverMode) "Bouton veille → encre de Chine générative" else "Bouton veille → verrouille l'écran",
+        checked = saverMode,
+        onCheckedChange = onSaverMode,
+    )
+    SettingRow("Tester le lever de soleil", subtitle = "Simulation 60 secondes") { onSunrise() }
+}
+
+@Composable
+private fun AppsPanelContent(onStore: () -> Unit, onInstalledApps: () -> Unit) {
+    SettingRow("FukkaStore", subtitle = "Télécharger et installer des apps") { onStore() }
+    SettingRow("Applications installées", subtitle = "Voir et désinstaller des apps") { onInstalledApps() }
+}
+
+@Composable
+private fun SystemPanelContent(
+    overlayRunning: Boolean,
+    airPlayName: String,
+    voiceEnabled: Boolean,
+    modelReady: Boolean,
+    downloading: Boolean,
+    downloadProgress: Int,
+    onOverlay: () -> Unit,
+    onAirPlay: () -> Unit,
+    onVoiceToggle: (Boolean) -> Unit,
+    onVoiceDownload: () -> Unit,
+) {
+    SettingRow(
+        text = if (overlayRunning) "Contrôles flottants actifs ✓" else "Contrôles flottants",
+        subtitle = if (overlayRunning) "Appuyer pour désactiver" else "Boutons multitâche et volume en superposition",
+        chevron = !overlayRunning,
+        onClick = onOverlay,
+    )
+    SettingRow("Nom AirPlay", subtitle = airPlayName, onClick = onAirPlay)
+
+    // Commandes vocales
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 68.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(
+                if (modelReady) "Commandes vocales" else "Commandes vocales (modèle ~40 MB)",
+                color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp,
+            )
+            Text(
+                when {
+                    !modelReady && downloading -> "Téléchargement… $downloadProgress%"
+                    !modelReady -> "Requis pour la reconnaissance hors-ligne"
+                    voiceEnabled -> "Actif — dites « Portal » pour parler"
+                    else -> "Désactivé"
+                },
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                fontSize = 12.sp, fontFamily = Mincho,
+            )
+        }
+        Spacer(Modifier.width(10.dp))
+        when {
+            !modelReady && downloading -> CircularProgressIndicator(color = AccentShu, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+            !modelReady -> Box(Modifier.clickable { onVoiceDownload() }) {
+                Text("Télécharger", color = Shu, fontSize = 15.sp, fontFamily = Mincho)
+            }
+            else -> Switch(
+                checked = voiceEnabled, onCheckedChange = onVoiceToggle,
+                colors = SwitchDefaults.colors(checkedThumbColor = AccentShu, checkedTrackColor = AccentShu.copy(alpha = 0.4f)),
+            )
+        }
+    }
+    Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+}
+
+@Composable
+private fun DevicePanelContent(
+    verifierDisabled: Boolean,
+    updateAvailable: String?,
+    updatePct: Int,
+    onVerifier: () -> Unit,
+    onUpdate: () -> Unit,
+    onSystem: () -> Unit,
+) {
+    SettingRow(
+        text = if (verifierDisabled) "Vérificateur désactivé ✓" else "Désactiver le vérificateur",
+        subtitle = "Requis pour FukkaStore et l'installation d'apps",
+        chevron = !verifierDisabled,
+    ) { if (!verifierDisabled) onVerifier() }
+
+    if (updateAvailable != null) {
+        val busy = updatePct in 0..100
+        SettingRow(
+            text = when {
+                updatePct in 0..99 -> "Téléchargement… $updatePct%"
+                updatePct == 100   -> "Installation en cours…"
+                else               -> "Mise à jour disponible : $updateAvailable"
+            },
+            subtitle = if (busy) "Ne pas quitter l'application"
+                       else "Version actuelle : ${BuildConfig.VERSION_NAME} — Appuyer pour installer",
+            chevron = !busy,
+        ) { if (!busy) onUpdate() }
+    } else {
+        SettingRow("Version ${BuildConfig.VERSION_NAME}", subtitle = "À jour", chevron = false) {}
+    }
+    SettingRow("Surveillance firmware", subtitle = FirmwareWatcher.currentBuild(), chevron = false) {}
+    SettingRow("Réglages système", subtitle = "Paramètres Android") { onSystem() }
+}
+
+// ── Credits full-screen ───────────────────────────────────────────────────────
+
+private data class Credit(val name: String, val detail: String, val license: String)
+
+private val CREDITS = listOf(
+    Credit("Musique Koto", "Amy — Pixabay", "Pixabay Content License"),
+    Credit("Jetpack Compose", "Google", "Apache 2.0"),
+    Credit("AndroidX Room", "Google", "Apache 2.0"),
+    Credit("AndroidX DataStore", "Google", "Apache 2.0"),
+    Credit("AndroidX Navigation", "Google", "Apache 2.0"),
+    Credit("OkHttp", "Square", "Apache 2.0"),
+    Credit("Coil", "Coil Contributors", "Apache 2.0"),
+    Credit("kotlinx.serialization", "JetBrains", "Apache 2.0"),
+    Credit("Vosk / vosk-android", "Alpha Cephei", "Apache 2.0"),
+    Credit("ZXing Core", "ZXing Authors", "Apache 2.0"),
+    Credit("JmDNS", "JmDNS Contributors", "LGPL 2.1"),
+    Credit("Bouncy Castle", "Legion of the Bouncy Castle", "MIT"),
+    Credit("Google Play API", "Aurora OSS", "GPL 3.0"),
+)
+
+@Composable
+private fun CreditsScreen(onBack: () -> Unit) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding(),
+    ) {
+        // Header
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 22.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            HankoSeal("礼", size = 40.dp, onClick = onBack)
+            Spacer(Modifier.width(14.dp))
+            Column {
+                Text("Crédits", fontFamily = Mincho, fontSize = 22.sp, color = MaterialTheme.colorScheme.onBackground)
+                Text(
+                    "Fukkatsu No P  v${BuildConfig.VERSION_NAME}",
+                    fontFamily = Mincho, fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                )
+            }
+        }
+        Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+
+        Column(
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 48.dp, vertical = 24.dp),
+        ) {
+            // App credit
+            Text(
+                "復活のP — Fukkatsu No P",
+                fontFamily = Mincho, fontSize = 18.sp, fontWeight = FontWeight.Medium,
+                color = Shu,
+            )
+            Text(
+                "Lanceur Android pour Meta Portal • Cyprien Brisset",
+                fontFamily = Mincho, fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                modifier = Modifier.padding(bottom = 32.dp),
+            )
+
+            // Libraries
+            Text(
+                "COMPOSANTS OPEN SOURCE",
+                fontSize = 10.sp, letterSpacing = 2.sp, fontFamily = Mincho,
+                color = Shu, modifier = Modifier.padding(bottom = 12.dp),
+            )
+
+            CREDITS.forEach { credit ->
+                Row(
+                    Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(credit.name, fontSize = 15.sp, color = MaterialTheme.colorScheme.onBackground)
+                        Text(
+                            credit.detail,
+                            fontSize = 12.sp, fontFamily = Mincho,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                        )
+                    }
+                    Text(
+                        credit.license,
+                        fontSize = 11.sp, fontFamily = Mincho,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+                    )
+                }
+                Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)))
+            }
+
+            Spacer(Modifier.height(48.dp))
+            Text(
+                "復活",
+                fontFamily = Mincho, fontSize = 48.sp, color = Shu.copy(alpha = 0.12f),
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
+        }
+    }
+}
+
+// ── Shared composables ────────────────────────────────────────────────────────
+
+@Composable
+private fun SettingSwitch(
+    text: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 68.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(text, color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
+            Text(subtitle, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), fontSize = 12.sp, fontFamily = Mincho)
+        }
+        Switch(
+            checked = checked, onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(checkedThumbColor = AccentShu, checkedTrackColor = AccentShu.copy(alpha = 0.4f)),
+        )
+    }
+    Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+}
 
 @Composable
 private fun SettingRow(text: String, subtitle: String? = null, chevron: Boolean = true, onClick: () -> Unit) {
@@ -357,9 +575,7 @@ private fun SettingRow(text: String, subtitle: String? = null, chevron: Boolean 
     ) {
         Column(Modifier.weight(1f)) {
             Text(text, color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
-            if (subtitle != null) {
-                Text(subtitle, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), fontSize = 12.sp, fontFamily = Mincho)
-            }
+            if (subtitle != null) Text(subtitle, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), fontSize = 12.sp, fontFamily = Mincho)
         }
         Spacer(Modifier.width(10.dp))
         if (chevron) Text("›", color = Shu, fontSize = 22.sp)

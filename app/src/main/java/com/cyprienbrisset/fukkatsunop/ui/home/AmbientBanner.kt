@@ -1,6 +1,8 @@
 package com.cyprienbrisset.fukkatsunop.ui.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cyprienbrisset.fukkatsunop.data.weather.Weather
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import java.time.LocalDateTime
@@ -28,10 +31,12 @@ fun AmbientBanner(
     modifier: Modifier = Modifier,
     nextAlarm: LocalDateTime? = null,
     portrait: Boolean = false,
+    onClockClick: () -> Unit = {},
 ) {
     val time = now.format(DateTimeFormatter.ofPattern("HH:mm"))
     val date = now.format(DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.FRENCH))
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(Modifier.clickable { onClockClick() }) {
         Text(
             time,
             fontFamily = Mincho,
@@ -39,6 +44,7 @@ fun AmbientBanner(
             color = MaterialTheme.colorScheme.onBackground,
             fontSize = if (portrait) 72.sp else 92.sp,
         )
+        }
         Spacer(Modifier.height(12.dp))
         Text(date, color = MaterialTheme.colorScheme.onBackground, fontSize = 16.sp)
         if (weather != null) {
@@ -64,8 +70,8 @@ fun AmbientBanner(
         if (nextAlarm != null) {
             Spacer(Modifier.height(2.dp))
             Text(
-                "⏰ " + nextAlarm.format(DateTimeFormatter.ofPattern("EEE HH:mm", Locale.FRENCH)),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                "↑ " + nextAlarm.format(DateTimeFormatter.ofPattern("EEE HH:mm", Locale.FRENCH)),
+                color = AccentShu,
                 fontSize = 13.sp,
             )
         }

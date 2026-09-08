@@ -43,7 +43,7 @@ import kotlinx.coroutines.launch
 // Three-page shell: page 0 = widget dashboard, page 1 = home, page 2 = Google.
 // Two-finger horizontal swipe switches pages (avoids conflict with single-finger gestures).
 @Composable
-fun HomeShell(onOpenSettings: () -> Unit, onAddTile: () -> Unit) {
+fun HomeShell(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: () -> Unit = {}) {
     val pagerState = rememberPagerState(initialPage = 1) { 3 }
     val scope = rememberCoroutineScope()
     val voiceState by VoiceService.state.collectAsState()
@@ -91,7 +91,7 @@ fun HomeShell(onOpenSettings: () -> Unit, onAddTile: () -> Unit) {
             when (page) {
                 0 -> WidgetDashboard()
                 2 -> GoogleScreen()
-                else -> HomeScreen(onOpenSettings = onOpenSettings, onAddTile = onAddTile)
+                else -> HomeScreen(onOpenSettings = onOpenSettings, onAddTile = onAddTile, onOpenAlarms = onOpenAlarms)
             }
         }
 

@@ -34,4 +34,6 @@ class AlarmsViewModel(app: Application) : AndroidViewModel(app) {
     fun delete(alarm: AlarmEntity) = viewModelScope.launch {
         scheduler.cancel(alarm.id); repo.delete(alarm)
     }
+
+    suspend fun getById(id: Long): AlarmEntity? = repo.byId(id)
 }

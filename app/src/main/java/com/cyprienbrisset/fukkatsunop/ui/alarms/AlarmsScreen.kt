@@ -34,7 +34,7 @@ import com.cyprienbrisset.fukkatsunop.ui.theme.SumiLine
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
 
 @Composable
-fun AlarmsScreen(onBack: () -> Unit, onAdd: () -> Unit, vm: AlarmsViewModel = viewModel()) {
+fun AlarmsScreen(onBack: () -> Unit, onAdd: () -> Unit, onEdit: (Long) -> Unit = {}, vm: AlarmsViewModel = viewModel()) {
     val alarms by vm.alarms.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 32.dp)) {
         Row(Modifier.fillMaxWidth().padding(vertical = 24.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -46,14 +46,14 @@ fun AlarmsScreen(onBack: () -> Unit, onAdd: () -> Unit, vm: AlarmsViewModel = vi
         }
         LazyColumn(verticalArrangement = Arrangement.spacedBy(1.dp)) {
             items(alarms, key = { it.id }) { a ->
-                Row(Modifier.fillMaxWidth().heightIn(min = 72.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().heightIn(min = 72.dp).clickable { onEdit(a.id) }, verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text("%02d:%02d".format(a.hour, a.minute), fontFamily = Mincho, color = Kinari, fontSize = 30.sp)
                         Text((if (a.repeatDays == 0) "Une fois" else repeatLabel(a.repeatDays)) + " · Snooze ${a.snoozeMinutes}m", color = SumiMuted, fontSize = 13.sp)
                     }
                     Switch(checked = a.enabled, onCheckedChange = { vm.toggle(a, it) })
                     Spacer(Modifier.width(8.dp))
-                    Text("✕", color = Shu, fontSize = 20.sp, modifier = Modifier.padding(8.dp).clickable { vm.delete(a) })
+                    Text("✕", color = Shu, fontSize = 20.sp, modifier = Modifier.padding(8.dp).clickable(onClick = { vm.delete(a) }))
                 }
                 Box(Modifier.fillMaxWidth().height(1.dp).background(SumiLine))
             }
