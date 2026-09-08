@@ -63,6 +63,11 @@ class AppUpdateService : Service() {
                         .putExtra(InstallTrampolineActivity.EXTRA_APK_URI, contentUri.toString())
                         .putExtra(InstallTrampolineActivity.EXTRA_PACKAGE, BuildConfig.APPLICATION_ID),
                 )
+                // Laisser le temps à l'activité d'ouvrir le fichier, puis libérer l'overlay.
+                // Si l'install réussit le process est tué de toute façon ; si elle échoue
+                // l'overlay disparaît et l'utilisateur reprend la main.
+                delay(4_000L)
+                stopSelf()
 
             } catch (e: Exception) {
                 UpdateProgress.set(-1)

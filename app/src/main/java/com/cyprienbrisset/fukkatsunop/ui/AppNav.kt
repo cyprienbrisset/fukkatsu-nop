@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -127,8 +128,9 @@ private fun UpdateOverlay(pct: Int) {
         Modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.85f))
-            // Consume all touch events — nothing below is reachable.
-            .pointerInput(Unit) {},
+            .pointerInput(Unit) {
+                detectTapGestures(onLongPress = { UpdateProgress.set(-1) })
+            },
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -176,6 +178,14 @@ private fun UpdateOverlay(pct: Int) {
                 color = SumiMuted,
                 fontFamily = Mincho,
                 fontSize = 14.sp,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(24.dp))
+            Text(
+                text = "Appui long pour annuler",
+                color = SumiMuted.copy(alpha = 0.4f),
+                fontFamily = Mincho,
+                fontSize = 11.sp,
                 textAlign = TextAlign.Center,
             )
         }
