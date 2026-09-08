@@ -18,8 +18,11 @@ android {
         applicationId = "com.cyprienbrisset.fukkatsunop"
         minSdk = 28
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        val major = 1
+        val minor = 0
+        val build = 1
+        versionCode = build
+        versionName = "$major.$minor.$build"
 
         val localProps = Properties()
         val localPropsFile = rootProject.file("local.properties")
