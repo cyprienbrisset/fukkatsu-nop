@@ -43,7 +43,8 @@ private fun descToEffect(description: String): WeatherEffect = when (description
 fun WeatherOverlay(weather: Weather?, isDark: Boolean, modifier: Modifier = Modifier) {
     val particleColor = if (isDark) Kinari.copy(alpha = 0.18f) else Ink.copy(alpha = 0.10f)
     val fogBase       = if (isDark) SumiMuted else InkMuted
-    val cloudColor    = if (isDark) Color(0xFFDDD8CC) else Color(0xFFF5F2EE)
+    // Nuit : beige clair sur fond sombre. Jour : gris-bleu visible sur fond crème Washi.
+    val cloudColor    = if (isDark) Color(0xFFDDD8CC) else Color(0xFFB8C4CC)
 
     val effect = remember(weather?.description) {
         weather?.description?.let { descToEffect(it) } ?: WeatherEffect.NONE
