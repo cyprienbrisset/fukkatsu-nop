@@ -77,10 +77,8 @@ class GoogleAuthManager(
                 obj["error"]?.jsonPrimitive?.content == "slow_down"             -> intervalMs += 5_000L
                 obj["error"]?.jsonPrimitive?.content == "authorization_pending"  -> Unit
                 // Terminal errors — user explicitly denied or code expired server-side.
-                obj["error"]?.jsonPrimitive?.content in
-                    listOf("access_denied", "expired_token", "invalid_grant")   -> return@withContext false
-                // Any other unknown error: keep polling until local deadline.
-                else -> Unit
+                // Terminal errors — stop immediately regardless of remaining time.
+                else -> return@withContext false
             }
         }
         false

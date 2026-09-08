@@ -18,7 +18,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,6 +35,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,11 +76,7 @@ fun MeetTab(state: TabState<List<CalendarEvent>>, onRetry: () -> Unit) {
     val meetEvents = remember(state, now) {
         if (state is TabState.Success) {
             state.data
-                .filter {
-                    it.hangoutLink != null &&
-                        it.start.isBefore(now.plusSeconds(48 * 3600)) &&
-                        it.end.isAfter(now)
-                }
+                .filter { it.hangoutLink != null && it.end.isAfter(now) }
                 .sortedBy { it.start }
         } else emptyList()
     }
@@ -90,29 +93,6 @@ fun MeetTab(state: TabState<List<CalendarEvent>>, onRetry: () -> Unit) {
             }
         }
         is TabState.Success -> {
-            if (meetEvents.isEmpty()) {
-                Box(Modifier.fillMaxSize(), Alignment.Center) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Text(
-                            "Aucune réunion Meet à venir",
-                            color = SumiMuted,
-                            fontFamily = Mincho,
-                            fontSize = 16.sp,
-                        )
-                        Text(
-                            "Les réunions avec lien Meet apparaissent ici",
-                            color = SumiMuted.copy(alpha = 0.6f),
-                            fontFamily = Gothic,
-                            fontSize = 13.sp,
-                        )
-                    }
-                }
-                return
-            }
-
             LazyColumn(
                 Modifier
                     .fillMaxSize()
@@ -120,28 +100,113 @@ fun MeetTab(state: TabState<List<CalendarEvent>>, onRetry: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 item { Spacer(Modifier.height(12.dp)) }
-                // Hero: first (soonest) meeting
-                item(key = meetEvents.first().id) {
-                    HeroMeetCard(event = meetEvents.first(), now = now)
-                }
-                // Compact: remaining meetings
-                if (meetEvents.size > 1) {
+
+                // ── Saisie de code manuel ──────────────────────────────────
+                item { JoinByCodeCard() }
+
+                if (meetEvents.isEmpty()) {
                     item {
-                        Text(
-                            "Prochaines réunions",
-                            color = SumiMuted,
-                            fontFamily = Gothic,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(top = 8.dp, bottom = 2.dp),
-                        )
+                        Box(
+                            Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                            Alignment.Center,
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                Text(
+                                    "Aucune réunion Meet à venir",
+                                    color = SumiMuted,
+                                    fontFamily = Mincho,
+                                    fontSize = 16.sp,
+                                )
+                                Text(
+                                    "Les réunions avec lien Meet apparaissent ici",
+                                    color = SumiMuted.copy(alpha = 0.6f),
+                                    fontFamily = Gothic,
+                                    fontSize = 13.sp,
+                                )
+                            }
+                        }
                     }
-                    items(meetEvents.drop(1), key = { it.id }) { event ->
-                        CompactMeetCard(event = event, now = now)
+                } else {
+                    // Hero: first (soonest) meeting
+                    item(key = meetEvents.first().id) {
+                        HeroMeetCard(event = meetEvents.first(), now = now)
+                    }
+                    // Compact: remaining meetings
+                    if (meetEvents.size > 1) {
+                        item {
+                            Text(
+                                "Prochaines réunions",
+                                color = SumiMuted,
+                                fontFamily = Gothic,
+                                fontSize = 11.sp,
+                                modifier = Modifier.padding(top = 8.dp, bottom = 2.dp),
+                            )
+                        }
+                        items(meetEvents.drop(1), key = { it.id }) { event ->
+                            CompactMeetCard(event = event, now = now)
+                        }
                     }
                 }
                 item { Spacer(Modifier.height(20.dp)) }
             }
         }
+    }
+}
+
+@Composable
+private fun JoinByCodeCard() {
+    val ctx = LocalContext.current
+    var code by remember { mutableStateOf("") }
+
+    fun join() {
+        val cleaned = code.trim().replace(" ", "").lowercase()
+        if (cleaned.isBlank()) return
+        val url = if (cleaned.startsWith("http")) cleaned
+                  else "https://meet.google.com/$cleaned"
+        ctx.startActivity(
+            Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+        code = ""
+    }
+
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(SumiSurface.copy(alpha = 0.5f))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        OutlinedTextField(
+            value = code,
+            onValueChange = { code = it },
+            placeholder = {
+                Text("Code de réunion", color = SumiMuted, fontFamily = Mincho, fontSize = 14.sp)
+            },
+            singleLine = true,
+            modifier = Modifier.weight(1f),
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.None,
+                imeAction = ImeAction.Go,
+            ),
+            keyboardActions = KeyboardActions(onGo = { join() }),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Shu,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                cursorColor = Shu,
+            ),
+        )
+        SumiPrimaryButton(
+            text = "Rejoindre",
+            onClick = { join() },
+        )
     }
 }
 
