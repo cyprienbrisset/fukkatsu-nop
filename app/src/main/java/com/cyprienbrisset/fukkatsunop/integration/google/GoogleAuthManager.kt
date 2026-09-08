@@ -51,16 +51,20 @@ class GoogleAuthManager(
         var intervalMs = data.interval * 1_000L
         while (System.currentTimeMillis() < deadline) {
             delay(intervalMs)
-            val body = FormBody.Builder()
+            val pollBody = FormBody.Builder()
                 .add("client_id",     BuildConfig.GOOGLE_CLIENT_ID)
                 .add("client_secret", BuildConfig.GOOGLE_CLIENT_SECRET)
                 .add("device_code",   data.deviceCode)
                 .add("grant_type",    "urn:ietf:params:oauth:grant-type:device_code")
                 .build()
-            val raw = http.newCall(
-                Request.Builder().url(TOKEN_URL).post(body).build()
-            ).execute().use { it.body!!.string() }
-            val obj = Json.parseToJsonElement(raw).jsonObject
+            // Transient network errors don't kill the flow — we just retry next interval.
+            val raw = try {
+                http.newCall(Request.Builder().url(TOKEN_URL).post(pollBody).build())
+                    .execute().use { it.body!!.string() }
+            } catch (_: Exception) { continue }
+            val obj = try {
+                Json.parseToJsonElement(raw).jsonObject
+            } catch (_: Exception) { continue }
             when {
                 obj["access_token"] != null -> {
                     val access    = obj["access_token"]!!.jsonPrimitive.content
@@ -70,9 +74,13 @@ class GoogleAuthManager(
                     tokenStore.save(access, refresh, System.currentTimeMillis() + expiresIn * 1_000L)
                     return@withContext true
                 }
-                obj["error"]?.jsonPrimitive?.content == "slow_down"            -> intervalMs += 5_000L
-                obj["error"]?.jsonPrimitive?.content == "authorization_pending" -> Unit
-                else -> return@withContext false
+                obj["error"]?.jsonPrimitive?.content == "slow_down"             -> intervalMs += 5_000L
+                obj["error"]?.jsonPrimitive?.content == "authorization_pending"  -> Unit
+                // Terminal errors — user explicitly denied or code expired server-side.
+                obj["error"]?.jsonPrimitive?.content in
+                    listOf("access_denied", "expired_token", "invalid_grant")   -> return@withContext false
+                // Any other unknown error: keep polling until local deadline.
+                else -> Unit
             }
         }
         false
