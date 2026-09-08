@@ -28,6 +28,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -50,6 +51,7 @@ import com.cyprienbrisset.fukkatsunop.ui.alarm.SunriseActivity
 import com.cyprienbrisset.fukkatsunop.system.DarkModeManager
 import com.cyprienbrisset.fukkatsunop.system.FirmwareWatcher
 import com.cyprienbrisset.fukkatsunop.system.UpdateChecker
+import com.cyprienbrisset.fukkatsunop.system.UpdateProgress
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceModelManager
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
 import com.cyprienbrisset.fukkatsunop.ui.sumi.HankoSeal
@@ -88,6 +90,10 @@ fun SettingsScreen(
         )
     }
     var updateAvailable by remember { mutableStateOf(UpdateChecker.availableVersionName(ctx)) }
+    LaunchedEffect(Unit) {
+        UpdateChecker.check(ctx)
+        updateAvailable = UpdateChecker.availableVersionName(ctx)
+    }
     var airPlayName by remember { mutableStateOf(AirPlayPrefs.getName(ctx)) }
     var showAirPlayNameDialog by remember { mutableStateOf(false) }
     var editingAirPlayName by remember { mutableStateOf("") }
@@ -167,12 +173,21 @@ fun SettingsScreen(
             )
         }
         SettingRow("Surveillance firmware", subtitle = FirmwareWatcher.currentBuild(), chevron = false) {}
+        val updatePct by UpdateProgress.pct.collectAsState()
         if (updateAvailable != null) {
+            val busy = updatePct in 0..100
+            val rowText = when {
+                updatePct in 0..99 -> "Téléchargement… $updatePct%"
+                updatePct == 100   -> "Installation en cours…"
+                else               -> "Mise à jour disponible : $updateAvailable"
+            }
             SettingRow(
-                text = "Mise à jour disponible : $updateAvailable",
-                subtitle = "Version installée : ${BuildConfig.VERSION_NAME} — Appuyer pour installer",
+                text = rowText,
+                subtitle = if (busy) "Ne pas quitter l'application"
+                           else "Version installée : ${BuildConfig.VERSION_NAME} — Appuyer pour installer",
+                chevron = !busy,
             ) {
-                UpdateChecker.startUpdate(ctx)
+                if (!busy) UpdateChecker.startUpdate(ctx)
             }
         } else {
             SettingRow(

@@ -14,9 +14,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 
 class AppUpdateService : Service() {
     private val scope = CoroutineScope(Dispatchers.IO)
+
+    // No read/call timeout — APK download can be 100+ MB on slow WiFi.
+    private val http = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(0, TimeUnit.SECONDS)
+        .callTimeout(0, TimeUnit.SECONDS)
+        .build()
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -24,24 +33,24 @@ class AppUpdateService : Service() {
         val apkUrl = intent?.getStringExtra(EXTRA_APK_URL) ?: run { stopSelf(); return START_NOT_STICKY }
         UpdateChecker.ensureChannel(this)
         startForeground(NOTIF_ID, buildNotif("Préparation du téléchargement…", -1))
+        UpdateProgress.set(0)
 
         scope.launch {
             try {
-                // Téléchargement — réutilise ApkDownloader existant
-                val files = ApkDownloader(this@AppUpdateService).download(
+                val files = ApkDownloader(this@AppUpdateService, http).download(
                     pkg = BuildConfig.APPLICATION_ID,
                     files = listOf(ApkFile("fukkatsu-nop", apkUrl, 0L)),
-                ) { pct -> updateNotif("Téléchargement… $pct%", pct) }
+                ) { pct ->
+                    UpdateProgress.set(pct)
+                    updateNotif("Téléchargement… $pct%", pct)
+                }
 
+                UpdateProgress.set(100)
                 updateNotif("Installation en cours…", 100)
-
-                // Installation — réutilise ApkInstaller existant (PackageInstaller)
                 ApkInstaller(this@AppUpdateService).install(BuildConfig.APPLICATION_ID, files)
 
-                // PackageInstaller envoie STATUS_PENDING_USER_ACTION → InstallResultReceiver
-                // → dialogue de confirmation standard Android (1 tap)
-
             } catch (e: Exception) {
+                UpdateProgress.set(-1)
                 updateNotif("Échec : ${e.message?.take(60)}", -1)
                 delay(4_000L)
                 stopSelf()
@@ -51,6 +60,7 @@ class AppUpdateService : Service() {
     }
 
     override fun onDestroy() {
+        UpdateProgress.set(-1)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) stopForeground(STOP_FOREGROUND_REMOVE)
         else @Suppress("DEPRECATION") stopForeground(true)
         super.onDestroy()
@@ -77,6 +87,6 @@ class AppUpdateService : Service() {
     companion object {
         const val EXTRA_APK_URL = "apk_url"
         private const val NOTIF_ID   = 9003
-        private const val CHANNEL_ID = "app_update"   // même canal qu'UpdateChecker
+        private const val CHANNEL_ID = "app_update"
     }
 }

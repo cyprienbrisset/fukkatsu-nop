@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
@@ -43,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import com.cyprienbrisset.fukkatsunop.integration.google.CalendarEvent
 import com.cyprienbrisset.fukkatsunop.ui.sumi.SumiPrimaryButton
 import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
+import com.cyprienbrisset.fukkatsunop.ui.theme.OnShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Gothic
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
@@ -203,10 +205,17 @@ private fun JoinByCodeCard() {
                 cursorColor = Shu,
             ),
         )
-        SumiPrimaryButton(
-            text = "Rejoindre",
-            onClick = { join() },
-        )
+        Box(
+            Modifier
+                .wrapContentHeight()
+                .clip(RoundedCornerShape(12.dp))
+                .background(AccentShu)
+                .clickable { join() }
+                .padding(horizontal = 18.dp, vertical = 14.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("Rejoindre", color = OnShu, fontFamily = Mincho, fontSize = 15.sp)
+        }
     }
 }
 
