@@ -1,6 +1,6 @@
 {
-  "versionCode": 8,
-  "versionName": "1.0.8",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.8/fukkatsu-nop-v1.0.8.apk",
-  "notes": "Fix installation mise à jour"
+  "versionCode": 9,
+  "versionName": "1.0.9",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.9/fukkatsu-nop-v1.0.9.apk",
+  "notes": "Settings deux-panneaux · Alarmes depuis l'horloge"
 }
