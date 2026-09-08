@@ -1,11 +1,7 @@
 package com.cyprienbrisset.fukkatsunop.ui.home
 
 import android.content.Intent
-import android.graphics.Bitmap
 import android.widget.Toast
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -42,14 +38,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -74,34 +65,6 @@ import com.cyprienbrisset.fukkatsunop.airplay.AirPlayState
 import com.cyprienbrisset.fukkatsunop.ui.airplay.AirPlayActivity
 import com.cyprienbrisset.fukkatsunop.ui.screensaver.SumiSaverActivity
 import com.cyprienbrisset.fukkatsunop.web.WebAppActivity
-
-@Composable
-private fun ArtworkBackground(art: Bitmap?, isDark: Boolean) {
-    var scaledArt by remember { mutableStateOf<Bitmap?>(null) }
-    LaunchedEffect(art) {
-        scaledArt = art?.let { bmp ->
-            withContext(Dispatchers.Default) {
-                Bitmap.createScaledBitmap(bmp, 32, 32, true)
-            }
-        }
-    }
-    val alpha = if (isDark) 0.30f else 0.14f
-    Crossfade(
-        targetState = scaledArt,
-        animationSpec = tween(1200),
-        label = "artBg",
-        modifier = Modifier.fillMaxSize(),
-    ) { bmp ->
-        if (bmp != null) {
-            Image(
-                bitmap = bmp.asImageBitmap(),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize().alpha(alpha),
-            )
-        }
-    }
-}
 
 @Composable
 fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: () -> Unit = {}, vm: HomeViewModel = viewModel()) {
@@ -200,7 +163,6 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
         val landscape = maxWidth > maxHeight
         val isCompact = maxWidth < 1500.dp   // Portal Go/Mini (1280dp) vs Portal+ 1st gen (1920dp)
         LaunchedEffect(now) { vm.refreshNowPlaying() }
-        ArtworkBackground(art = nowPlaying?.art, isDark = isDark)
         WatermarkKanji("墨", Modifier.align(Alignment.BottomEnd).offset(x = (-64).dp, y = (-10).dp))
         if (landscape) {
             Row(Modifier.fillMaxSize().padding(
