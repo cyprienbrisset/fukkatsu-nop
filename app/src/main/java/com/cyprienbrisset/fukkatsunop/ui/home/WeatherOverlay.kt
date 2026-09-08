@@ -41,22 +41,24 @@ private fun descToEffect(description: String): WeatherEffect = when (description
 
 @Composable
 fun WeatherOverlay(weather: Weather?, isDark: Boolean, modifier: Modifier = Modifier) {
-    val effect = remember(weather?.description) {
-        weather?.description?.let { descToEffect(it) } ?: WeatherEffect.NONE
-    }
-    if (effect == WeatherEffect.NONE) return
-
     val particleColor = if (isDark) Kinari.copy(alpha = 0.18f) else Ink.copy(alpha = 0.10f)
     val fogBase       = if (isDark) SumiMuted else InkMuted
     val cloudColor    = if (isDark) Color(0xFFDDD8CC) else Color(0xFFF5F2EE)
 
+    val effect = remember(weather?.description) {
+        weather?.description?.let { descToEffect(it) } ?: WeatherEffect.NONE
+    }
+
+    // Nuages toujours présents — décoration ambiante du launcher.
+    CloudCanvas(cloudColor, modifier)
+
+    // Effets météo additionnels par-dessus les nuages.
     when (effect) {
-        WeatherEffect.CLOUDY -> CloudCanvas(cloudColor, modifier)
-        WeatherEffect.RAIN   -> RainCanvas(particleColor, modifier)
-        WeatherEffect.STORM  -> StormCanvas(particleColor, modifier)
-        WeatherEffect.SNOW   -> SnowCanvas(particleColor, modifier)
-        WeatherEffect.FOG    -> FogCanvas(fogBase, modifier)
-        WeatherEffect.NONE   -> Unit
+        WeatherEffect.RAIN  -> RainCanvas(particleColor, modifier)
+        WeatherEffect.STORM -> StormCanvas(particleColor, modifier)
+        WeatherEffect.SNOW  -> SnowCanvas(particleColor, modifier)
+        WeatherEffect.FOG   -> FogCanvas(fogBase, modifier)
+        else                -> Unit
     }
 }
 
