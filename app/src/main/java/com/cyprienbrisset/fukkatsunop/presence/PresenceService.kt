@@ -22,6 +22,13 @@ import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
 import java.util.concurrent.Executors
 
+// Pure function — testable sans Android runtime
+fun adaptiveIntervalMs(isPresent: Boolean): Long =
+    if (isPresent) INTERVAL_PRESENT_MS else INTERVAL_ABSENT_MS
+
+private const val INTERVAL_PRESENT_MS = 2_000L
+private const val INTERVAL_ABSENT_MS  = 10_000L
+
 class PresenceService : Service(), LifecycleOwner {
 
     private val lifecycleRegistry = LifecycleRegistry(this)
@@ -66,7 +73,8 @@ class PresenceService : Service(), LifecycleOwner {
 
     private fun analyzeImage(proxy: ImageProxy) {
         val now = System.currentTimeMillis()
-        if (now - lastAnalysisMs < INTERVAL_MS) { proxy.close(); return }
+        val interval = adaptiveIntervalMs(PresenceManager.isPresent.value)
+        if (now - lastAnalysisMs < interval) { proxy.close(); return }
         lastAnalysisMs = now
         val mediaImage = proxy.image
         if (mediaImage == null) { proxy.close(); return }
@@ -109,7 +117,6 @@ class PresenceService : Service(), LifecycleOwner {
     companion object {
         private const val NOTIF_ID = 9001
         private const val CHANNEL_ID = "presence"
-        private const val INTERVAL_MS = 2_000L
 
         fun start(ctx: Context) = ctx.startForegroundService(Intent(ctx, PresenceService::class.java))
         fun stop(ctx: Context) = ctx.stopService(Intent(ctx, PresenceService::class.java))
