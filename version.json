@@ -1,6 +1,6 @@
 {
-  "versionCode": 16,
-  "versionName": "1.0.16",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.16/fukkatsu-nop-v1.0.16.apk",
-  "notes": "Corrections : fuite BT, cache icônes/apps, erreurs météo visibles, rafraîchissement météo manuel, économiseur d'écran depuis les réglages"
+  "versionCode": 17,
+  "versionName": "1.0.17",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.17/fukkatsu-nop-v1.0.17.apk",
+  "notes": "Appel vidéo direct depuis le bandeau contacts · Détection de présence (caméra frontale → écran allumé automatiquement)"
 }
