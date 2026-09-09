@@ -240,7 +240,7 @@ fun SettingsScreen(
                                 onVoiceDownload = {
                                     downloading = true
                                     scope.launch {
-                                        val ok = VoiceModelManager.downloadAndExtract(ctx) { p -> downloadProgress = p }
+                                        val ok = VoiceModelManager.downloadAndExtract(ctx)
                                         modelReady = ok; downloading = false
                                     }
                                 },

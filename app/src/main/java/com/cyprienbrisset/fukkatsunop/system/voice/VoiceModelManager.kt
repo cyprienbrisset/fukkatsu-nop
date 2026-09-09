@@ -2,6 +2,9 @@ package com.cyprienbrisset.fukkatsunop.system.voice
 
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -12,6 +15,9 @@ object VoiceModelManager {
     private const val MODEL_NAME = "vosk-model-small-fr-0.22"
     private const val MODEL_URL = "https://alphacephei.com/vosk/models/$MODEL_NAME.zip"
 
+    private val _downloadProgress = MutableStateFlow<Int?>(null)
+    val downloadProgress: StateFlow<Int?> = _downloadProgress.asStateFlow()
+
     fun modelDir(ctx: Context): File = File(ctx.filesDir, MODEL_NAME)
 
     fun isModelReady(ctx: Context): Boolean {
@@ -19,11 +25,14 @@ object VoiceModelManager {
         return dir.exists() && dir.isDirectory && (dir.listFiles()?.isNotEmpty() == true)
     }
 
-    suspend fun downloadAndExtract(ctx: Context, onProgress: (Int) -> Unit): Boolean =
+    fun resetDownloadProgress() { _downloadProgress.value = null }
+    fun setDownloadProgressForTest(value: Int?) { _downloadProgress.value = value }
+
+    suspend fun downloadAndExtract(ctx: Context): Boolean =
         withContext(Dispatchers.IO) {
             runCatching {
+                _downloadProgress.value = 0
                 val zipFile = File(ctx.cacheDir, "$MODEL_NAME.zip")
-                // Download
                 val conn = URL(MODEL_URL).openConnection()
                 val total = conn.contentLength.toLong()
                 var downloaded = 0L
@@ -34,11 +43,13 @@ object VoiceModelManager {
                         while (input.read(buf).also { n = it } != -1) {
                             output.write(buf, 0, n)
                             downloaded += n
-                            if (total > 0) onProgress(((downloaded * 100) / total).toInt())
+                            if (total > 0) {
+                                _downloadProgress.value = ((downloaded * 100) / total).toInt()
+                            }
                         }
                     }
                 }
-                // Extract
+                _downloadProgress.value = 100
                 val dest = modelDir(ctx)
                 dest.mkdirs()
                 ZipInputStream(zipFile.inputStream()).use { zis ->
@@ -57,7 +68,8 @@ object VoiceModelManager {
                     }
                 }
                 zipFile.delete()
+                _downloadProgress.value = null
                 true
-            }.getOrDefault(false)
+            }.getOrElse { _downloadProgress.value = -1; false }
         }
 }
