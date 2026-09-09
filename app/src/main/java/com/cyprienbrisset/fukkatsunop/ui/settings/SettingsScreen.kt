@@ -21,14 +21,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
@@ -39,7 +41,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -67,6 +68,7 @@ import com.cyprienbrisset.fukkatsunop.ui.sumi.HankoSeal
 import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
+import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
 import kotlinx.coroutines.launch
 
 // ── Catégories ───────────────────────────────────────────────────────────────
@@ -104,8 +106,7 @@ fun SettingsScreen(
 
     var voiceEnabled     by remember { mutableStateOf(VoiceService.isEnabled(ctx)) }
     var modelReady       by remember { mutableStateOf(VoiceModelManager.isModelReady(ctx)) }
-    var downloading      by remember { mutableStateOf(false) }
-    var downloadProgress by remember { mutableIntStateOf(0) }
+    val voiceDownloadProgress by VoiceModelManager.downloadProgress.collectAsState()
     var overlayRunning   by remember { mutableStateOf(OverlayService.isRunning) }
     var verifierDisabled by remember {
         mutableStateOf(runCatching {
@@ -218,7 +219,7 @@ fun SettingsScreen(
                             )
                             Cat.APPS    -> {} // handled above (InstalledAppsScreen embedded)
                             Cat.SYSTEM  -> SystemPanelContent(
-                                overlayRunning, airPlayName, voiceEnabled, modelReady, downloading, downloadProgress,
+                                overlayRunning, airPlayName, voiceEnabled, modelReady, voiceDownloadProgress,
                                 presenceEnabled = presenceEnabled,
                                 onOverlay = {
                                     if (overlayRunning) {
@@ -238,10 +239,9 @@ fun SettingsScreen(
                                     voiceEnabled = enabled; VoiceService.setEnabled(ctx, enabled)
                                 },
                                 onVoiceDownload = {
-                                    downloading = true
                                     scope.launch {
                                         val ok = VoiceModelManager.downloadAndExtract(ctx)
-                                        modelReady = ok; downloading = false
+                                        modelReady = ok
                                     }
                                 },
                                 onPresenceToggle = { homeVm.setPresenceEnabled(ctx, it) },
@@ -362,8 +362,7 @@ private fun SystemPanelContent(
     airPlayName: String,
     voiceEnabled: Boolean,
     modelReady: Boolean,
-    downloading: Boolean,
-    downloadProgress: Int,
+    voiceDownloadProgress: Int?,
     presenceEnabled: Boolean,
     onOverlay: () -> Unit,
     onAirPlay: () -> Unit,
@@ -380,36 +379,54 @@ private fun SystemPanelContent(
     SettingRow("Nom AirPlay", subtitle = airPlayName, onClick = onAirPlay)
 
     // Commandes vocales
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 68.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(
-                if (modelReady) "Commandes vocales" else "Commandes vocales (modèle ~40 MB)",
-                color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp,
-            )
-            Text(
-                when {
-                    !modelReady && downloading -> "Téléchargement… $downloadProgress%"
-                    !modelReady -> "Requis pour la reconnaissance hors-ligne"
-                    voiceEnabled -> "Actif — dites « Portal » pour parler"
-                    else -> "Désactivé"
-                },
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                fontSize = 12.sp, fontFamily = Mincho,
-            )
-        }
-        Spacer(Modifier.width(10.dp))
-        when {
-            !modelReady && downloading -> CircularProgressIndicator(color = AccentShu, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-            !modelReady -> Box(Modifier.clickable { onVoiceDownload() }) {
-                Text("Télécharger", color = Shu, fontSize = 15.sp, fontFamily = Mincho)
+    val isDownloading = voiceDownloadProgress != null && voiceDownloadProgress != -1
+    Column(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 68.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    if (modelReady) "Commandes vocales" else "Commandes vocales (modèle ~40 MB)",
+                    color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp,
+                )
+                Text(
+                    when {
+                        voiceDownloadProgress == -1 -> "Erreur de téléchargement — réessayez"
+                        voiceDownloadProgress == 100 -> "Extraction en cours…"
+                        isDownloading -> "Téléchargement modèle vocal… ${voiceDownloadProgress}%"
+                        !modelReady -> "Requis pour la reconnaissance hors-ligne"
+                        voiceEnabled -> "Actif — dites « Portal » pour parler"
+                        else -> "Désactivé"
+                    },
+                    color = if (voiceDownloadProgress == -1) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                    fontSize = 12.sp, fontFamily = Mincho,
+                )
             }
-            else -> Switch(
-                checked = voiceEnabled, onCheckedChange = onVoiceToggle,
-                colors = SwitchDefaults.colors(checkedThumbColor = AccentShu, checkedTrackColor = AccentShu.copy(alpha = 0.4f)),
+            Spacer(Modifier.width(10.dp))
+            when {
+                isDownloading -> {}
+                !modelReady -> Box(Modifier.clickable { onVoiceDownload() }) {
+                    Text("Télécharger", color = Shu, fontSize = 15.sp, fontFamily = Mincho)
+                }
+                else -> Switch(
+                    checked = voiceEnabled, onCheckedChange = onVoiceToggle,
+                    colors = SwitchDefaults.colors(checkedThumbColor = AccentShu, checkedTrackColor = AccentShu.copy(alpha = 0.4f)),
+                )
+            }
+        }
+        if (isDownloading) {
+            LinearProgressIndicator(
+                progress = { (voiceDownloadProgress ?: 0) / 100f },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp)),
+                color = AccentShu,
+                trackColor = AccentShu.copy(alpha = 0.2f),
             )
         }
     }
