@@ -40,7 +40,7 @@ import java.time.LocalDateTime
 class HomeViewModel(app: Application) : AndroidViewModel(app) {
     private val repo = TileRepository(AppDatabase.get(app).tileDao())
     private val settings = SettingsRepository(app)
-    private val weatherRepo = WeatherRepository()
+    private val weatherRepo = WeatherRepository(cache = AppDatabase.get(app).weatherCacheDao())
     private val alarmRepo = AlarmRepository(AppDatabase.get(app).alarmDao())
 
     val recentContacts = RecentContactsRepository.contacts
