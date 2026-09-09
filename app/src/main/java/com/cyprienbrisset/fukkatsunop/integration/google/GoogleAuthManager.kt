@@ -12,6 +12,7 @@ import kotlinx.serialization.json.longOrNull
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import timber.log.Timber
 
 private const val DEVICE_CODE_URL = "https://oauth2.googleapis.com/device/code"
 private const val TOKEN_URL       = "https://oauth2.googleapis.com/token"
@@ -60,10 +61,10 @@ class GoogleAuthManager(
             val raw = try {
                 http.newCall(Request.Builder().url(TOKEN_URL).post(pollBody).build())
                     .execute().use { it.body!!.string() }
-            } catch (_: Exception) { continue }
+            } catch (e: Exception) { Timber.w(e, "poll token: network error"); continue }
             val obj = try {
                 Json.parseToJsonElement(raw).jsonObject
-            } catch (_: Exception) { continue }
+            } catch (e: Exception) { Timber.w(e, "poll token: JSON parse error"); continue }
             when {
                 obj["access_token"] != null -> {
                     val access    = obj["access_token"]!!.jsonPrimitive.content

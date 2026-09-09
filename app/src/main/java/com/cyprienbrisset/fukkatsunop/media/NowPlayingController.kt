@@ -12,6 +12,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.cyprienbrisset.fukkatsunop.system.MediaListenerService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import timber.log.Timber
 
 class NowPlayingController(private val context: Context) {
     private val _state = MutableStateFlow<NowPlaying?>(null)
@@ -41,6 +42,7 @@ class NowPlayingController(private val context: Context) {
             // Already in the allowed list — request a rebind in case the service isn't live yet.
             // This happens when the setting was written via ADB but the system didn't auto-bind.
             runCatching { NotificationListenerService.requestRebind(serviceComponent) }
+                .onFailure { Timber.w(it, "requestRebind failed") }
             return
         }
         // Add to enabled_notification_listeners via WRITE_SECURE_SETTINGS (granted by provision script).
@@ -52,15 +54,21 @@ class NowPlayingController(private val context: Context) {
             val updated = if (current.isEmpty() || current == "null") serviceId else "$current:$serviceId"
             runCatching {
                 Settings.Secure.putString(context.contentResolver, "enabled_notification_listeners", updated)
-            }
+            }.onFailure { Timber.w(it, "putString enabled_notification_listeners failed") }
         }
         runCatching { NotificationListenerService.requestRebind(serviceComponent) }
+            .onFailure { Timber.w(it, "requestRebind failed") }
     }
 
     fun refresh() {
         ensureListenerEnabled()
         if (!hasAccess()) { detach(); controller = null; _state.value = null; return }
-        val sessions = try { msm.getActiveSessions(component) } catch (e: SecurityException) { emptyList() }
+        val sessions = try {
+            msm.getActiveSessions(component)
+        } catch (e: SecurityException) {
+            Timber.w(e, "getActiveSessions denied — notification listener not enabled")
+            emptyList()
+        }
         val playingFlags = sessions.map { isPlaying(it.playbackState?.state ?: PlaybackState.STATE_NONE) }
         val idx = indexOfActive(playingFlags)
         val next = if (idx >= 0) sessions.getOrNull(idx) else null
