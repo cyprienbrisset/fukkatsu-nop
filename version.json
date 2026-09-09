@@ -1,6 +1,6 @@
 {
-  "versionCode": 15,
-  "versionName": "1.0.15",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.15/fukkatsu-nop-v1.0.15.apk",
-  "notes": "Alarme Portal 1 : écran allumé au réveil · mise à jour : erreur claire si APK introuvable"
+  "versionCode": 16,
+  "versionName": "1.0.16",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.16/fukkatsu-nop-v1.0.16.apk",
+  "notes": "Corrections : fuite BT, cache icônes/apps, erreurs météo visibles, rafraîchissement météo manuel, économiseur d'écran depuis les réglages"
 }
