@@ -1,6 +1,6 @@
 {
-  "versionCode": 19,
-  "versionName": "1.0.19",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.19/fukkatsu-nop-v1.0.19.apk",
-  "notes": "Cache météo 15 min + agenda 30 min · RetryInterceptor backoff exponentiel · Présence adaptative 2s/10s · Progression téléchargement Vosk · Palette saisonnière personnalisable · Animation CrossFade 600 ms"
+  "versionCode": 20,
+  "versionName": "1.0.20",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.20/fukkatsu-nop-v1.0.20.apk",
+  "notes": "Slider volume fixe sur les alarmes (10–100 %) · Migration Room v7 · Retry météo + hint ↺ · registerForActivityResult · StoreScreen erreurs différenciées · Timber logging"
 }
