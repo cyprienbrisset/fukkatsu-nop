@@ -32,6 +32,7 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -134,6 +135,7 @@ fun StoreBody(modifier: Modifier = Modifier, vm: StoreViewModel = viewModel()) {
         AppResults(
             state = content,
             progress = progress,
+            onRetry = { vm.loadHome() },
             onInstall = { vm.install(it) },
             onOpen = { LaunchIntentResolver.launch(ctx, it.packageName) },
             onDetail = { vm.loadDetail(it) },
@@ -198,6 +200,7 @@ private fun SumiSearchField(
 private fun AppResults(
     state: StoreUi,
     progress: Map<String, Int>,
+    onRetry: () -> Unit,
     onInstall: (StoreApp) -> Unit,
     onOpen: (StoreApp) -> Unit,
     onDetail: (StoreApp) -> Unit,
@@ -209,7 +212,26 @@ private fun AppResults(
                 CircularProgressIndicator(color = Shu)
             }
         }
-        is StoreUi.Error -> Text(state.message, color = SumiMuted, fontSize = 15.sp)
+        is StoreUi.Error -> {
+            val isAuthError = state.message == "Non connecté"
+            Column(
+                modifier = Modifier.fillMaxSize().padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    if (isAuthError) "Non connecté — reconnectez-vous dans Réglages → Google" else state.message,
+                    color = SumiMuted,
+                    fontSize = 15.sp,
+                )
+                if (!isAuthError) {
+                    Spacer(Modifier.height(12.dp))
+                    TextButton(onClick = onRetry) {
+                        Text("Réessayer", color = Shu)
+                    }
+                }
+            }
+        }
         is StoreUi.Results -> {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 300.dp),
