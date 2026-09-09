@@ -98,8 +98,9 @@ fun SettingsScreen(
     val scope  = rememberCoroutineScope()
     val homeVm: HomeViewModel = viewModel()
 
-    val weatherEffects by homeVm.weatherEffectsEnabled.collectAsState()
-    val saverMode      by homeVm.saverMode.collectAsState()
+    val weatherEffects  by homeVm.weatherEffectsEnabled.collectAsState()
+    val saverMode       by homeVm.saverMode.collectAsState()
+    val presenceEnabled by homeVm.presenceEnabled.collectAsState()
 
     var voiceEnabled     by remember { mutableStateOf(VoiceService.isEnabled(ctx)) }
     var modelReady       by remember { mutableStateOf(VoiceModelManager.isModelReady(ctx)) }
@@ -218,6 +219,7 @@ fun SettingsScreen(
                             Cat.APPS    -> {} // handled above (InstalledAppsScreen embedded)
                             Cat.SYSTEM  -> SystemPanelContent(
                                 overlayRunning, airPlayName, voiceEnabled, modelReady, downloading, downloadProgress,
+                                presenceEnabled = presenceEnabled,
                                 onOverlay = {
                                     if (overlayRunning) {
                                         ctx.startService(Intent(ctx, OverlayService::class.java).apply { action = OverlayService.ACTION_STOP })
@@ -242,6 +244,7 @@ fun SettingsScreen(
                                         modelReady = ok; downloading = false
                                     }
                                 },
+                                onPresenceToggle = { homeVm.setPresenceEnabled(ctx, it) },
                             )
                             Cat.DEVICE  -> {
                                 val updatePct by UpdateProgress.pct.collectAsState()
@@ -361,10 +364,12 @@ private fun SystemPanelContent(
     modelReady: Boolean,
     downloading: Boolean,
     downloadProgress: Int,
+    presenceEnabled: Boolean,
     onOverlay: () -> Unit,
     onAirPlay: () -> Unit,
     onVoiceToggle: (Boolean) -> Unit,
     onVoiceDownload: () -> Unit,
+    onPresenceToggle: (Boolean) -> Unit,
 ) {
     SettingRow(
         text = if (overlayRunning) "Contrôles flottants actifs ✓" else "Contrôles flottants",
@@ -409,6 +414,13 @@ private fun SystemPanelContent(
         }
     }
     Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+
+    SettingSwitch(
+        text = "Détection de présence",
+        subtitle = if (presenceEnabled) "Écran allumé si vous êtes devant" else "Désactivé",
+        checked = presenceEnabled,
+        onCheckedChange = onPresenceToggle,
+    )
 }
 
 @Composable

@@ -12,6 +12,7 @@ data class RecentContact(
     val packageName: String,
     val lastSeenMs: Long,
     val tapIntent: PendingIntent?,
+    val callIntent: PendingIntent? = null,
 )
 
 object RecentContactsRepository {

@@ -25,6 +25,7 @@ class SettingsRepository(private val context: Context) {
     private val WEATHER_CITIES   = stringPreferencesKey("weather_cities")
     private val WEATHER_EFFECTS  = booleanPreferencesKey("weather_effects")
     private val SAVER_MODE       = booleanPreferencesKey("saver_mode")
+    private val PRESENCE_ENABLED = booleanPreferencesKey("presence_enabled")
 
     val weatherCities: Flow<List<WeatherLocation>> = context.dataStore.data.map { p ->
         val json = p[WEATHER_CITIES]
@@ -74,6 +75,12 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setSaverMode(enabled: Boolean) {
         context.dataStore.edit { it[SAVER_MODE] = enabled }
+    }
+
+    val presenceEnabled: Flow<Boolean> = context.dataStore.data.map { p -> p[PRESENCE_ENABLED] ?: false }
+
+    suspend fun setPresenceEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[PRESENCE_ENABLED] = enabled }
     }
 
     private fun decodeCities(json: String?): List<WeatherLocation> =

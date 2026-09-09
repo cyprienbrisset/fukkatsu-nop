@@ -51,13 +51,11 @@ class MediaListenerService : NotificationListenerService() {
             notif.largeIcon as? Bitmap
         }
 
-        val tapIntent = notif.actions
-            ?.firstOrNull { a ->
-                a.title?.toString()?.contains("appel", ignoreCase = true) == true
-                    || a.title?.toString()?.contains("call", ignoreCase = true) == true
-            }
-            ?.actionIntent
-            ?: notif.contentIntent
+        val callIntent = notif.actions?.firstOrNull { a ->
+            val t = a.title?.toString() ?: ""
+            t.contains("appel", ignoreCase = true) || t.contains("call", ignoreCase = true) ||
+            t.contains("rappel", ignoreCase = true) || t.contains("callback", ignoreCase = true)
+        }?.actionIntent
 
         RecentContactsRepository.onNotification(
             RecentContact(
@@ -66,7 +64,8 @@ class MediaListenerService : NotificationListenerService() {
                 avatar = avatar,
                 packageName = sbn.packageName,
                 lastSeenMs = sbn.postTime,
-                tapIntent = tapIntent,
+                tapIntent = notif.contentIntent,
+                callIntent = callIntent,
             )
         )
     }

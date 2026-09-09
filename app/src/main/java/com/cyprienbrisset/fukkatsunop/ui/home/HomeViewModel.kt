@@ -3,8 +3,11 @@ package com.cyprienbrisset.fukkatsunop.ui.home
 import android.app.ActivityManager
 import android.app.Application
 import android.content.Context
+import android.provider.Settings
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.cyprienbrisset.fukkatsunop.presence.PresenceManager
+import com.cyprienbrisset.fukkatsunop.presence.PresenceService
 import com.cyprienbrisset.fukkatsunop.alarm.nextTriggerTime
 import com.cyprienbrisset.fukkatsunop.data.AppDatabase
 import com.cyprienbrisset.fukkatsunop.integration.RecentContactsRepository
@@ -27,10 +30,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDateTime
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModel(app: Application) : AndroidViewModel(app) {
     private val repo = TileRepository(AppDatabase.get(app).tileDao())
     private val settings = SettingsRepository(app)
@@ -109,6 +114,15 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             while (true) { nowPlayingController.refresh(); delay(5_000) }
         }
+        viewModelScope.launch {
+            settings.presenceEnabled.flatMapLatest { enabled ->
+                if (enabled) PresenceManager.isPresent else flowOf(null)
+            }.collect { present ->
+                present ?: return@collect
+                val timeout = if (present) 30 * 60 * 1000 else 30 * 1000
+                Settings.System.putInt(app.contentResolver, Settings.System.SCREEN_OFF_TIMEOUT, timeout)
+            }
+        }
     }
 
     val airPlayState = AirPlayReceiver.state
@@ -149,6 +163,19 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setSaverMode(enabled: Boolean) {
         viewModelScope.launch { settings.setSaverMode(enabled) }
+    }
+
+    val presenceEnabled: StateFlow<Boolean> = settings.presenceEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setPresenceEnabled(ctx: Context, enabled: Boolean) {
+        viewModelScope.launch {
+            settings.setPresenceEnabled(enabled)
+            if (enabled) PresenceService.start(ctx) else PresenceService.stop(ctx)
+            if (!enabled) {
+                Settings.System.putInt(ctx.contentResolver, Settings.System.SCREEN_OFF_TIMEOUT, 5 * 60 * 1000)
+            }
+        }
     }
 
     fun clearRecents() {
