@@ -20,7 +20,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.foundation.layout.padding
@@ -65,8 +67,12 @@ import com.cyprienbrisset.fukkatsunop.ui.alarm.SunriseActivity
 import com.cyprienbrisset.fukkatsunop.ui.screensaver.SumiSaverActivity
 import com.cyprienbrisset.fukkatsunop.ui.home.HomeViewModel
 import com.cyprienbrisset.fukkatsunop.ui.sumi.HankoSeal
+import com.cyprienbrisset.fukkatsunop.data.settings.SettingsRepository as Repo
 import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
+import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
+import com.cyprienbrisset.fukkatsunop.ui.theme.Momiji
+import com.cyprienbrisset.fukkatsunop.ui.theme.Sakura
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
 import kotlinx.coroutines.launch
@@ -338,6 +344,56 @@ private fun DisplayPanelContent(
     onSunrise: () -> Unit,
     onLaunchSaver: () -> Unit = {},
 ) {
+    val ctx2 = LocalContext.current
+    val scope2 = rememberCoroutineScope()
+    val settingsRepo2 = remember(ctx2) { Repo(ctx2) }
+    val accentOverride by settingsRepo2.accentOverride.collectAsState(initial = "AUTO")
+
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 68.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text("Couleur d'accent", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
+            Text(
+                when (accentOverride) {
+                    "SAKURA" -> "Rose sakura (printemps)"
+                    "MOMIJI" -> "Momiji automnal"
+                    "SHU"    -> "Shu vermillon"
+                    else     -> "Automatique (saisonnier)"
+                },
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                fontSize = 12.sp, fontFamily = Mincho,
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(
+                "AUTO"   to AccentShu,
+                "SAKURA" to Sakura,
+                "MOMIJI" to Momiji,
+                "SHU"    to Shu,
+            ).forEach { (key, color) ->
+                val selected = accentOverride == key
+                Box(
+                    Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(color.copy(alpha = if (selected) 1f else 0.4f))
+                        .then(
+                            if (selected) Modifier.border(2.dp, Kinari, CircleShape)
+                            else Modifier
+                        )
+                        .clickable { scope2.launch { settingsRepo2.setAccentOverride(key) } },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (selected) Text("✓", color = Kinari, fontSize = 12.sp)
+                }
+            }
+        }
+    }
+    Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+
     SettingSwitch(
         text = "Effets météo",
         subtitle = if (weatherEffects) "Pluie, neige, brouillard animés" else "Désactivés",

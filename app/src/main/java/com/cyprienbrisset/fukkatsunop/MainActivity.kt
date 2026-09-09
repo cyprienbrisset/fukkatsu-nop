@@ -42,7 +42,11 @@ import com.cyprienbrisset.fukkatsunop.alarm.AlarmForegroundService
 import com.cyprienbrisset.fukkatsunop.alarm.AlarmRingActivity
 import com.cyprienbrisset.fukkatsunop.alarm.AlarmReceiver
 import com.cyprienbrisset.fukkatsunop.integration.google.ChatAuthManager
+import androidx.lifecycle.lifecycleScope
+import com.cyprienbrisset.fukkatsunop.data.settings.SettingsRepository
 import com.cyprienbrisset.fukkatsunop.system.DarkModeManager
+import com.cyprienbrisset.fukkatsunop.ui.theme.applyAccentOverride
+import kotlinx.coroutines.launch
 import com.cyprienbrisset.fukkatsunop.system.FirmwareWatcher
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
 import com.cyprienbrisset.fukkatsunop.ui.AppNav
@@ -101,6 +105,11 @@ class MainActivity : ComponentActivity() {
             notifPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
         DarkModeManager.initFromSystem(this)
+        lifecycleScope.launch {
+            SettingsRepository(this@MainActivity).accentOverride.collect { override ->
+                applyAccentOverride(override)
+            }
+        }
         FirmwareWatcher.init(this)
 
         // Request RECORD_AUDIO if voice enabled

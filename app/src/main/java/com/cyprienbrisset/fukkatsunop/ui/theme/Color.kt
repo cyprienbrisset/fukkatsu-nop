@@ -10,12 +10,23 @@ val OnShu = Color(0xFFF6EEE0)
 val Sakura = Color(0xFFE8A0AF)
 val Momiji = Color(0xFFC85A14)
 
+private val _accentOverrideState = mutableStateOf("AUTO")
+
+fun applyAccentOverride(override: String) { _accentOverrideState.value = override }
+
 val AccentShu: Color get() {
-    val month = java.time.LocalDate.now().monthValue
-    return when (month) {
-        3, 4, 5   -> Sakura
-        9, 10, 11 -> Momiji
-        else      -> Shu
+    return when (_accentOverrideState.value) {
+        "SAKURA" -> Sakura
+        "MOMIJI" -> Momiji
+        "SHU"    -> Shu
+        else     -> {
+            val month = java.time.LocalDate.now().monthValue
+            when (month) {
+                3, 4, 5   -> Sakura
+                9, 10, 11 -> Momiji
+                else      -> Shu
+            }
+        }
     }
 }
 

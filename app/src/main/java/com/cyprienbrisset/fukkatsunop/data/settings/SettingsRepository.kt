@@ -26,6 +26,7 @@ class SettingsRepository(private val context: Context) {
     private val WEATHER_EFFECTS  = booleanPreferencesKey("weather_effects")
     private val SAVER_MODE       = booleanPreferencesKey("saver_mode")
     private val PRESENCE_ENABLED = booleanPreferencesKey("presence_enabled")
+    private val ACCENT_OVERRIDE   = stringPreferencesKey("accent_override")
 
     val weatherCities: Flow<List<WeatherLocation>> = context.dataStore.data.map { p ->
         val json = p[WEATHER_CITIES]
@@ -81,6 +82,15 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setPresenceEnabled(enabled: Boolean) {
         context.dataStore.edit { it[PRESENCE_ENABLED] = enabled }
+    }
+
+    val accentOverride: Flow<String> = context.dataStore.data.map { p ->
+        p[ACCENT_OVERRIDE] ?: "AUTO"
+    }
+
+    suspend fun setAccentOverride(value: String) {
+        require(value in setOf("AUTO", "SAKURA", "MOMIJI", "SHU"))
+        context.dataStore.edit { it[ACCENT_OVERRIDE] = value }
     }
 
     private fun decodeCities(json: String?): List<WeatherLocation> =
