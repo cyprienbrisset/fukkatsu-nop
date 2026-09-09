@@ -42,8 +42,8 @@ abstract class AppDatabase : RoomDatabase() {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext, AppDatabase::class.java, "myportal.db"
                 ).fallbackToDestructiveMigration().addCallback(object : RoomDatabase.Callback() {
-                    override fun onCreate(db: SupportSQLiteDatabase) {
-                        Timber.w("AppDatabase recreated — all user data was wiped (destructive migration)")
+                    override fun onDestructiveMigration(db: SupportSQLiteDatabase) {
+                        Timber.w("AppDatabase: migration destructive — toutes les données utilisateur ont été effacées (schema v${db.version})")
                     }
                 }).build().also { instance = it }
             }
