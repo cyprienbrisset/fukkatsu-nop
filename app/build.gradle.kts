@@ -89,6 +89,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.okhttp)
+    implementation(libs.timber)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.coil.compose)
     implementation(libs.camerax.camera2)
