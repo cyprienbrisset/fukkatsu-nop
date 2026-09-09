@@ -8,20 +8,30 @@ import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import com.cyprienbrisset.fukkatsunop.data.alarm.AlarmDao
 import com.cyprienbrisset.fukkatsunop.data.alarm.AlarmEntity
+import com.cyprienbrisset.fukkatsunop.data.google.CalendarCacheDao
+import com.cyprienbrisset.fukkatsunop.data.google.CalendarCacheEntity
 import com.cyprienbrisset.fukkatsunop.data.tile.TileDao
 import com.cyprienbrisset.fukkatsunop.data.tile.TileEntity
 import com.cyprienbrisset.fukkatsunop.data.tile.TileType
+import com.cyprienbrisset.fukkatsunop.data.weather.WeatherCacheDao
+import com.cyprienbrisset.fukkatsunop.data.weather.WeatherCacheEntity
 
 class Converters {
     @TypeConverter fun tileType(v: String): TileType = TileType.valueOf(v)
     @TypeConverter fun tileTypeToString(v: TileType): String = v.name
 }
 
-@Database(entities = [TileEntity::class, AlarmEntity::class], version = 5, exportSchema = false)
+@Database(
+    entities = [TileEntity::class, AlarmEntity::class, WeatherCacheEntity::class, CalendarCacheEntity::class],
+    version = 6,
+    exportSchema = false,
+)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun tileDao(): TileDao
     abstract fun alarmDao(): AlarmDao
+    abstract fun weatherCacheDao(): WeatherCacheDao
+    abstract fun calendarCacheDao(): CalendarCacheDao
 
     companion object {
         @Volatile private var instance: AppDatabase? = null
