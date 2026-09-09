@@ -6,11 +6,12 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.os.SystemClock
 import android.provider.Settings
-import android.util.Log
+import timber.log.Timber
 
 class MyPortalApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        if (BuildConfig.DEBUG) Timber.plant(Timber.DebugTree())
         disablePackageVerifier()
         installCrashWatchdog()
     }
@@ -20,14 +21,14 @@ class MyPortalApp : Application() {
             Settings.Global.putInt(contentResolver, "package_verifier_enable", 0)
             Settings.Global.putInt(contentResolver, "verifier_verify_adb_installs", 0)
             Settings.Global.putInt(contentResolver, "package_verifier_user_consent", -1)
-        }.onFailure { Log.w("MyPortalApp", "verifier disable failed: ${it.message}") }
+        }.onFailure { Timber.w(it, "verifier disable failed") }
     }
 
     private fun installCrashWatchdog() {
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             try {
-                Log.e("Watchdog", "Crash détecté — redémarrage dans 1s", throwable)
+                Timber.e(throwable, "Crash détecté — redémarrage dans 1s")
                 val restart = Intent(this, MainActivity::class.java).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
@@ -41,9 +42,7 @@ class MyPortalApp : Application() {
                     SystemClock.elapsedRealtime() + 1_000L,
                     pi,
                 )
-            } catch (_: Exception) {
-                // ne pas bloquer la propagation si le watchdog lui-même échoue
-            }
+            } catch (_: Exception) { }
             defaultHandler?.uncaughtException(thread, throwable)
         }
     }

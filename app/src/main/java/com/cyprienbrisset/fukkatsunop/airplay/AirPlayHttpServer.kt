@@ -1,8 +1,8 @@
 package com.cyprienbrisset.fukkatsunop.airplay
 
 import android.util.Base64
-import android.util.Log
 import org.bouncycastle.crypto.params.X25519PrivateKeyParameters
+import timber.log.Timber
 import org.bouncycastle.crypto.params.X25519PublicKeyParameters
 import java.io.InputStream
 import java.io.OutputStream
@@ -10,8 +10,6 @@ import java.net.ServerSocket
 import java.net.Socket
 
 private val BPLIST_MAGIC = "bplist00".toByteArray().toList()
-
-private const val TAG = "AirPlayServer"
 
 private const val W = 1920
 private const val H = 1080
@@ -39,11 +37,11 @@ class AirPlayHttpServer(
             repeat(8) {
                 if (bound) return@repeat
                 runCatching { ss.bind(java.net.InetSocketAddress(7000)) }.onSuccess { bound = true }
-                    .onFailure { Log.w(TAG, "Port 7000 busy, retry in 1s: ${it.message}"); Thread.sleep(1_000) }
+                    .onFailure { Timber.w("Port 7000 busy, retry in 1s: ${it.message}"); Thread.sleep(1_000) }
             }
-            if (!bound) { Log.e(TAG, "Failed to bind port 7000 — giving up"); return@Thread }
+            if (!bound) { Timber.e("Failed to bind port 7000 — giving up"); return@Thread }
             serverSocket = ss
-            Log.d(TAG, "AirPlay HTTP server listening on :7000")
+            Timber.d("AirPlay HTTP server listening on :7000")
             while (running) {
                 runCatching {
                     val client = ss.accept()
@@ -59,7 +57,7 @@ class AirPlayHttpServer(
     }
 
     private fun handleClient(socket: Socket) {
-        Log.d(TAG, "Client CONNECTED: ${socket.remoteSocketAddress}")
+        Timber.d("Client CONNECTED: ${socket.remoteSocketAddress}")
         socket.use {
             val inp = socket.getInputStream()
             val out = socket.getOutputStream()
@@ -78,7 +76,7 @@ class AirPlayHttpServer(
 
             while (running && !socket.isClosed) {
                 val requestLine = inp.readHttpLine() ?: run {
-                    Log.d(TAG, "Client DISCONNECTED: ${socket.remoteSocketAddress}")
+                    Timber.d("Client DISCONNECTED: ${socket.remoteSocketAddress}")
                     break
                 }
                 if (requestLine.isEmpty()) continue
@@ -95,14 +93,14 @@ class AirPlayHttpServer(
 
                 val method = requestLine.substringBefore(' ')
                 val path   = requestLine.substringAfter(' ').substringBefore(' ')
-                Log.d(TAG, ">>> $method $path | body[${bodyBytes.size}]: ${bodyBytes.take(16).toHex()}")
-                headers.forEach { (k, v) -> Log.d(TAG, "  hdr $k: $v") }
+                Timber.d(">>> $method $path | body[${bodyBytes.size}]: ${bodyBytes.take(16).toHex()}")
+                headers.forEach { (k, v) -> Timber.d("  hdr $k: $v") }
 
                 when {
                     method == "GET" && (path == "/info" || path == "/server-info") -> {
                         if (bodyBytes.isNotEmpty()) {
                             val ascii = bodyBytes.toString(Charsets.ISO_8859_1).replace(Regex("[\\x00-\\x08\\x0E-\\x1F\\x7F]"), ".")
-                            Log.d(TAG, "GET /info body[${bodyBytes.size}] hex=${bodyBytes.take(32).toHex()} txt=$ascii")
+                            Timber.d("GET /info body[${bodyBytes.size}] hex=${bodyBytes.take(32).toHex()} txt=$ascii")
                         }
                         val pkB64 = Base64.encodeToString(AirPlayPairing.edPublicKeyBytes, Base64.NO_WRAP)
                         val plist = """<?xml version="1.0" encoding="UTF-8"?>
@@ -132,7 +130,7 @@ class AirPlayHttpServer(
 <key>overscanned</key><false/>
 </dict></array>
 </dict></plist>""".toByteArray(Charsets.UTF_8)
-                        Log.d(TAG, "GET /info")
+                        Timber.d("GET /info")
                         out.writeHttp("HTTP/1.1 200 OK", "text/x-apple-plist+xml", plist)
                     }
 
@@ -145,7 +143,7 @@ class AirPlayHttpServer(
                         pairVerifyClientLtEdPub = null
                         pairVerifyServerX25519Pub = null
                         val serverEdPub = AirPlayPairing.edPublicKeyBytes
-                        Log.d(TAG, "pair-setup: client_pk=${bodyBytes.toHex()} server_pk=${serverEdPub.toHex()}")
+                        Timber.d("pair-setup: client_pk=${bodyBytes.toHex()} server_pk=${serverEdPub.toHex()}")
                         out.writeHttp("HTTP/1.1 200 OK", "application/octet-stream", serverEdPub)
                     }
 
@@ -154,7 +152,7 @@ class AirPlayHttpServer(
                             // M1 (68 bytes): [0x01,0x00,0x00,0x00] + client_eph_x25519(32) + client_lt_ed25519(32)
                             val clientX25519 = bodyBytes.copyOfRange(4, 36)
                             val clientLtEd   = if (bodyBytes.size >= 68) bodyBytes.copyOfRange(36, 68) else ByteArray(32)
-                            Log.d(TAG, "pair-verify M1[${bodyBytes.size}]: client_x25519=${clientX25519.toHex()} client_lt=${clientLtEd.toHex()}")
+                            Timber.d("pair-verify M1[${bodyBytes.size}]: client_x25519=${clientX25519.toHex()} client_lt=${clientLtEd.toHex()}")
 
                             val serverX25519Pair = AirPlayPairing.generateX25519Pair()
                             val serverX25519Priv = serverX25519Pair.private as X25519PrivateKeyParameters
@@ -183,13 +181,13 @@ class AirPlayHttpServer(
 
                             // M2 (96 bytes): server_eph_x25519(32) + AES-CTR-encrypted-Ed25519-signature(64)
                             val response = serverX25519Pub + encSig
-                            Log.d(TAG, "pair-verify M2[${response.size}]: server_x25519=${serverX25519Pub.toHex()}")
-                            Log.d(TAG, "pair-verify M2: shared=${sharedSecret.toHex()} sig=${signature.take(8).toHex()}...")
+                            Timber.d("pair-verify M2[${response.size}]: server_x25519=${serverX25519Pub.toHex()}")
+                            Timber.d("pair-verify M2: shared=${sharedSecret.toHex()} sig=${signature.take(8).toHex()}...")
                             out.writeHttp("HTTP/1.1 200 OK", "application/octet-stream", response)
                         } else {
                             // M3 (68 bytes): [0x00,0x00,0x00,0x00] + AES-CTR-encrypted-client-signature(64)
                             // Client encrypted M3 with keystream[64:128] (CTR blocks 4-7, after "consuming" 0-3 for M2)
-                            Log.d(TAG, "pair-verify M3[${bodyBytes.size}]: ${bodyBytes.toHex()}")
+                            Timber.d("pair-verify M3[${bodyBytes.size}]: ${bodyBytes.toHex()}")
                             val ks = pairVerifyKeystream!!
                             val encrypted = if (bodyBytes.size >= 68) bodyBytes.copyOfRange(4, 68) else ByteArray(64)
                             // Decrypt with keystream[64:128]
@@ -198,7 +196,7 @@ class AirPlayHttpServer(
                             // Verify: client signed client_x25519 || server_x25519 with its long-term Ed25519 key
                             val verifyMsg = pairVerifyClientX25519Pub!! + pairVerifyServerX25519Pub!!
                             val ok = AirPlayPairing.edVerifyWith(verifyMsg, clientSig, pairVerifyClientLtEdPub!!)
-                            Log.d(TAG, "pair-verify M3: clientSig=${clientSig.take(8).toHex()}... ok=$ok")
+                            Timber.d("pair-verify M3: clientSig=${clientSig.take(8).toHex()}... ok=$ok")
                             // M4: client ignores content
                             out.writeHttp("HTTP/1.1 200 OK", "application/octet-stream", ByteArray(0))
                             onConnecting()
@@ -212,7 +210,7 @@ class AirPlayHttpServer(
                     }
 
                     method == "SETUP" -> {
-                        Log.d(TAG, "SETUP body[${bodyBytes.size}]=${bodyBytes.take(8).toHex()}")
+                        Timber.d("SETUP body[${bodyBytes.size}]=${bodyBytes.take(8).toHex()}")
                         if (bodyBytes.size > 8 && bodyBytes.take(8) == BPLIST_MAGIC) {
                             handleAirPlay2Setup(out, cseq, bodyBytes, macAddress, timingLportRef, isExtendedRef, onVideoNal, onReconfigureCsd) { isExtended ->
                                 onSession(isExtended)
@@ -228,7 +226,7 @@ class AirPlayHttpServer(
 
                     method == "GET_PARAMETER" -> {
                         val reqBody = bodyBytes.toString(Charsets.UTF_8).trim()
-                        Log.d(TAG, "GET_PARAMETER: $reqBody")
+                        Timber.d("GET_PARAMETER: $reqBody")
                         val respBody = when {
                             reqBody.contains("volume") -> "volume: 0.000000\r\n"
                             else -> ""
@@ -237,12 +235,12 @@ class AirPlayHttpServer(
                     }
 
                     method == "SET_PARAMETER" -> {
-                        Log.d(TAG, "SET_PARAMETER body[${bodyBytes.size}]")
+                        Timber.d("SET_PARAMETER body[${bodyBytes.size}]")
                         out.writeRtsp(cseq)
                     }
 
                     method == "RECORD" -> {
-                        Log.d(TAG, "RECORD")
+                        Timber.d("RECORD")
                         out.writeRtsp(cseq, mapOf(
                             "Server" to "AirTunes/550.10",
                             "Session" to "BABE0001;timeout=90",
@@ -253,7 +251,7 @@ class AirPlayHttpServer(
 
                     method == "TEARDOWN" -> {
                         val tdAscii = bodyBytes.toString(Charsets.ISO_8859_1).replace(Regex("[\\x00-\\x08\\x0E-\\x1F\\x7F]"), ".")
-                        Log.d(TAG, "TEARDOWN body[${bodyBytes.size}] hex=${bodyBytes.toHex()} txt=$tdAscii")
+                        Timber.d("TEARDOWN body[${bodyBytes.size}] hex=${bodyBytes.toHex()} txt=$tdAscii")
                         out.writeRtsp(cseq)
                         onDisconnect()
                         break
@@ -264,21 +262,21 @@ class AirPlayHttpServer(
                     }
 
                     method == "POST" && path == "/fp-setup" -> {
-                        Log.d(TAG, "fp-setup: body[${bodyBytes.size}]=${bodyBytes.take(16).toHex()}")
+                        Timber.d("fp-setup: body[${bodyBytes.size}]=${bodyBytes.take(16).toHex()}")
                         val fpResponse = when (bodyBytes.size) {
                             16 -> {
                                 // Phase 1: respond with 142-byte static blob indexed by req[14] (mode 0-3)
                                 val mode = bodyBytes.getOrElse(14) { 0 }.toInt() and 0xFF
-                                Log.d(TAG, "fp-setup phase1 mode=$mode")
+                                Timber.d("fp-setup phase1 mode=$mode")
                                 FairPlay.setupReply(mode)
                             }
                             164 -> {
                                 // Phase 2: 12-byte header + last 20 bytes of request echoed
-                                Log.d(TAG, "fp-setup phase2")
+                                Timber.d("fp-setup phase2")
                                 FairPlay.handshakeReply(bodyBytes)
                             }
                             else -> {
-                                Log.w(TAG, "fp-setup: unexpected body size ${bodyBytes.size}")
+                                Timber.w("fp-setup: unexpected body size ${bodyBytes.size}")
                                 ByteArray(0)
                             }
                         }
@@ -286,7 +284,7 @@ class AirPlayHttpServer(
                     }
 
                     else -> {
-                        Log.w(TAG, "Unhandled: $method $path body[${bodyBytes.size}]=${bodyBytes.toHex()}")
+                        Timber.w("Unhandled: $method $path body[${bodyBytes.size}]=${bodyBytes.toHex()}")
                         out.write("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n".toByteArray())
                         out.flush()
                     }
@@ -314,17 +312,17 @@ private fun handleAirPlay2Setup(
 ) {
     runCatching {
         val plist = BinaryPlist.decode(bodyBytes)
-        Log.d(TAG, "SETUP plist keys: ${plist.keys}")
+        Timber.d("SETUP plist keys: ${plist.keys}")
 
         if ("streams" in plist) {
             // ── Fallback: unexpected second SETUP with streams ─────────────────
             @Suppress("UNCHECKED_CAST")
             val streams = plist["streams"] as? List<Map<String, Any?>> ?: emptyList()
-            Log.d(TAG, "SETUP #2 (fallback) streams[${streams.size}]")
+            Timber.d("SETUP #2 (fallback) streams[${streams.size}]")
             val responseStreams = streams.mapIndexed { i, stream ->
                 val type = (stream["type"] as? Long)?.toInt() ?: 0
                 val connId = stream["streamConnectionID"]
-                Log.d(TAG, "  stream[$i] type=$type connId=$connId")
+                Timber.d("  stream[$i] type=$type connId=$connId")
                 when (type) {
                     110 -> mapOf("type" to type.toLong(), "dataPort" to openVideoTcpServer(onVideoNal, onReconfigureCsd).toLong())
                     96, 103 -> {
@@ -346,12 +344,12 @@ private fun handleAirPlay2Setup(
                    "macAddress", "sessionUUID").forEach { k ->
                 val v = plist[k]
                 val s = when (v) { is ByteArray -> "data[${v.size}]"; is List<*> -> "list"; is Map<*,*> -> "dict"; else -> v?.toString() ?: "null" }
-                Log.d(TAG, "  SETUP[$k]=$s")
+                Timber.d("  SETUP[$k]=$s")
             }
 
             val isMirror = plist["isScreenMirroringSession"] as? Boolean ?: true
             isExtendedRef.set(!isMirror)
-            Log.d(TAG, "SETUP: isMirror=$isMirror isExtended=${!isMirror}")
+            Timber.d("SETUP: isMirror=$isMirror isExtended=${!isMirror}")
 
             val macTimingPort = (plist["timingPort"] as? Long)?.toInt() ?: 0
             val timingLport = openRaopTimingClient(macAddress, macTimingPort)
@@ -379,14 +377,14 @@ private fun handleAirPlay2Setup(
                 ))
             }
             val responseBytes = BinaryPlist.encode(responseMap)
-            Log.d(TAG, "SETUP: timingLport=$timingLport videoTcp=$videoPort bytes=${responseBytes.size}")
-            Log.d(TAG, "SETUP response hex: ${responseBytes.toHex()}")
+            Timber.d("SETUP: timingLport=$timingLport videoTcp=$videoPort bytes=${responseBytes.size}")
+            Timber.d("SETUP response hex: ${responseBytes.toHex()}")
             out.writeRtspWithBody(cseq, "application/x-apple-binary-plist", responseBytes,
                 mapOf("Server" to "AirTunes/550.10", "Session" to "BABE0001;timeout=90"))
             onStreamsReady(isExtendedRef.get())
         }
     }.onFailure { e ->
-        Log.e(TAG, "SETUP error: ${e.message}", e)
+        Timber.e(e, "SETUP error: ${e.message}")
         out.writeRtsp(cseq)
     }
 }
@@ -399,7 +397,7 @@ private fun openRaopTimingClient(macAddress: java.net.InetAddress?, macTimingPor
         val sock = java.net.DatagramSocket(null)
         sock.bind(java.net.InetSocketAddress("::", 0))
         val timingLport = sock.localPort
-        Log.d(TAG, "RAOP timing client: bound port $timingLport, sending to $macAddress:$macTimingPort")
+        Timber.d("RAOP timing client: bound port $timingLport, sending to $macAddress:$macTimingPort")
         Thread({
             // Apple RAOP timing request: 32 bytes
             // [0] 0x80 [1] 0xd2 [2-3] 0x0007 [4-7] 0 [8-15] client_ref_time [16-23] recv_ntp [24-31] send_ntp
@@ -427,13 +425,13 @@ private fun openRaopTimingClient(macAddress: java.net.InetAddress?, macTimingPor
                     sock.receive(respPkt)
                     prevRecvMs = System.currentTimeMillis()
                     respBuf.copyInto(clientRefRaw, 0, 24, 32)
-                    Log.d(TAG, "RAOP NTP: timing exchange ok with ${respPkt.address}")
-                }.onFailure { Log.d(TAG, "RAOP NTP: no response (${it.message})") }
+                    Timber.d("RAOP NTP: timing exchange ok with ${respPkt.address}")
+                }.onFailure { Timber.d("RAOP NTP: no response (${it.message})") }
                 Thread.sleep(3000)
             }
         }, "airplay-ntp-client").apply { isDaemon = true }.start()
         timingLport
-    }.getOrElse { e -> Log.e(TAG, "openRaopTimingClient failed: ${e.message}"); 0 }
+    }.getOrElse { e -> Timber.e(e, "openRaopTimingClient failed: ${e.message}"); 0 }
 }
 
 private fun ntpPutTs(buf: ByteArray, off: Int, ms: Long) {
@@ -451,18 +449,18 @@ private fun openAudioUdpServer(): Int {
         val sock = java.net.DatagramSocket(null)
         sock.bind(java.net.InetSocketAddress("::", 0))
         val port = sock.localPort
-        Log.d(TAG, "Audio UDP server bound on port $port")
+        Timber.d("Audio UDP server bound on port $port")
         Thread({
             runCatching {
                 val buf = java.net.DatagramPacket(ByteArray(2048), 2048)
                 while (true) {
                     sock.receive(buf)
-                    Log.d(TAG, "Audio UDP pkt from ${buf.address}:${buf.port} len=${buf.length}")
+                    Timber.d("Audio UDP pkt from ${buf.address}:${buf.port} len=${buf.length}")
                 }
-            }.onFailure { Log.d(TAG, "Audio UDP closed: ${it.message}") }
+            }.onFailure { Timber.d("Audio UDP closed: ${it.message}") }
         }, "airplay-audio-udp").start()
         port
-    }.getOrElse { e -> Log.e(TAG, "openAudioUdpServer failed: ${e.message}"); 6001 }
+    }.getOrElse { e -> Timber.e(e, "openAudioUdpServer failed: ${e.message}"); 6001 }
 }
 
 private fun openVideoTcpServer(
@@ -474,18 +472,18 @@ private fun openVideoTcpServer(
         ss.reuseAddress = true
         ss.bind(java.net.InetSocketAddress("::", 0))  // IPv6 wildcard → dual-stack, macOS connects via IPv6
         val port = ss.localPort
-        Log.d(TAG, "Video TCP server bound on port $port (IPv6 dual-stack via ::)")
+        Timber.d("Video TCP server bound on port $port (IPv6 dual-stack via ::)")
         Thread({
             runCatching {
                 ss.soTimeout = 10_000
                 val client = try {
                     ss.accept()
                 } catch (e: java.net.SocketTimeoutException) {
-                    Log.e(TAG, "Video TCP TIMEOUT — macOS n'a pas connecté après 10s (port $port)")
+                    Timber.e("Video TCP TIMEOUT — macOS n'a pas connecté après 10s (port $port)")
                     ss.close(); return@runCatching
                 }
                 ss.soTimeout = 0
-                Log.d(TAG, "Video TCP client CONNECTED from ${client.remoteSocketAddress}")
+                Timber.d("Video TCP client CONNECTED from ${client.remoteSocketAddress}")
                 val inp = client.getInputStream()
                 val hdr = ByteArray(128)
                 var pendingSps: ByteArray? = null
@@ -521,15 +519,15 @@ private fun openVideoTcpServer(
                             avccFrameToAnnexB(payload) { nal -> onVideoNal(nal) }
                         }
                         0x05 -> {} // nop / keepalive
-                        else -> Log.d(TAG, "Video pkt type=0x${"%02x".format(pktType)} size=$payloadSize")
+                        else -> Timber.d("Video pkt type=0x${"%02x".format(pktType)} size=$payloadSize")
                     }
                 }
                 client.close()
-            }.onFailure { Log.e(TAG, "Video TCP error: ${it.message}") }
+            }.onFailure { Timber.e("Video TCP error: ${it.message}") }
             ss.close()
         }, "airplay-video-tcp").start()
         port
-    }.getOrElse { e -> Log.e(TAG, "openVideoTcpServer failed: ${e.message}"); 7100 }
+    }.getOrElse { e -> Timber.e(e, "openVideoTcpServer failed: ${e.message}"); 7100 }
 }
 
 // Parse avcC extradata box → list of Annex-B NAL units (start code + NALU bytes)
