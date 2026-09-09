@@ -82,7 +82,9 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
             }.collect { present ->
                 present ?: return@collect
                 val timeout = if (present) 30 * 60 * 1000 else 30 * 1000
-                Settings.System.putInt(app.contentResolver, Settings.System.SCREEN_OFF_TIMEOUT, timeout)
+                if (Settings.System.canWrite(app)) {
+                    Settings.System.putInt(app.contentResolver, Settings.System.SCREEN_OFF_TIMEOUT, timeout)
+                }
             }
         }
     }
@@ -120,7 +122,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             settings.setPresenceEnabled(enabled)
             if (enabled) PresenceService.start(ctx) else PresenceService.stop(ctx)
-            if (!enabled) {
+            if (!enabled && Settings.System.canWrite(ctx)) {
                 Settings.System.putInt(ctx.contentResolver, Settings.System.SCREEN_OFF_TIMEOUT, 5 * 60 * 1000)
             }
         }
