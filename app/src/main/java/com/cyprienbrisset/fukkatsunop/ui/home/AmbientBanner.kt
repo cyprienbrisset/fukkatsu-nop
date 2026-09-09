@@ -90,7 +90,7 @@ fun AmbientBanner(
             Spacer(Modifier.height(if (compact) 4.dp else 8.dp))
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = weatherSwipeModifier.then(Modifier.clickable { onRefreshWeather() }),
+                modifier = Modifier.clickable { onRefreshWeather() }.then(weatherSwipeModifier),
             ) {
                 if (weather != null) {
                     Row(
