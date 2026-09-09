@@ -5,9 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.cyprienbrisset.fukkatsunop.integration.google.CalendarEvent
+import com.cyprienbrisset.fukkatsunop.integration.google.ChatAuthManager
+import com.cyprienbrisset.fukkatsunop.integration.google.ChatMessage
+import com.cyprienbrisset.fukkatsunop.integration.google.ChatSpace
+import com.cyprienbrisset.fukkatsunop.integration.google.ChatTokenStore
 import com.cyprienbrisset.fukkatsunop.integration.google.DeviceFlowData
 import com.cyprienbrisset.fukkatsunop.integration.google.GoogleAuthManager
 import com.cyprienbrisset.fukkatsunop.integration.google.GoogleCalendarRepo
+import com.cyprienbrisset.fukkatsunop.integration.google.GoogleChatRepo
 import com.cyprienbrisset.fukkatsunop.integration.google.GoogleTokenStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,8 +23,13 @@ import kotlinx.coroutines.launch
 // ── State types ───────────────────────────────────────────────────────────────
 
 data class GoogleUiState(
-    val authState: AuthState                  = AuthState.Loading,
-    val agenda: TabState<List<CalendarEvent>> = TabState.Loading,
+    val authState: AuthState                      = AuthState.Loading,
+    val agenda: TabState<List<CalendarEvent>>     = TabState.Loading,
+    val isChatLoggedIn: Boolean                   = false,
+    val chatAuthUrl: String?                      = null,
+    val chatSpaces: TabState<List<ChatSpace>>     = TabState.Loading,
+    val chatMessages: TabState<List<ChatMessage>> = TabState.Loading,
+    val selectedSpace: ChatSpace?                 = null,
 )
 
 sealed interface AuthState {
@@ -40,6 +50,8 @@ sealed interface TabState<out T> {
 class GoogleViewModel(
     private val authManager: GoogleAuthManager,
     private val calendarRepo: GoogleCalendarRepo,
+    private val chatRepo: GoogleChatRepo,
+    private val chatAuthManager: ChatAuthManager,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(GoogleUiState())
@@ -54,6 +66,14 @@ class GoogleViewModel(
                     if (!alreadyLoggedIn) loadAll()
                 } else if (_state.value.authState !is AuthState.DeviceFlow) {
                     _state.update { it.copy(authState = AuthState.NotLoggedIn()) }
+                }
+            }
+        }
+        viewModelScope.launch {
+            chatAuthManager.isLoggedIn.collect { loggedIn ->
+                _state.update { it.copy(isChatLoggedIn = loggedIn) }
+                if (loggedIn && _state.value.chatSpaces is TabState.Loading) {
+                    loadChatSpaces()
                 }
             }
         }
@@ -80,6 +100,29 @@ class GoogleViewModel(
     }
 
     fun retryAgenda() { viewModelScope.launch { loadAgenda() } }
+    fun startChatAuth() {
+        val url = chatAuthManager.buildAuthUrl()
+        _state.update { it.copy(chatAuthUrl = url) }
+    }
+    fun onChatAuthCode(code: String) {
+        _state.update { it.copy(chatAuthUrl = null) }
+        viewModelScope.launch {
+            val ok = chatAuthManager.exchangeCode(code)
+            if (!ok) _state.update { it.copy(chatSpaces = TabState.Error("Échange de code échoué")) }
+        }
+    }
+    fun dismissChatAuth() { _state.update { it.copy(chatAuthUrl = null) } }
+    fun logoutChat() { viewModelScope.launch { chatAuthManager.logout() } }
+    fun retryChatSpaces() { viewModelScope.launch { loadChatSpaces() } }
+    fun retryMessages() {
+        val space = _state.value.selectedSpace ?: return
+        viewModelScope.launch { loadMessages(space) }
+    }
+    fun selectSpace(space: ChatSpace) {
+        _state.update { it.copy(selectedSpace = space, chatMessages = TabState.Loading) }
+        viewModelScope.launch { loadMessages(space) }
+    }
+    fun clearSelectedSpace() { _state.update { it.copy(selectedSpace = null) } }
 
     fun createEvent(title: String, start: java.time.Instant, end: java.time.Instant) {
         viewModelScope.launch {
@@ -90,6 +133,7 @@ class GoogleViewModel(
 
     private fun loadAll() {
         viewModelScope.launch { loadAgenda() }
+        viewModelScope.launch { loadChatSpaces() }
     }
 
     private suspend fun loadAgenda() {
@@ -99,13 +143,30 @@ class GoogleViewModel(
             .onFailure { e ->     _state.update { it.copy(agenda = TabState.Error(e.message ?: "Erreur réseau")) } }
     }
 
+    private suspend fun loadChatSpaces() {
+        _state.update { it.copy(chatSpaces = TabState.Loading) }
+        runCatching { chatRepo.fetchSpaces() }
+            .onSuccess { spaces -> _state.update { it.copy(chatSpaces = TabState.Success(spaces)) } }
+            .onFailure { e ->      _state.update { it.copy(chatSpaces = TabState.Error(e.message ?: "Erreur réseau")) } }
+    }
+
+    private suspend fun loadMessages(space: ChatSpace) {
+        _state.update { it.copy(chatMessages = TabState.Loading) }
+        runCatching { chatRepo.fetchMessages(space.name) }
+            .onSuccess { msgs -> _state.update { it.copy(chatMessages = TabState.Success(msgs)) } }
+            .onFailure { e ->    _state.update { it.copy(chatMessages = TabState.Error(e.message ?: "Erreur réseau")) } }
+    }
+
     class Factory(private val context: Context) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            val store    = GoogleTokenStore(context)
-            val auth     = GoogleAuthManager(context, store)
-            val calendar = GoogleCalendarRepo(auth)
-            return GoogleViewModel(auth, calendar) as T
+            val store     = GoogleTokenStore(context)
+            val auth      = GoogleAuthManager(context, store)
+            val calendar  = GoogleCalendarRepo(auth)
+            val chatStore = ChatTokenStore(context)
+            val chatAuth  = ChatAuthManager(chatStore)
+            val chat      = GoogleChatRepo(chatAuth)
+            return GoogleViewModel(auth, calendar, chat, chatAuth) as T
         }
     }
 }

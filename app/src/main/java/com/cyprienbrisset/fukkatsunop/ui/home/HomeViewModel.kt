@@ -88,7 +88,13 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
 
     private val nowPlayingController = com.cyprienbrisset.fukkatsunop.media.NowPlayingController(app)
     val nowPlaying = nowPlayingController.state
-    fun refreshNowPlaying() = nowPlayingController.refresh()
+
+    // Rafraîchissement toutes les 5s — était déclenché par le tick d'horloge (1/s) côté UI.
+    init {
+        viewModelScope.launch {
+            while (true) { nowPlayingController.refresh(); delay(5_000) }
+        }
+    }
 
     val airPlayState = AirPlayReceiver.state
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AirPlayState.Waiting)

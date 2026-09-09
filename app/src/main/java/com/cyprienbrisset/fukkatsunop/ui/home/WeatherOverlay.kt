@@ -11,9 +11,13 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.delay
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -40,19 +44,19 @@ private fun descToEffect(description: String): WeatherEffect = when (description
 
 @Composable
 fun WeatherOverlay(weather: Weather?, isDark: Boolean, modifier: Modifier = Modifier) {
+    if (weather == null) return
+
     val particleColor = if (isDark) Kinari.copy(alpha = 0.18f) else Ink.copy(alpha = 0.10f)
     val fogBase       = if (isDark) SumiMuted else InkMuted
     // Nuit : beige clair sur fond sombre. Jour : bleu-gris bien visible sur fond crème Washi.
     val cloudColor    = if (isDark) Color(0xFFE0DBD0) else Color(0xFF8AAAC0)
 
-    val effect = remember(weather?.description) {
-        weather?.description?.let { descToEffect(it) } ?: WeatherEffect.NONE
+    val effect = remember(weather.description) {
+        descToEffect(weather.description)
     }
 
-    // Nuages toujours présents — décoration ambiante du launcher.
     CloudCanvas(cloudColor, modifier)
 
-    // Effets météo additionnels par-dessus les nuages.
     when (effect) {
         WeatherEffect.RAIN  -> RainCanvas(particleColor, modifier)
         WeatherEffect.STORM -> StormCanvas(particleColor, modifier)
@@ -78,12 +82,9 @@ private fun randF(lo: Float, hi: Float) = (lo + Math.random() * (hi - lo)).toFlo
 private fun randomBelly() = randF(6f, 16f)
 
 private val CLOUDS = listOf(
-    CloudDef(0.12f, 0.30f, 0.22f, 30_000f, 0.00f),
-    CloudDef(0.26f, 0.40f, 0.20f, 45_000f, 0.40f),
-    CloudDef(0.14f, 0.22f, 0.21f, 22_000f, 0.68f),
-    CloudDef(0.36f, 0.34f, 0.18f, 38_000f, 0.20f),
-    CloudDef(0.20f, 0.26f, 0.20f, 27_000f, 0.55f),
-    CloudDef(0.32f, 0.36f, 0.17f, 50_000f, 0.83f),
+    CloudDef(0.12f, 0.30f, 0.22f, 70_000f, 0.00f),
+    CloudDef(0.26f, 0.40f, 0.20f, 110_000f, 0.40f),
+    CloudDef(0.14f, 0.22f, 0.21f, 55_000f, 0.68f),
 )
 
 // Espace de référence : 242 × 84. Centre visuel vertical ≈ y 38.
@@ -175,23 +176,23 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCloud(
 
 @Composable
 private fun CloudCanvas(cloudColor: Color, modifier: Modifier) {
-    // Belly aléatoire stable par nuage (fond arrondi, sans base plate).
-    val bellies = remember { CLOUDS.map { randomBelly() } }
+    val bellies  = remember { CLOUDS.map { randomBelly() } }
+    val startMs  = remember { System.currentTimeMillis() }
+    var tick     by remember { mutableLongStateOf(0L) }
 
-    val tr = rememberInfiniteTransition(label = "clouds")
-    // Une animation par nuage : redémarre toujours hors-écran → boucle invisible.
-    val t0 by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(CLOUDS[0].durationMs.toInt(), easing = LinearEasing)), "c0")
-    val t1 by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(CLOUDS[1].durationMs.toInt(), easing = LinearEasing)), "c1")
-    val t2 by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(CLOUDS[2].durationMs.toInt(), easing = LinearEasing)), "c2")
-    val t3 by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(CLOUDS[3].durationMs.toInt(), easing = LinearEasing)), "c3")
-    val t4 by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(CLOUDS[4].durationMs.toInt(), easing = LinearEasing)), "c4")
-    val t5 by tr.animateFloat(0f, 1f, infiniteRepeatable(tween(CLOUDS[5].durationMs.toInt(), easing = LinearEasing)), "c5")
-    val ts = listOf(t0, t1, t2, t3, t4, t5)
+    // Les nuages bougent très lentement (22–45 s par traversée) : 8 fps suffit.
+    // Évite de maintenir le Choreographer à 60 fps en permanence.
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(333L)   // 3 fps — nuages imperceptibles à plus de 3 fps
+            tick = System.currentTimeMillis() - startMs
+        }
+    }
 
     Canvas(modifier.fillMaxSize()) {
         CLOUDS.forEachIndexed { i, cloud ->
             val cloudW = size.width * cloud.wFrac
-            val xFrac  = (ts[i] + cloud.phase) % 1.0f
+            val xFrac  = ((tick.toFloat() / cloud.durationMs) + cloud.phase) % 1.0f
             val cx     = -cloudW + xFrac * (size.width + cloudW * 2f)
             val cy     = cloud.yFrac * size.height
             drawCloud(cx, cy, cloudW, cloud.alpha, cloudColor, i, bellies[i])

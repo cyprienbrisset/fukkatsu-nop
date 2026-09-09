@@ -1,6 +1,6 @@
 {
-  "versionCode": 13,
-  "versionName": "1.0.13",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.13/fukkatsu-nop-v1.0.13.apk",
-  "notes": "Artwork pochette en fond · dim progressif écran · transitions · volume alarme fixe/progressif"
+  "versionCode": 15,
+  "versionName": "1.0.15",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.15/fukkatsu-nop-v1.0.15.apk",
+  "notes": "Alarme Portal 1 : écran allumé au réveil · mise à jour : erreur claire si APK introuvable"
 }

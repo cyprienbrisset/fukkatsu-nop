@@ -38,6 +38,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.cyprienbrisset.fukkatsunop.alarm.AlarmForegroundService
+import com.cyprienbrisset.fukkatsunop.alarm.AlarmRingActivity
+import com.cyprienbrisset.fukkatsunop.alarm.AlarmReceiver
+import com.cyprienbrisset.fukkatsunop.integration.google.ChatAuthManager
 import com.cyprienbrisset.fukkatsunop.system.DarkModeManager
 import com.cyprienbrisset.fukkatsunop.system.FirmwareWatcher
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
@@ -58,11 +62,28 @@ class MainActivity : ComponentActivity() {
     companion object {
         private val _goHome = MutableStateFlow(0)
         val goHome: StateFlow<Int> = _goHome
+
+        // Relais d'alarme : AlarmReceiver y dépose l'ID quand startActivity direct échoue
+        // à amener AlarmRingActivity au premier plan (Portal 1). MainActivity lance alors
+        // l'activité depuis son propre contexte, ce qui fonctionne sans FLAG_ACTIVITY_NEW_TASK.
+        data class PendingAlarm(val alarmId: Long, val videoEnabled: Boolean)
+        private val _pendingAlarm = MutableStateFlow<PendingAlarm?>(null)
+        val pendingAlarm: StateFlow<PendingAlarm?> = _pendingAlarm
+
+        fun triggerAlarm(alarmId: Long, videoEnabled: Boolean) {
+            _pendingAlarm.value = PendingAlarm(alarmId, videoEnabled)
+        }
+        fun clearAlarm() { _pendingAlarm.value = null }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        _goHome.value++
+        val code = intent.data?.getQueryParameter("code")
+        if (code != null) {
+            ChatAuthManager.onAuthCode(code)
+        } else {
+            _goHome.value++
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -108,6 +129,20 @@ class MainActivity : ComponentActivity() {
                     // Release the system splash once our Compose tree is drawn
                     LaunchedEffect(Unit) {
                         splashReady = true
+                    }
+
+                    // Relais alarme Portal 1 : démarre AlarmRingActivity depuis un contexte
+                    // Activity (sans FLAG_ACTIVITY_NEW_TASK) pour qu'elle passe au premier plan.
+                    val alarm by pendingAlarm.collectAsState()
+                    LaunchedEffect(alarm) {
+                        val a = alarm ?: return@LaunchedEffect
+                        clearAlarm()
+                        startActivity(
+                            Intent(this@MainActivity, AlarmRingActivity::class.java)
+                                .addFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION)
+                                .putExtra(AlarmReceiver.EXTRA_ALARM_ID, a.alarmId)
+                                .putExtra(AlarmForegroundService.EXTRA_VIDEO_ENABLED, a.videoEnabled)
+                        )
                     }
 
                     Box(Modifier.fillMaxSize()) {

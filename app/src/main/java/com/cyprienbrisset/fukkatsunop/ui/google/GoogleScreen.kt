@@ -53,8 +53,8 @@ fun GoogleScreen(modifier: Modifier = Modifier) {
 
     // Connected view
     val scope = rememberCoroutineScope()
-    val pagerState = rememberPagerState(pageCount = { 2 })
-    val tabs = listOf("Agenda", "Meet")
+    val pagerState = rememberPagerState(pageCount = { 3 })
+    val tabs = listOf("Agenda", "Meet", "Chat")
     val selectedTab = pagerState.currentPage
     var showNewEvent by remember { mutableStateOf(false) }
 
@@ -132,6 +132,21 @@ fun GoogleScreen(modifier: Modifier = Modifier) {
             when (page) {
                 0 -> AgendaTab(state = uiState.agenda, onRetry = { vm.retryAgenda() })
                 1 -> MeetTab(state = uiState.agenda, onRetry = { vm.retryAgenda() })
+                2 -> ChatTab(
+                    isLoggedIn      = uiState.isChatLoggedIn,
+                    chatAuthUrl     = uiState.chatAuthUrl,
+                    spacesState     = uiState.chatSpaces,
+                    messagesState   = uiState.chatMessages,
+                    selectedSpace   = uiState.selectedSpace,
+                    onSelectSpace   = { vm.selectSpace(it) },
+                    onBack          = { vm.clearSelectedSpace() },
+                    onRetrySpaces   = { vm.retryChatSpaces() },
+                    onRetryMessages = { vm.retryMessages() },
+                    onReauth        = { vm.logoutChat() },
+                    onStartChatAuth = { vm.startChatAuth() },
+                    onChatAuthCode  = { vm.onChatAuthCode(it) },
+                    onDismissChatAuth = { vm.dismissChatAuth() },
+                )
             }
         }
     }

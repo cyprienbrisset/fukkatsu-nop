@@ -15,7 +15,6 @@ import okhttp3.Request
 
 private const val DEVICE_CODE_URL = "https://oauth2.googleapis.com/device/code"
 private const val TOKEN_URL       = "https://oauth2.googleapis.com/token"
-// gmail.readonly est rejeté par Google dans le Device Flow (restricted scope)
 private const val SCOPES = "https://www.googleapis.com/auth/calendar"
 
 data class DeviceFlowData(

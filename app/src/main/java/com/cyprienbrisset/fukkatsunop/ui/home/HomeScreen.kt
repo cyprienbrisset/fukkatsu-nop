@@ -162,7 +162,7 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
     ) {
         val landscape = maxWidth > maxHeight
         val isCompact = maxWidth < 1500.dp   // Portal Go/Mini (1280dp) vs Portal+ 1st gen (1920dp)
-        LaunchedEffect(now) { vm.refreshNowPlaying() }
+        // NowPlaying est rafraîchi dans le ViewModel (toutes les 5s), pas sur chaque tick d'horloge.
         WatermarkKanji("墨", Modifier.align(Alignment.BottomEnd).offset(x = (-64).dp, y = (-10).dp))
         if (landscape) {
             Row(Modifier.fillMaxSize().padding(
@@ -318,7 +318,6 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
             }
         }
 
-        // Nuages toujours visibles ; effets météo (pluie/neige…) seulement si activés.
         val weatherEffects by vm.weatherEffectsEnabled.collectAsStateWithLifecycle()
         WeatherOverlay(
             weather = if (weatherEffects) weather else null,

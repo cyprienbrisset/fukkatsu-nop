@@ -1,9 +1,7 @@
 package com.cyprienbrisset.fukkatsunop.ui.home
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -34,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.isActive
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -74,6 +73,10 @@ fun MedallionGrid(
     // Set to true by a tile's onLongClick so the grid-level long press ignores the same event.
     var tileConsumedLongPress by remember { mutableStateOf(false) }
 
+    // Collecté une seule fois au niveau du grid — évite N collectAsState() dans items()
+    // qui causaient une recomposition de toute la grille à chaque changement AirPlay.
+    val airPlayState by AirPlayReceiver.state.collectAsState()
+
     LaunchedEffect(tiles) { if (draggingKey == null) displayTiles = tiles }
     LaunchedEffect(reorderMode) { if (!reorderMode) displayTiles = tiles }
 
@@ -99,19 +102,25 @@ fun MedallionGrid(
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         items(displayTiles, key = { it.id }) { tile ->
-            val airPlayState by AirPlayReceiver.state.collectAsState()
             val isAirPlayLive = tile.type == TileType.AIRPLAY && airPlayState is AirPlayState.Streaming
             val isDragging = reorderMode && draggingKey == tile.id
-            val jiggleTransition = rememberInfiniteTransition(label = "jiggle_${tile.id}")
-            val jiggleAngle by jiggleTransition.animateFloat(
-                initialValue = if (tile.id % 2 == 0L) -1.8f else 1.8f,
-                targetValue = if (tile.id % 2 == 0L) 1.8f else -1.8f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(durationMillis = 110 + (tile.id % 3).toInt() * 25),
-                    repeatMode = RepeatMode.Reverse,
-                ),
-                label = "jiggle",
-            )
+            // Animatable + LaunchedEffect : l'animation ne tourne que pendant reorderMode.
+            // rememberInfiniteTransition maintenait le Choreographer à 60 fps pour TOUS les tiles.
+            val jiggle = remember { Animatable(0f) }
+            LaunchedEffect(reorderMode, isDragging) {
+                if (!reorderMode || isDragging) {
+                    jiggle.snapTo(0f)
+                    return@LaunchedEffect
+                }
+                val initial = if (tile.id % 2 == 0L) -1.8f else 1.8f
+                val dur = 110 + (tile.id % 3).toInt() * 25
+                jiggle.snapTo(initial)
+                while (isActive) {
+                    jiggle.animateTo(-initial, animationSpec = tween(dur, easing = LinearEasing))
+                    jiggle.animateTo(initial,  animationSpec = tween(dur, easing = LinearEasing))
+                }
+            }
+            val jiggleAngle = jiggle.value
             Box(
                 modifier = Modifier.then(
                     if (isAirPlayLive)

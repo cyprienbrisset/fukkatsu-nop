@@ -20,7 +20,7 @@ android {
         targetSdk = 37
         val major = 1
         val minor = 0
-        val build = 13
+        val build = 15
         versionCode = build
         versionName = "$major.$minor.$build"
 
@@ -31,6 +31,8 @@ android {
             "\"${localProps["GOOGLE_CLIENT_ID"] ?: ""}\"")
         buildConfigField("String", "GOOGLE_CLIENT_SECRET",
             "\"${localProps["GOOGLE_CLIENT_SECRET"] ?: ""}\"")
+        buildConfigField("String", "GOOGLE_ANDROID_CLIENT_ID",
+            "\"${localProps["GOOGLE_ANDROID_CLIENT_ID"] ?: ""}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

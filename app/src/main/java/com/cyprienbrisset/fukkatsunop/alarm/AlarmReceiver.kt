@@ -3,6 +3,7 @@ package com.cyprienbrisset.fukkatsunop.alarm
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.cyprienbrisset.fukkatsunop.MainActivity
 import com.cyprienbrisset.fukkatsunop.data.AppDatabase
 import com.cyprienbrisset.fukkatsunop.data.alarm.AlarmRepository
 import kotlinx.coroutines.CoroutineScope
@@ -24,8 +25,10 @@ class AlarmReceiver : BroadcastReceiver() {
                 val videoEnabled = alarm?.videoEnabled ?: false
                 val volumeProgressive = alarm?.volumeProgressive ?: true
                 AlarmForegroundService.start(context, alarmId, alarm?.label ?: "", alarm?.ringtoneUri, videoEnabled, volumeProgressive)
-                // Lancement explicite de l'activité : le fullScreenIntent de la notif
-                // ne déclenche pas l'écran automatiquement sur certains appareils (Gen 1).
+                // Relais via MainActivity (Portal 1) : startActivity depuis un contexte Activity
+                // passe au premier plan même quand le home screen task bloque le lancement direct.
+                MainActivity.triggerAlarm(alarmId, videoEnabled)
+                // Lancement direct en parallèle (Portal Gen 2 / cas où MainActivity n'est pas en vie).
                 context.startActivity(
                     Intent(context, AlarmRingActivity::class.java)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION)

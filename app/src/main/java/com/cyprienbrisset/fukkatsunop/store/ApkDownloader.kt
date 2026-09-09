@@ -16,6 +16,7 @@ class ApkDownloader(private val context: Context, private val http: OkHttpClient
             files.map { f ->
                 val out = File(dir, if (f.name.endsWith(".apk")) f.name else "${f.name}.apk")
                 http.newCall(Request.Builder().url(f.url).build()).execute().use { resp ->
+                    if (!resp.isSuccessful) throw StoreException("Téléchargement échoué : HTTP ${resp.code} (${f.name})")
                     val body = resp.body ?: throw StoreException("Téléchargement vide (${f.name})")
                     // Use Content-Length from response if size hint was unknown (0).
                     val total = if (knownTotal > 0) knownTotal
