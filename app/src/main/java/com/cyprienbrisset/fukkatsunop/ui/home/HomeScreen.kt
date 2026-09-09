@@ -69,16 +69,18 @@ import com.cyprienbrisset.fukkatsunop.web.WebAppActivity
 @Composable
 fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: () -> Unit = {}, vm: HomeViewModel = viewModel()) {
     val ctx = LocalContext.current
+    val weatherVm: WeatherViewModel = viewModel()
+    val nowPlayingVm: NowPlayingViewModel = viewModel()
     val tiles by vm.tiles.collectAsStateWithLifecycle()
     val now by vm.now.collectAsStateWithLifecycle()
-    val weather by vm.weather.collectAsStateWithLifecycle()
-    val weatherError by vm.weatherError.collectAsStateWithLifecycle()
-    val weatherFetchedAt by vm.weatherFetchedAt.collectAsStateWithLifecycle()
+    val weather by weatherVm.weather.collectAsStateWithLifecycle()
+    val weatherError by weatherVm.weatherError.collectAsStateWithLifecycle()
+    val weatherFetchedAt by weatherVm.weatherFetchedAt.collectAsStateWithLifecycle()
     val nextAlarm by vm.nextAlarm.collectAsStateWithLifecycle()
-    val currentCity by vm.currentCity.collectAsStateWithLifecycle()
-    val weatherCities by vm.weatherCities.collectAsStateWithLifecycle()
-    val weatherIndex by vm.weatherIndex.collectAsStateWithLifecycle()
-    val nowPlaying by vm.nowPlaying.collectAsStateWithLifecycle()
+    val currentCity by weatherVm.currentCity.collectAsStateWithLifecycle()
+    val weatherCities by weatherVm.weatherCities.collectAsStateWithLifecycle()
+    val weatherIndex by weatherVm.weatherIndex.collectAsStateWithLifecycle()
+    val nowPlaying by nowPlayingVm.nowPlaying.collectAsStateWithLifecycle()
     val recentContacts by vm.recentContacts.collectAsStateWithLifecycle()
     val badgeCounts by NotificationBadgeRepository.counts.collectAsStateWithLifecycle()
     var showDndDuration by remember { mutableStateOf(false) }
@@ -196,9 +198,9 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
                             cityName = currentCity?.city,
                             cityIndex = weatherIndex,
                             citiesCount = weatherCities.size,
-                            onNextCity = { vm.nextWeatherCity() },
-                            onPrevCity = { vm.prevWeatherCity() },
-                            onRefreshWeather = { vm.refreshWeather() },
+                            onNextCity = { weatherVm.nextWeatherCity() },
+                            onPrevCity = { weatherVm.prevWeatherCity() },
+                            onRefreshWeather = { weatherVm.refreshWeather() },
                             weatherFetchedAt = weatherFetchedAt,
                             weatherError = weatherError,
                         )
@@ -207,10 +209,10 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
                             Spacer(Modifier.height(20.dp))
                             NowPlayingBar(
                                 np,
-                                onPrev = { vm.mediaPrev() },
-                                onToggle = { vm.mediaToggle() },
-                                onNext = { vm.mediaNext() },
-                                onSeek = { vm.mediaSeek(it) },
+                                onPrev = { nowPlayingVm.prev() },
+                                onToggle = { nowPlayingVm.toggle() },
+                                onNext = { nowPlayingVm.next() },
+                                onSeek = { nowPlayingVm.seekTo(it) },
                                 onOpenApp = { np.packageName?.let { p -> LaunchIntentResolver.launch(ctx, p) } },
                             )
                         }
@@ -286,9 +288,9 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
                     cityName = currentCity?.city,
                     cityIndex = weatherIndex,
                     citiesCount = weatherCities.size,
-                    onNextCity = { vm.nextWeatherCity() },
-                    onPrevCity = { vm.prevWeatherCity() },
-                    onRefreshWeather = { vm.refreshWeather() },
+                    onNextCity = { weatherVm.nextWeatherCity() },
+                    onPrevCity = { weatherVm.prevWeatherCity() },
+                    onRefreshWeather = { weatherVm.refreshWeather() },
                     weatherFetchedAt = weatherFetchedAt,
                     weatherError = weatherError,
                 )
@@ -297,10 +299,10 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
                     Spacer(Modifier.height(18.dp))
                     NowPlayingBar(
                     np,
-                    onPrev = { vm.mediaPrev() },
-                    onToggle = { vm.mediaToggle() },
-                    onNext = { vm.mediaNext() },
-                    onSeek = { vm.mediaSeek(it) },
+                    onPrev = { nowPlayingVm.prev() },
+                    onToggle = { nowPlayingVm.toggle() },
+                    onNext = { nowPlayingVm.next() },
+                    onSeek = { nowPlayingVm.seekTo(it) },
                     onOpenApp = { np.packageName?.let { p -> LaunchIntentResolver.launch(ctx, p) } },
                 )
                 }
