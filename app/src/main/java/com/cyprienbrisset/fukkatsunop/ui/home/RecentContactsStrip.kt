@@ -1,7 +1,9 @@
 package com.cyprienbrisset.fukkatsunop.ui.home
 
 import android.app.PendingIntent
+import android.content.pm.LauncherApps
 import android.graphics.Bitmap
+import android.os.Process
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,6 +29,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -55,6 +59,21 @@ fun RecentContactsStrip(contacts: List<RecentContact>, modifier: Modifier = Modi
 
 @Composable
 private fun ContactBubble(contact: RecentContact) {
+    val ctx = LocalContext.current
+    val launcherApps = remember { ctx.getSystemService(LauncherApps::class.java) }
+
+    val onTap: () -> Unit = {
+        if (contact.shortcutId != null) {
+            runCatching {
+                launcherApps?.startShortcut(
+                    contact.packageName, contact.shortcutId, null, null, Process.myUserHandle()
+                )
+            }
+        } else {
+            contact.tapIntent?.let { runCatching { it.send() } }
+        }
+    }
+
     Column(
         modifier = Modifier.width(64.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -64,7 +83,7 @@ private fun ContactBubble(contact: RecentContact) {
             AvatarCircle(
                 name = contact.name,
                 avatar = contact.avatar,
-                onClick = { contact.tapIntent?.let { runCatching { it.send() } } },
+                onClick = onTap,
             )
             if (contact.callIntent != null) {
                 Box(

@@ -14,6 +14,8 @@ class MediaListenerService : NotificationListenerService() {
 
     companion object {
         private val COMM_PACKAGES = setOf(
+            "com.whatsapp",
+            "com.facebook.orca",          // Messenger standard
             "com.facebook.aloha.app.whatsapp",
             "com.facebook.aloha.app.messenger",
         )

@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.app.Application
 import android.content.Context
 import android.provider.Settings
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.cyprienbrisset.fukkatsunop.presence.PresenceManager
@@ -114,6 +115,10 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             while (true) { nowPlayingController.refresh(); delay(5_000) }
         }
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val contacts = loadMessengerShortcuts(app)
+            if (contacts.isNotEmpty()) RecentContactsRepository.setBaseContacts(contacts)
+        }
         viewModelScope.launch {
             settings.presenceEnabled.flatMapLatest { enabled ->
                 if (enabled) PresenceManager.isPresent else flowOf(null)
@@ -194,4 +199,46 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         nowPlayingController.dispose()
         super.onCleared()
     }
+}
+
+private val MESSAGING_PACKAGES = listOf(
+    "com.whatsapp",
+    "com.facebook.orca",          // Messenger standard
+    "com.facebook.aloha.app.messenger",
+    "com.facebook.aloha.app.whatsapp",
+)
+
+private fun loadMessengerShortcuts(app: Application): List<com.cyprienbrisset.fukkatsunop.integration.RecentContact> {
+    val launcherApps = app.getSystemService(android.content.pm.LauncherApps::class.java)
+        ?: return emptyList()
+    val userHandle = android.os.Process.myUserHandle()
+    val query = android.content.pm.LauncherApps.ShortcutQuery().apply {
+        setQueryFlags(
+            android.content.pm.LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC or
+            android.content.pm.LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED_BY_ANY_LAUNCHER,
+        )
+    }
+    return MESSAGING_PACKAGES.flatMap { pkg ->
+        runCatching {
+            query.setPackage(pkg)
+            launcherApps.getShortcuts(query, userHandle)?.mapNotNull { sc ->
+                val label = sc.shortLabel?.toString()?.takeIf { it.isNotBlank() }
+                    ?: sc.longLabel?.toString()?.takeIf { it.isNotBlank() }
+                    ?: return@mapNotNull null
+                val bmp = runCatching {
+                    launcherApps.getShortcutIconDrawable(sc, 0)?.toBitmap()
+                }.getOrNull()
+                com.cyprienbrisset.fukkatsunop.integration.RecentContact(
+                    key = "$pkg:${sc.id}",
+                    name = label,
+                    avatar = bmp,
+                    packageName = pkg,
+                    lastSeenMs = sc.lastChangedTimestamp,
+                    tapIntent = null,
+                    callIntent = null,
+                    shortcutId = sc.id,
+                )
+            } ?: emptyList()
+        }.getOrElse { emptyList() }
+    }.sortedByDescending { it.lastSeenMs }.take(6)
 }

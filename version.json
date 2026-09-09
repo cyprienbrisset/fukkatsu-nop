@@ -1,6 +1,6 @@
 {
-  "versionCode": 17,
-  "versionName": "1.0.17",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.17/fukkatsu-nop-v1.0.17.apk",
-  "notes": "Appel vidéo direct depuis le bandeau contacts · Détection de présence (caméra frontale → écran allumé automatiquement)"
+  "versionCode": 18,
+  "versionName": "1.0.18",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.18/fukkatsu-nop-v1.0.18.apk",
+  "notes": "Bandeau contacts : chargé depuis WhatsApp/Messenger au démarrage via shortcuts · apps standard (com.whatsapp, Messenger) reconnues"
 }

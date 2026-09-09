@@ -13,6 +13,7 @@ data class RecentContact(
     val lastSeenMs: Long,
     val tapIntent: PendingIntent?,
     val callIntent: PendingIntent? = null,
+    val shortcutId: String? = null,
 )
 
 object RecentContactsRepository {
@@ -22,6 +23,14 @@ object RecentContactsRepository {
 
     private const val MAX = 6
 
+    /** Pré-remplit depuis les shortcuts Messenger/WhatsApp (appelé au démarrage). */
+    fun setBaseContacts(base: List<RecentContact>) {
+        val current = _contacts.value.toMutableList()
+        base.forEach { sc -> if (current.none { it.key == sc.key }) current.add(sc) }
+        _contacts.value = current.sortedByDescending { it.lastSeenMs }.take(MAX)
+    }
+
+    /** Met à jour / ajoute un contact à la réception d'une notification. */
     fun onNotification(contact: RecentContact) {
         val current = _contacts.value.toMutableList()
         current.removeAll { it.key == contact.key }
