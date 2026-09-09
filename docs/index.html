@@ -451,14 +451,14 @@
       <div class="feat-card">
         <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-leaf"/></svg></div>
         <span class="feat-new">Nouveau</span>
-        <h3>Thèmes saisonniers</h3>
-        <p>L'accent vermillon 朱 vire au rose sakura 桜 au printemps (mars–mai) et à l'orangé momiji 紅葉 en automne (sept.–nov.). Bascule automatique selon le mois, dans l'esprit de la papeterie japonaise.</p>
+        <h3>Palette personnalisable</h3>
+        <p>L'accent vermillon 朱 adopte une variante saisonnière automatique : rose sakura 桜 (mars–mai), orangé momiji 紅葉 (sept.–nov.). Un sélecteur dans Réglages → Affichage permet de forcer la palette à tout moment — quatre pastilles Auto / Sakura / Momiji / Shu.</p>
       </div>
       <div class="feat-card">
         <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-mic"/></svg></div>
         <span class="feat-new">Nouveau</span>
         <h3>Commandes vocales locales</h3>
-        <p>Wake word « Portal » détecté en continu par Vosk — 100% embarqué, zéro cloud. Commandes : ouvre une app, mode nuit/jour, éteins l'écran. Le micro-réseau du Portal reprend vie, sans Alexa.</p>
+        <p>Wake word « Portal » détecté en continu par Vosk — 100% embarqué, zéro cloud. Commandes : ouvre une app, mode nuit/jour, éteins l'écran. Le micro-réseau du Portal reprend vie, sans Alexa. Téléchargement du modèle avec barre de progression en temps réel.</p>
       </div>
       <div class="feat-card">
         <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-map"/></svg></div>
@@ -471,6 +471,24 @@
         <span class="feat-new">Nouveau</span>
         <h3>Mode compact — Portal Go &amp; Mini</h3>
         <p>Sur Portal Go (10,1") et Portal Mini (8"), le launcher détecte automatiquement l'écran 1280×800 dp et active un mode compact : polices et espacement réduits, grille resserrée. Zéro configuration.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-zap"/></svg></div>
+        <span class="feat-new">Nouveau</span>
+        <h3>Résilience réseau</h3>
+        <p>Cache Room local avec TTL de 15 min pour la météo et 30 min pour l'agenda — l'interface reste fonctionnelle sans connexion. Toutes les requêtes HTTP bénéficient d'un backoff exponentiel automatique (1 s → 2 s → 4 s, codes 5xx).</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-moon"/></svg></div>
+        <span class="feat-new">Nouveau</span>
+        <h3>Animation jour / nuit</h3>
+        <p>La transition entre les palettes Sumi (nuit) et Washi (jour) s'effectue avec un fondu de 600 ms sur toutes les couleurs du thème — aucun saut brutal à l'heure de bascule.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-cpu"/></svg></div>
+        <span class="feat-new">Nouveau</span>
+        <h3>Présence adaptative</h3>
+        <p>La caméra analyse les visages toutes les 2 s en présence, 10 s en absence — réduisant la consommation CPU de 80 % quand le Portal est sans utilisateur, sans sacrifier la réactivité.</p>
       </div>
     </div>
   </div>

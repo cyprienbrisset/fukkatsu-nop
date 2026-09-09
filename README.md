@@ -68,7 +68,7 @@ Un `AlarmManager` vérifie quotidiennement `android.os.Build.DISPLAY`. Si la val
 
 ---
 
-## Thèmes saisonniers
+## Thèmes saisonniers et palette personnalisable
 
 L'accent vermillon **朱** adopte une variante saisonnière automatique :
 
@@ -78,7 +78,20 @@ L'accent vermillon **朱** adopte une variante saisonnière automatique :
 | 朱 Shu | Juin — Août, Déc. | Vermillon `#C1272D` |
 | 紅葉 Momiji | Septembre — Novembre | Orangé `#C85A14` |
 
-La bascule est entièrement automatique, sans configuration. Dans l'esprit de la papeterie japonaise du projet.
+En mode **Auto**, la bascule est entièrement automatique selon le mois. Un sélecteur dans **Réglages → Affichage → Couleur d'accent** permet de forcer une palette à tout moment (quatre pastilles de couleur : Auto, Sakura, Momiji, Shu). La transition jour/nuit est animée avec un fondu de 600 ms sur toutes les couleurs du thème.
+
+---
+
+## Résilience réseau
+
+Les données météo et l'agenda Google sont mis en cache localement (Room) pour fonctionner sans connexion :
+
+| Source | TTL cache |
+|---|---|
+| Météo (Open-Meteo) | 15 minutes |
+| Agenda Google | 30 minutes |
+
+Toutes les requêtes HTTP passent par un `RetryInterceptor` OkHttp avec backoff exponentiel (1 s → 2 s → 4 s, 3 tentatives maximum, codes 5xx uniquement).
 
 ---
 
@@ -89,7 +102,7 @@ Le micro-réseau du Portal est réactivé via **Vosk**, moteur de reconnaissance
 - Dites **« Portal »** — le wake word est détecté localement en continu, aucun bouton requis
 - **Commandes** : `ouvre [nom app]`, `mode nuit`, `mode jour`, `éteins l'écran`, `météo`, `alarme`
 - Retour visuel : bannière en bas de l'écran pendant la fenêtre d'écoute (5 s)
-- Modèle `vosk-model-small-fr-0.22` (~40 MB), téléchargé à la première activation depuis **Réglages → Commandes vocales**
+- Modèle `vosk-model-small-fr-0.22` (~40 MB), téléchargé à la première activation depuis **Réglages → Commandes vocales** — une barre de progression linéaire affiche l'avancement en temps réel
 
 ---
 
