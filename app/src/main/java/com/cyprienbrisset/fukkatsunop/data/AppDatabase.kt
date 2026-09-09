@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.cyprienbrisset.fukkatsunop.data.alarm.AlarmDao
 import com.cyprienbrisset.fukkatsunop.data.alarm.AlarmEntity
 import com.cyprienbrisset.fukkatsunop.data.google.CalendarCacheDao
@@ -15,6 +16,7 @@ import com.cyprienbrisset.fukkatsunop.data.tile.TileEntity
 import com.cyprienbrisset.fukkatsunop.data.tile.TileType
 import com.cyprienbrisset.fukkatsunop.data.weather.WeatherCacheDao
 import com.cyprienbrisset.fukkatsunop.data.weather.WeatherCacheEntity
+import timber.log.Timber
 
 class Converters {
     @TypeConverter fun tileType(v: String): TileType = TileType.valueOf(v)
@@ -39,7 +41,11 @@ abstract class AppDatabase : RoomDatabase() {
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext, AppDatabase::class.java, "myportal.db"
-                ).fallbackToDestructiveMigration().build().also { instance = it }
+                ).fallbackToDestructiveMigration().addCallback(object : RoomDatabase.Callback() {
+                    override fun onCreate(db: SupportSQLiteDatabase) {
+                        Timber.w("AppDatabase recreated — all user data was wiped (destructive migration)")
+                    }
+                }).build().also { instance = it }
             }
     }
 }
