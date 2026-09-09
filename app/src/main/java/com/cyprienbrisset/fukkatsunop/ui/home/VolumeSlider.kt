@@ -96,16 +96,20 @@ fun VolumeSlider(modifier: Modifier = Modifier) {
         val adapter = btManager?.adapter ?: return@DisposableEffect onDispose {}
         bondedDevices = adapter.bondedDevices?.toList() ?: emptyList()
 
+        var proxy: BluetoothProfile? = null
         val listener = object : BluetoothProfile.ServiceListener {
-            override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
-                connectedDevices = proxy.connectedDevices ?: emptyList()
+            override fun onServiceConnected(profile: Int, p: BluetoothProfile) {
+                proxy = p
+                connectedDevices = p.connectedDevices ?: emptyList()
             }
             override fun onServiceDisconnected(profile: Int) {
                 connectedDevices = emptyList()
             }
         }
         adapter.getProfileProxy(ctx, listener, BluetoothProfile.A2DP)
-        onDispose {}
+        onDispose {
+            proxy?.let { adapter.closeProfileProxy(BluetoothProfile.A2DP, it) }
+        }
     }
 
     val isBtActive = activeBtName != null

@@ -61,6 +61,7 @@ import com.cyprienbrisset.fukkatsunop.system.UpdateProgress
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceModelManager
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
 import com.cyprienbrisset.fukkatsunop.ui.alarm.SunriseActivity
+import com.cyprienbrisset.fukkatsunop.ui.screensaver.SumiSaverActivity
 import com.cyprienbrisset.fukkatsunop.ui.home.HomeViewModel
 import com.cyprienbrisset.fukkatsunop.ui.sumi.HankoSeal
 import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
@@ -207,6 +208,12 @@ fun SettingsScreen(
                                             .putExtra(SunriseActivity.EXTRA_DURATION_MS, 60_000L)
                                     )
                                 },
+                                onLaunchSaver    = {
+                                    ctx.startActivity(
+                                        Intent(ctx, SumiSaverActivity::class.java)
+                                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    )
+                                },
                             )
                             Cat.APPS    -> {} // handled above (InstalledAppsScreen embedded)
                             Cat.SYSTEM  -> SystemPanelContent(
@@ -326,6 +333,7 @@ private fun DisplayPanelContent(
     onWeather: () -> Unit,
     onDarkSchedule: () -> Unit,
     onSunrise: () -> Unit,
+    onLaunchSaver: () -> Unit = {},
 ) {
     SettingSwitch(
         text = "Effets météo",
@@ -341,6 +349,7 @@ private fun DisplayPanelContent(
         checked = saverMode,
         onCheckedChange = onSaverMode,
     )
+    SettingRow("Lancer l'économiseur maintenant", subtitle = "Aperçu de l'animation encre de Chine") { onLaunchSaver() }
     SettingRow("Tester le lever de soleil", subtitle = "Simulation 60 secondes") { onSunrise() }
 }
 

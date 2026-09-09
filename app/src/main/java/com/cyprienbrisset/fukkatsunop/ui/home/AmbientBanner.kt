@@ -30,6 +30,7 @@ import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.roundToInt
 
 @Composable
 fun AmbientBanner(
@@ -45,6 +46,9 @@ fun AmbientBanner(
     citiesCount: Int = 1,
     onNextCity: () -> Unit = {},
     onPrevCity: () -> Unit = {},
+    onRefreshWeather: () -> Unit = {},
+    weatherFetchedAt: Long? = null,
+    weatherError: String? = null,
 ) {
     val time = now.format(DateTimeFormatter.ofPattern("HH:mm"))
     val date = now.format(DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.FRENCH))
@@ -82,27 +86,41 @@ fun AmbientBanner(
         }
         Spacer(Modifier.height(if (compact) 6.dp else 12.dp))
         Text(date, color = MaterialTheme.colorScheme.onBackground, fontSize = dateSize)
-        if (weather != null) {
+        if (weather != null || weatherError != null) {
             Spacer(Modifier.height(if (compact) 4.dp else 8.dp))
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = weatherSwipeModifier,
+                modifier = weatherSwipeModifier.then(Modifier.clickable { onRefreshWeather() }),
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                ) {
+                if (weather != null) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        Text(
+                            "${weather.temperatureC}°",
+                            color = Shu,
+                            fontSize = tempSize,
+                            fontWeight = FontWeight.Light,
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            weather.description,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = descSize,
+                        )
+                    }
+                }
+                if (weatherError != null && weather == null) {
+                    Text("⚠ $weatherError", color = SumiMuted, fontFamily = Mincho, fontSize = 12.sp)
+                }
+                val ageMinutes = weatherFetchedAt?.let { ((System.currentTimeMillis() - it) / 60_000f).roundToInt() }
+                if (ageMinutes != null && ageMinutes >= 20) {
                     Text(
-                        "${weather.temperatureC}°",
-                        color = Shu,
-                        fontSize = tempSize,
-                        fontWeight = FontWeight.Light,
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        weather.description,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = descSize,
+                        "il y a $ageMinutes min — actualiser",
+                        color = SumiMuted.copy(alpha = 0.6f),
+                        fontFamily = Mincho,
+                        fontSize = 11.sp,
                     )
                 }
                 if (cityName != null) {

@@ -57,13 +57,28 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         combine(settings.weatherCities, _weatherIndex) { cities, idx -> cities.getOrNull(idx) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    private val _weatherRefreshTrigger = MutableStateFlow(0L)
+    private val _weatherError = MutableStateFlow<String?>(null)
+    private val _weatherFetchedAt = MutableStateFlow<Long?>(null)
+
+    val weatherError: StateFlow<String?> = _weatherError.asStateFlow()
+    val weatherFetchedAt: StateFlow<Long?> = _weatherFetchedAt.asStateFlow()
+
+    fun refreshWeather() { _weatherRefreshTrigger.value++ }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val weather: StateFlow<Weather?> =
-        combine(settings.weatherCities, _weatherIndex) { cities, idx -> cities.getOrNull(idx) }
+        combine(settings.weatherCities, _weatherIndex, _weatherRefreshTrigger) { cities, idx, _ -> cities.getOrNull(idx) }
             .flatMapLatest { loc ->
                 flow {
                     while (true) {
-                        emit(loc?.let { weatherRepo.currentWeather(it.lat, it.lon) })
+                        if (loc == null) {
+                            emit(null)
+                        } else {
+                            runCatching { weatherRepo.currentWeather(loc.lat, loc.lon) }
+                                .onSuccess { w -> _weatherError.value = null; _weatherFetchedAt.value = System.currentTimeMillis(); emit(w) }
+                                .onFailure { e -> _weatherError.value = e.message ?: "Erreur réseau" }
+                        }
                         delay(15 * 60 * 1000)
                     }
                 }

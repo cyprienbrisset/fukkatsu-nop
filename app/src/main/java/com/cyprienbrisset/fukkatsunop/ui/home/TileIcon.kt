@@ -11,7 +11,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,14 +25,18 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.cyprienbrisset.fukkatsunop.airplay.AirPlayReceiver
 import com.cyprienbrisset.fukkatsunop.airplay.AirPlayState
 import com.cyprienbrisset.fukkatsunop.data.tile.TileEntity
 import com.cyprienbrisset.fukkatsunop.data.tile.TileType
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+
+private object AppIconCache {
+    val bitmaps = ConcurrentHashMap<String, android.graphics.Bitmap>()
+}
 
 fun monogramLetter(label: String): String =
     label.trim().firstOrNull()?.uppercase() ?: "?"
@@ -64,7 +67,7 @@ fun googleFaviconUrl(url: String): String {
 fun faviconUrl(url: String): String = googleFaviconUrl(url)
 
 @Composable
-fun TileIcon(tile: TileEntity, size: Dp, modifier: Modifier = Modifier) {
+fun TileIcon(tile: TileEntity, size: Dp, modifier: Modifier = Modifier, airPlayState: AirPlayState? = null) {
     val ctx = LocalContext.current
     val shape = RoundedCornerShape(size / 4)
 
@@ -80,14 +83,15 @@ fun TileIcon(tile: TileEntity, size: Dp, modifier: Modifier = Modifier) {
     when (tile.type) {
         TileType.APP -> {
             val pkg = tile.packageName
-            var bmp by remember(pkg) { mutableStateOf<android.graphics.Bitmap?>(null) }
+            var bmp by remember(pkg) { mutableStateOf(pkg?.let { AppIconCache.bitmaps[it] }) }
             var failed by remember(pkg) { mutableStateOf(false) }
             LaunchedEffect(pkg) {
                 if (pkg == null) { failed = true; return@LaunchedEffect }
+                if (AppIconCache.bitmaps.containsKey(pkg)) { bmp = AppIconCache.bitmaps[pkg]; return@LaunchedEffect }
                 val loaded = withContext(Dispatchers.IO) {
                     runCatching { ctx.packageManager.getApplicationIcon(pkg).toBitmap() }.getOrNull()
                 }
-                if (loaded != null) bmp = loaded else failed = true
+                if (loaded != null) { AppIconCache.bitmaps[pkg] = loaded; bmp = loaded } else failed = true
             }
             when {
                 bmp != null -> AsyncImage(
@@ -120,7 +124,7 @@ fun TileIcon(tile: TileEntity, size: Dp, modifier: Modifier = Modifier) {
             }
         }
         TileType.AIRPLAY -> {
-            val airState by AirPlayReceiver.state.collectAsState()
+            val airState = airPlayState ?: AirPlayState.Waiting
             val statusText = when (airState) {
                 is AirPlayState.Streaming  -> "● Live"
                 is AirPlayState.Connecting -> "Connexion…"

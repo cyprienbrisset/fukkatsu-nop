@@ -156,6 +156,7 @@ fun MedallionGrid(
                     BadgedTileIcon(
                         tile = tile,
                         badgeCount = tile.packageName?.let { badgeCounts[it] } ?: 0,
+                        airPlayState = airPlayState,
                     )
                 }
                 // In reorder mode: transparent overlay captures drag gestures without conflicting
@@ -224,9 +225,9 @@ fun MedallionGrid(
 }
 
 @Composable
-private fun BadgedTileIcon(tile: TileEntity, badgeCount: Int) {
+private fun BadgedTileIcon(tile: TileEntity, badgeCount: Int, airPlayState: AirPlayState) {
     Box(Modifier.size(72.dp)) {
-        TileIcon(tile = tile, size = 64.dp, modifier = Modifier.align(Alignment.Center))
+        TileIcon(tile = tile, size = 64.dp, modifier = Modifier.align(Alignment.Center), airPlayState = airPlayState)
         if (badgeCount > 0) {
             Box(
                 modifier = Modifier

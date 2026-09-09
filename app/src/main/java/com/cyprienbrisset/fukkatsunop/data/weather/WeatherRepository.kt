@@ -16,12 +16,10 @@ class WeatherRepository(
 ) {
     suspend fun currentWeather(lat: Double, lon: Double): Weather? = withContext(Dispatchers.IO) {
         val url = "https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,weather_code"
-        runCatching {
-            client.newCall(Request.Builder().url(url).build()).execute().use { resp ->
-                val body = resp.body?.string() ?: return@use null
-                json.decodeFromString(ForecastResponse.serializer(), body).current?.toWeather()
-            }
-        }.getOrNull()
+        client.newCall(Request.Builder().url(url).build()).execute().use { resp ->
+            val body = resp.body?.string() ?: return@withContext null
+            json.decodeFromString(ForecastResponse.serializer(), body).current?.toWeather()
+        }
     }
 
     suspend fun geocode(query: String): List<GeocodeResult> = withContext(Dispatchers.IO) {

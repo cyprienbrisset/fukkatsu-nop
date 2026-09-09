@@ -72,6 +72,8 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
     val tiles by vm.tiles.collectAsStateWithLifecycle()
     val now by vm.now.collectAsStateWithLifecycle()
     val weather by vm.weather.collectAsStateWithLifecycle()
+    val weatherError by vm.weatherError.collectAsStateWithLifecycle()
+    val weatherFetchedAt by vm.weatherFetchedAt.collectAsStateWithLifecycle()
     val nextAlarm by vm.nextAlarm.collectAsStateWithLifecycle()
     val currentCity by vm.currentCity.collectAsStateWithLifecycle()
     val weatherCities by vm.weatherCities.collectAsStateWithLifecycle()
@@ -196,6 +198,9 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
                             citiesCount = weatherCities.size,
                             onNextCity = { vm.nextWeatherCity() },
                             onPrevCity = { vm.prevWeatherCity() },
+                            onRefreshWeather = { vm.refreshWeather() },
+                            weatherFetchedAt = weatherFetchedAt,
+                            weatherError = weatherError,
                         )
                         val np = nowPlaying
                         if (np != null) {
@@ -283,6 +288,9 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
                     citiesCount = weatherCities.size,
                     onNextCity = { vm.nextWeatherCity() },
                     onPrevCity = { vm.prevWeatherCity() },
+                    onRefreshWeather = { vm.refreshWeather() },
+                    weatherFetchedAt = weatherFetchedAt,
+                    weatherError = weatherError,
                 )
                 val np = nowPlaying
                 if (np != null) {

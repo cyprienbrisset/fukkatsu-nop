@@ -49,19 +49,26 @@ import kotlinx.coroutines.withContext
 
 private data class SearchAppEntry(val packageName: String, val label: String)
 
+private object InstalledAppsCache {
+    @Volatile var apps: List<SearchAppEntry>? = null
+}
+
 @Composable
 fun AppSearchOverlay(onDismiss: () -> Unit) {
     val ctx = LocalContext.current
     var query by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
 
-    val allApps by produceState<List<SearchAppEntry>>(emptyList()) {
+    val allApps by produceState<List<SearchAppEntry>>(InstalledAppsCache.apps ?: emptyList()) {
+        val cached = InstalledAppsCache.apps
+        if (cached != null) { value = cached; return@produceState }
         value = withContext(Dispatchers.IO) {
             ctx.packageManager.getInstalledApplications(0)
                 .filter { it.flags and ApplicationInfo.FLAG_SYSTEM == 0 }
                 .filter { it.packageName != ctx.packageName }
                 .map { SearchAppEntry(it.packageName, ctx.packageManager.getApplicationLabel(it).toString()) }
                 .sortedBy { it.label.lowercase() }
+                .also { InstalledAppsCache.apps = it }
         }
     }
 
