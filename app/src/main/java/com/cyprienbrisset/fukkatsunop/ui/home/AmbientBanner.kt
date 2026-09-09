@@ -113,6 +113,7 @@ fun AmbientBanner(
                 }
                 if (weatherError != null && weather == null) {
                     Text("⚠ $weatherError", color = SumiMuted, fontFamily = Mincho, fontSize = 12.sp)
+                    Text("↺ Actualiser", color = SumiMuted.copy(alpha = 0.6f), fontFamily = Mincho, fontSize = 11.sp)
                 }
                 val ageMinutes = weatherFetchedAt?.let { ((System.currentTimeMillis() - it) / 60_000f).roundToInt() }
                 if (ageMinutes != null && ageMinutes >= 20) {

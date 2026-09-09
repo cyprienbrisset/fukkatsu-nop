@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import timber.log.Timber
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class WeatherViewModel(app: Application) : AndroidViewModel(app) {
@@ -57,7 +58,10 @@ class WeatherViewModel(app: Application) : AndroidViewModel(app) {
                     } else {
                         runCatching { weatherRepo.currentWeather(loc.lat, loc.lon) }
                             .onSuccess { w -> _weatherError.value = null; _weatherFetchedAt.value = System.currentTimeMillis(); emit(w) }
-                            .onFailure { e -> _weatherError.value = e.message ?: "Erreur réseau" }
+                            .onFailure { e ->
+                                Timber.w(e, "weather fetch failed")
+                                _weatherError.value = e.message ?: "Erreur réseau"
+                            }
                     }
                     delay(15 * 60 * 1000)
                 }
