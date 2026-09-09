@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -24,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.roundToInt
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cyprienbrisset.fukkatsunop.ui.sumi.HankoSeal
 import com.cyprienbrisset.fukkatsunop.ui.sumi.SectionLabel
@@ -46,6 +49,7 @@ fun AlarmEditScreen(onDone: () -> Unit, alarmId: Long = 0L, vm: AlarmsViewModel 
     var ringtoneUri by remember { mutableStateOf<String?>(null) }
     var videoEnabled by remember { mutableStateOf(false) }
     var volumeProgressive by remember { mutableStateOf(true) }
+    var volumeLevel by remember { mutableStateOf(100) }
 
     LaunchedEffect(alarmId) {
         if (alarmId > 0L) {
@@ -57,6 +61,7 @@ fun AlarmEditScreen(onDone: () -> Unit, alarmId: Long = 0L, vm: AlarmsViewModel 
                 ringtoneUri = a.ringtoneUri
                 videoEnabled = a.videoEnabled
                 volumeProgressive = a.volumeProgressive
+                volumeLevel = a.volumeLevel
             }
         }
     }
@@ -137,9 +142,37 @@ fun AlarmEditScreen(onDone: () -> Unit, alarmId: Long = 0L, vm: AlarmsViewModel 
                 ),
             )
         }
+        if (!volumeProgressive) {
+            Spacer(Modifier.height(8.dp))
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    "$volumeLevel %",
+                    color = SumiMuted,
+                    fontFamily = Mincho,
+                    fontSize = 13.sp,
+                    modifier = Modifier.width(44.dp),
+                )
+                Slider(
+                    value = volumeLevel.toFloat(),
+                    onValueChange = { volumeLevel = it.roundToInt() },
+                    valueRange = 10f..100f,
+                    steps = 8,
+                    colors = SliderDefaults.colors(
+                        thumbColor = AccentShu,
+                        activeTrackColor = AccentShu,
+                        inactiveTrackColor = AccentShu.copy(alpha = 0.25f),
+                    ),
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
         Spacer(Modifier.weight(1f))
         SumiPrimaryButton("保存 · Enregistrer", onClick = {
-            vm.save(hour, minute, days, "", ringtoneUri, snooze, videoEnabled, volumeProgressive, id = alarmId)
+            vm.save(hour, minute, days, "", ringtoneUri, snooze, videoEnabled, volumeProgressive, volumeLevel, id = alarmId)
             onDone()
         })
         Spacer(Modifier.height(20.dp))

@@ -24,7 +24,8 @@ class AlarmReceiver : BroadcastReceiver() {
                 val alarm = repo.byId(alarmId)
                 val videoEnabled = alarm?.videoEnabled ?: false
                 val volumeProgressive = alarm?.volumeProgressive ?: true
-                AlarmForegroundService.start(context, alarmId, alarm?.label ?: "", alarm?.ringtoneUri, videoEnabled, volumeProgressive)
+                val volumeLevel = alarm?.volumeLevel ?: 100
+                AlarmForegroundService.start(context, alarmId, alarm?.label ?: "", alarm?.ringtoneUri, videoEnabled, volumeProgressive, volumeLevel)
                 // Relais via MainActivity (Portal 1) : startActivity depuis un contexte Activity
                 // passe au premier plan même quand le home screen task bloque le lancement direct.
                 MainActivity.triggerAlarm(alarmId, videoEnabled)

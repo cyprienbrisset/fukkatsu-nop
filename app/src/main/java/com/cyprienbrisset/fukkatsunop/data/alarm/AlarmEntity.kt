@@ -20,4 +20,5 @@ data class AlarmEntity(
     val snoozeMinutes: Int = 10,
     @ColumnInfo(name = "sunriseEnabled") val videoEnabled: Boolean = false,
     @ColumnInfo(name = "volumeProgressive") val volumeProgressive: Boolean = true,
+    val volumeLevel: Int = 100,
 )

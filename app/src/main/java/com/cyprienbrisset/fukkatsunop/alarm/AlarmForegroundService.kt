@@ -27,6 +27,7 @@ class AlarmForegroundService : Service() {
         val label = intent?.getStringExtra(EXTRA_LABEL) ?: ""
         val videoEnabled = intent?.getBooleanExtra(EXTRA_VIDEO_ENABLED, false) ?: false
         val volumeProgressive = intent?.getBooleanExtra(EXTRA_VOLUME_PROGRESSIVE, true) ?: true
+        val volumeLevel = intent?.getIntExtra(EXTRA_VOLUME_LEVEL, 100) ?: 100
         startForeground(AlarmNotifications.NOTIF_ID, AlarmNotifications.buildRinging(this, alarmId, label, videoEnabled))
 
         when (intent?.action) {
@@ -44,7 +45,7 @@ class AlarmForegroundService : Service() {
         resetRinging()
         val ringUri = intent.getStringExtra(EXTRA_RINGTONE)
         acquireWakeLock()
-        startRinging(ringUri, volumeProgressive)
+        startRinging(ringUri, volumeProgressive, volumeLevel)
         return START_NOT_STICKY
     }
 
@@ -57,14 +58,15 @@ class AlarmForegroundService : Service() {
         ).also { it.acquire(10 * 60 * 1000L) }
     }
 
-    private fun startRinging(ringUri: String?, progressive: Boolean = true) {
+    private fun startRinging(ringUri: String?, progressive: Boolean = true, volumeLevel: Int = 100) {
         val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val maxVol = am.getStreamMaxVolume(AudioManager.STREAM_ALARM)
-        am.setStreamVolume(
-            AudioManager.STREAM_ALARM,
-            if (progressive) volumeAtStep(0, RAMP_STEPS, maxVol) else maxVol,
-            0,
-        )
+        val targetVol = if (progressive) {
+            volumeAtStep(0, RAMP_STEPS, maxVol)
+        } else {
+            (volumeLevel / 100f * maxVol).toInt().coerceIn(0, maxVol)
+        }
+        am.setStreamVolume(AudioManager.STREAM_ALARM, targetVol, 0)
 
         val uri: Uri = ringUri?.let { Uri.parse(it) }
             ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
@@ -113,16 +115,18 @@ class AlarmForegroundService : Service() {
         const val EXTRA_SNOOZE_MIN = "snooze_min"
         const val EXTRA_VIDEO_ENABLED = "video_enabled"
         const val EXTRA_VOLUME_PROGRESSIVE = "volume_progressive"
+        const val EXTRA_VOLUME_LEVEL = "volume_level"
         const val RAMP_STEPS = 30
         const val RAMP_INTERVAL_MS = 1000L
 
-        fun start(context: Context, alarmId: Long, label: String, ringtoneUri: String?, videoEnabled: Boolean = false, volumeProgressive: Boolean = true) {
+        fun start(context: Context, alarmId: Long, label: String, ringtoneUri: String?, videoEnabled: Boolean = false, volumeProgressive: Boolean = true, volumeLevel: Int = 100) {
             val i = Intent(context, AlarmForegroundService::class.java)
                 .putExtra(AlarmReceiver.EXTRA_ALARM_ID, alarmId)
                 .putExtra(EXTRA_LABEL, label)
                 .putExtra(EXTRA_RINGTONE, ringtoneUri)
                 .putExtra(EXTRA_VIDEO_ENABLED, videoEnabled)
                 .putExtra(EXTRA_VOLUME_PROGRESSIVE, volumeProgressive)
+                .putExtra(EXTRA_VOLUME_LEVEL, volumeLevel)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(i)
             else context.startService(i)
         }
