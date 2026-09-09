@@ -162,7 +162,8 @@ class GoogleViewModel(
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             val store     = GoogleTokenStore(context)
             val auth      = GoogleAuthManager(context, store)
-            val calendar  = GoogleCalendarRepo(auth)
+            val db        = com.cyprienbrisset.fukkatsunop.data.AppDatabase.get(context)
+            val calendar  = GoogleCalendarRepo(auth, cache = db.calendarCacheDao())
             val chatStore = ChatTokenStore(context)
             val chatAuth  = ChatAuthManager(chatStore)
             val chat      = GoogleChatRepo(chatAuth)

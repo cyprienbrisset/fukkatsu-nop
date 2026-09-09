@@ -1,5 +1,7 @@
 package com.cyprienbrisset.fukkatsunop.integration.google
 
+import com.cyprienbrisset.fukkatsunop.data.google.CalendarCacheDao
+import com.cyprienbrisset.fukkatsunop.data.google.CalendarCacheEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -32,12 +34,17 @@ private const val CALENDAR_URL =
 class GoogleCalendarRepo(
     private val authManager: GoogleAuthManager,
     private val http: OkHttpClient = OkHttpClient(),
+    private val cache: CalendarCacheDao? = null,
 ) {
     suspend fun fetchEvents(): List<CalendarEvent> = withContext(Dispatchers.IO) {
+        val now = System.currentTimeMillis()
+        cache?.get()?.takeIf { now - it.fetchedAt < CALENDAR_TTL_MS }
+            ?.let { return@withContext parseEventsResponse(it.eventsJson) }
+
         val token = authManager.validToken() ?: return@withContext emptyList()
-        val now     = Instant.now().truncatedTo(ChronoUnit.SECONDS)
-        val maxTime = now.plusSeconds(60L * 24 * 3600)
-        val url = "$CALENDAR_URL?timeMin=$now&timeMax=$maxTime" +
+        val nowInstant = Instant.now().truncatedTo(ChronoUnit.SECONDS)
+        val maxTime = nowInstant.plusSeconds(60L * 24 * 3600)
+        val url = "$CALENDAR_URL?timeMin=$nowInstant&timeMax=$maxTime" +
                   "&maxResults=100&orderBy=startTime&singleEvents=true"
         val response = http.newCall(
             Request.Builder().url(url).header("Authorization", "Bearer $token").build()
@@ -46,8 +53,10 @@ class GoogleCalendarRepo(
             if (!it.isSuccessful) return@withContext emptyList()
             it.body?.string() ?: return@withContext emptyList()
         }
+        cache?.put(CalendarCacheEntity(eventsJson = raw, fetchedAt = now))
         parseEventsResponse(raw)
     }
+
     suspend fun createEvent(title: String, start: Instant, end: Instant): Boolean =
         withContext(Dispatchers.IO) {
             val token = authManager.validToken() ?: return@withContext false
@@ -63,6 +72,10 @@ class GoogleCalendarRepo(
             ).execute()
             response.use { it.isSuccessful }
         }
+
+    companion object {
+        private const val CALENDAR_TTL_MS = 30 * 60 * 1_000L
+    }
 }
 
 // ── Pure helper ──────────────────────────────────────────────────────────────
