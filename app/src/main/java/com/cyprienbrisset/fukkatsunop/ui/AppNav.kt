@@ -1,11 +1,13 @@
 package com.cyprienbrisset.fukkatsunop.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -72,10 +74,10 @@ fun AppNav() {
         NavHost(
             navController = nav,
             startDestination = Routes.HOME,
-            enterTransition = { fadeIn(tween(280)) + slideInHorizontally(tween(280)) { it / 8 } },
-            exitTransition = { fadeOut(tween(220)) + slideOutHorizontally(tween(220)) { -it / 8 } },
-            popEnterTransition = { fadeIn(tween(220)) + slideInHorizontally(tween(220)) { -it / 8 } },
-            popExitTransition = { fadeOut(tween(280)) + slideOutHorizontally(tween(280)) { it / 8 } },
+            enterTransition = { scaleIn(spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium), initialScale = 0.94f) + fadeIn(tween(260)) },
+            exitTransition = { scaleOut(tween(200), targetScale = 0.97f) + fadeOut(tween(200)) },
+            popEnterTransition = { scaleIn(tween(220), initialScale = 0.97f) + fadeIn(tween(220)) },
+            popExitTransition = { scaleOut(spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium), targetScale = 0.94f) + fadeOut(tween(260)) },
         ) {
             composable(Routes.HOME) {
                 com.cyprienbrisset.fukkatsunop.ui.home.HomeShell(

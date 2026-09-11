@@ -4,11 +4,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 
 // ── Accent — invariant across modes ─────────────────────────────────────────
-val Shu   = Color(0xFFC1272D)
-val OnShu = Color(0xFFF6EEE0)
+val Shu    = Color(0xFFC1272D)
+val OnShu  = Color(0xFFF6EEE0)
 
 val Sakura = Color(0xFFE8A0AF)
 val Momiji = Color(0xFFC85A14)
+val Indigo = Color(0xFF5B6EE8)
+val Matcha = Color(0xFF4D8A5F)
+val Nuit   = Color(0xFF8557CE)
+val Or     = Color(0xFFC89020)
 
 private val _accentOverrideState = mutableStateOf("AUTO")
 
@@ -18,6 +22,10 @@ val AccentShu: Color get() {
     return when (_accentOverrideState.value) {
         "SAKURA" -> Sakura
         "MOMIJI" -> Momiji
+        "INDIGO" -> Indigo
+        "MATCHA" -> Matcha
+        "NUIT"   -> Nuit
+        "OR"     -> Or
         "SHU"    -> Shu
         else     -> {
             val month = java.time.LocalDate.now().monthValue
@@ -29,6 +37,25 @@ val AccentShu: Color get() {
         }
     }
 }
+
+// ── Background tone ──────────────────────────────────────────────────────────
+private val _bgToneState = mutableStateOf("DEFAULT")
+fun applyBgTone(tone: String) { _bgToneState.value = tone }
+val BgTone: Color get() = when (_bgToneState.value) {
+    "INDIGO" -> Color(0xFF080C1A)
+    "MATCHA" -> Color(0xFF060E08)
+    "NUIT"   -> Color(0xFF0D0714)
+    "OR"     -> Color(0xFF130F06)
+    "SAKURA" -> Color(0xFF150810)
+    "MOMIJI" -> Color(0xFF150A05)
+    "SHU"    -> Color(0xFF160608)
+    else     -> Color(0xFF0D0E12)
+}
+
+// ── Icon shape ────────────────────────────────────────────────────────────────
+private val _iconShapeState = mutableStateOf(false)
+fun applyIconShape(enabled: Boolean) { _iconShapeState.value = enabled }
+val IconShapeEnabled: Boolean get() = _iconShapeState.value
 
 // ── Raw palette values ───────────────────────────────────────────────────────
 private val SumiRaw        = Color(0xFF0D0E12)

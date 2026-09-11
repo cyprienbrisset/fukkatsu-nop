@@ -70,9 +70,14 @@ import com.cyprienbrisset.fukkatsunop.ui.home.HomeViewModel
 import com.cyprienbrisset.fukkatsunop.ui.sumi.HankoSeal
 import com.cyprienbrisset.fukkatsunop.data.settings.SettingsRepository as Repo
 import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
+import com.cyprienbrisset.fukkatsunop.ui.theme.BgTone
+import com.cyprienbrisset.fukkatsunop.ui.theme.Indigo
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
+import com.cyprienbrisset.fukkatsunop.ui.theme.Matcha
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.Momiji
+import com.cyprienbrisset.fukkatsunop.ui.theme.Nuit
+import com.cyprienbrisset.fukkatsunop.ui.theme.Or
 import com.cyprienbrisset.fukkatsunop.ui.theme.Sakura
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
@@ -349,7 +354,20 @@ private fun DisplayPanelContent(
     val scope2 = rememberCoroutineScope()
     val settingsRepo2 = remember(ctx2) { Repo(ctx2) }
     val accentOverride by settingsRepo2.accentOverride.collectAsState(initial = "AUTO")
+    val bgToneOverride by settingsRepo2.bgTone.collectAsState(initial = "DEFAULT")
+    val iconShape by settingsRepo2.iconShape.collectAsState(initial = false)
 
+    // ── Accent palette ────────────────────────────────────────────────────────
+    val accentPalette = listOf(
+        "AUTO"   to AccentShu,
+        "SHU"    to Shu,
+        "SAKURA" to Sakura,
+        "MOMIJI" to Momiji,
+        "INDIGO" to Indigo,
+        "MATCHA" to Matcha,
+        "NUIT"   to Nuit,
+        "OR"     to Or,
+    )
     Row(
         Modifier.fillMaxWidth().heightIn(min = 68.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -359,41 +377,84 @@ private fun DisplayPanelContent(
             Text("Couleur d'accent", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
             Text(
                 when (accentOverride) {
-                    "SAKURA" -> "Rose sakura (printemps)"
+                    "SAKURA" -> "Sakura rose"
                     "MOMIJI" -> "Momiji automnal"
-                    "SHU"    -> "AccentShu vermillon"
+                    "SHU"    -> "Vermillon"
+                    "INDIGO" -> "Indigo nuit"
+                    "MATCHA" -> "Matcha vert"
+                    "NUIT"   -> "Nuit violette"
+                    "OR"     -> "Or ambré"
                     else     -> "Automatique (saisonnier)"
                 },
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                 fontSize = 12.sp, fontFamily = Mincho,
             )
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(
-                "AUTO"   to AccentShu,
-                "SAKURA" to Sakura,
-                "MOMIJI" to Momiji,
-                "SHU"    to AccentShu,
-            ).forEach { (key, color) ->
+        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            accentPalette.forEach { (key, color) ->
                 val selected = accentOverride == key
                 Box(
                     Modifier
-                        .size(32.dp)
+                        .size(28.dp)
                         .clip(CircleShape)
-                        .background(color.copy(alpha = if (selected) 1f else 0.4f))
-                        .then(
-                            if (selected) Modifier.border(2.dp, Kinari, CircleShape)
-                            else Modifier
-                        )
+                        .background(color.copy(alpha = if (selected) 1f else 0.38f))
+                        .then(if (selected) Modifier.border(2.dp, Kinari, CircleShape) else Modifier)
                         .clickable { scope2.launch { settingsRepo2.setAccentOverride(key) } },
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (selected) Text("✓", color = Kinari, fontSize = 12.sp)
+                    if (selected) Text("✓", color = Kinari, fontSize = 11.sp)
                 }
             }
         }
     }
     Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+
+    // ── Fond d'écran (teinte) ─────────────────────────────────────────────────
+    val bgPalette = listOf(
+        "DEFAULT" to androidx.compose.ui.graphics.Color(0xFF0D0E12),
+        "SHU"     to androidx.compose.ui.graphics.Color(0xFF160608),
+        "SAKURA"  to androidx.compose.ui.graphics.Color(0xFF150810),
+        "MOMIJI"  to androidx.compose.ui.graphics.Color(0xFF150A05),
+        "INDIGO"  to androidx.compose.ui.graphics.Color(0xFF080C1A),
+        "MATCHA"  to androidx.compose.ui.graphics.Color(0xFF060E08),
+        "NUIT"    to androidx.compose.ui.graphics.Color(0xFF0D0714),
+        "OR"      to androidx.compose.ui.graphics.Color(0xFF130F06),
+    )
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 64.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text("Teinte du fond", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
+            Text("Teinte subtile de l'écran d'accueil", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), fontSize = 12.sp, fontFamily = Mincho)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            bgPalette.forEach { (key, color) ->
+                val selected = bgToneOverride == key
+                Box(
+                    Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(if (key == "DEFAULT") androidx.compose.ui.graphics.Color(0xFF2A2A2A) else color.copy(red = color.red * 3.5f, green = color.green * 3.5f, blue = color.blue * 3.5f).run { androidx.compose.ui.graphics.Color(red.coerceAtMost(1f), green.coerceAtMost(1f), blue.coerceAtMost(1f)) })
+                        .then(if (selected) Modifier.border(2.dp, Kinari, CircleShape) else Modifier)
+                        .clickable { scope2.launch { settingsRepo2.setBgTone(key) } },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (selected) Text("✓", color = Kinari, fontSize = 11.sp)
+                }
+            }
+        }
+    }
+    Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+
+    // ── Icônes normalisées ────────────────────────────────────────────────────
+    SettingSwitch(
+        text = "Icônes uniformes",
+        subtitle = if (iconShape) "Toutes les icônes dans un cercle sombre" else "Icônes natives des apps",
+        checked = iconShape,
+        onCheckedChange = { scope2.launch { settingsRepo2.setIconShape(it) } },
+    )
 
     SettingSwitch(
         text = "Effets météo",

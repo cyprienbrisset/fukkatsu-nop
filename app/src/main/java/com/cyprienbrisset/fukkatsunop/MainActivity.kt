@@ -46,6 +46,8 @@ import androidx.lifecycle.lifecycleScope
 import com.cyprienbrisset.fukkatsunop.data.settings.SettingsRepository
 import com.cyprienbrisset.fukkatsunop.system.DarkModeManager
 import com.cyprienbrisset.fukkatsunop.ui.theme.applyAccentOverride
+import com.cyprienbrisset.fukkatsunop.ui.theme.applyBgTone
+import com.cyprienbrisset.fukkatsunop.ui.theme.applyIconShape
 import kotlinx.coroutines.launch
 import com.cyprienbrisset.fukkatsunop.overlay.OverlayPrefs
 import com.cyprienbrisset.fukkatsunop.overlay.OverlayService
@@ -110,11 +112,10 @@ class MainActivity : ComponentActivity() {
         }
         DarkModeManager.initFromSystem(this)
         OverlayPrefs.init(this)
-        lifecycleScope.launch {
-            SettingsRepository(this@MainActivity).accentOverride.collect { override ->
-                applyAccentOverride(override)
-            }
-        }
+        val repo = SettingsRepository(this)
+        lifecycleScope.launch { repo.accentOverride.collect { applyAccentOverride(it) } }
+        lifecycleScope.launch { repo.bgTone.collect { applyBgTone(it) } }
+        lifecycleScope.launch { repo.iconShape.collect { applyIconShape(it) } }
         FirmwareWatcher.init(this)
         lifecycleScope.launch { UpdateChecker.check(this@MainActivity) }
 

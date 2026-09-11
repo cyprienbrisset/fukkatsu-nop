@@ -22,6 +22,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,6 +34,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import kotlinx.coroutines.isActive
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,6 +71,7 @@ fun MedallionGrid(
     onReorder: ((List<TileEntity>) -> Unit)? = null,
     onEnterReorder: (() -> Unit)? = null,
 ) {
+    val haptic = LocalHapticFeedback.current
     val lazyGridState = rememberLazyGridState()
     var displayTiles by remember { mutableStateOf(tiles) }
     var draggingKey by remember { mutableStateOf<Long?>(null) }
@@ -150,6 +155,7 @@ fun MedallionGrid(
                     onClick = { if (!reorderMode) onTileClick(tile) },
                     onLongClick = if (!reorderMode) {{
                         tileConsumedLongPress = true
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onLongClick(tile)
                     }} else null,
                     disc = false,
@@ -230,23 +236,30 @@ private fun BadgedTileIcon(tile: TileEntity, badgeCount: Int, airPlayState: AirP
     Box(Modifier.size(72.dp)) {
         TileIcon(tile = tile, size = 64.dp, modifier = Modifier.align(Alignment.Center), airPlayState = airPlayState)
         if (badgeCount > 0) {
+            val countStr = if (badgeCount > 99) "99+" else badgeCount.toString()
+            val scale by animateFloatAsState(
+                targetValue = 1f, animationSpec = tween(220),
+                label = "badge_scale_${tile.id}",
+            )
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(top = 2.dp, end = 2.dp)
-                    .defaultMinSize(minWidth = 18.dp)
-                    .height(18.dp)
+                    .padding(top = 1.dp, end = 1.dp)
+                    .graphicsLayer { scaleX = scale; scaleY = scale }
+                    .defaultMinSize(minWidth = 20.dp)
+                    .height(20.dp)
+                    .border(1.5.dp, Color.Black.copy(alpha = 0.55f), CircleShape)
                     .clip(CircleShape)
                     .background(AccentShu)
-                    .padding(horizontal = 4.dp),
+                    .padding(horizontal = 5.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = if (badgeCount > 99) "99+" else badgeCount.toString(),
+                    text = countStr,
                     color = Color.White,
-                    fontSize = 8.sp,
+                    fontSize = 9.sp,
                     fontWeight = FontWeight.Bold,
-                    lineHeight = 8.sp,
+                    lineHeight = 9.sp,
                 )
             }
         }

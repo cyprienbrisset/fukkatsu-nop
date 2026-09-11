@@ -4,8 +4,8 @@
   "project_name": "MyPortal",
   "project_path": "/Users/cyprienbrisset/AndroidStudioProjects/MyPortal",
   "started_at": "2026-09-11T11:52:41Z",
-  "status": "active",
-  "last_activity": "2026-09-11T11:55:01Z",
+  "status": "completed",
+  "last_activity": "2026-09-11T13:10:03Z",
   "pipeline": {
     "current_phase": null,
     "current_phase_name": null,
@@ -19,7 +19,7 @@
   "errors": [],
   "metrics": {
     "total_tokens": 0,
-    "total_tool_uses": 5,
+    "total_tool_uses": 59,
     "total_files": 0,
     "total_messages": 0,
     "phase_timings": {}
@@ -28,5 +28,7 @@
     "active": false,
     "session": "",
     "pane_count": 0
-  }
+  },
+  "current_skill": null,
+  "completed_at": "2026-09-11T12:57:21Z"
 }

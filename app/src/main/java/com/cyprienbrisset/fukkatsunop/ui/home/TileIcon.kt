@@ -28,6 +28,7 @@ import coil.request.ImageRequest
 import com.cyprienbrisset.fukkatsunop.airplay.AirPlayState
 import com.cyprienbrisset.fukkatsunop.data.tile.TileEntity
 import com.cyprienbrisset.fukkatsunop.data.tile.TileType
+import com.cyprienbrisset.fukkatsunop.ui.theme.IconShapeEnabled
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
@@ -69,6 +70,20 @@ fun faviconUrl(url: String): String = googleFaviconUrl(url)
 
 @Composable
 fun TileIcon(tile: TileEntity, size: Dp, modifier: Modifier = Modifier, airPlayState: AirPlayState? = null) {
+    if (IconShapeEnabled && tile.type == TileType.APP && tile.iconRef == null) {
+        Box(
+            modifier.size(size).clip(androidx.compose.foundation.shape.CircleShape).background(Color(0xFF1A1A26)),
+            contentAlignment = Alignment.Center,
+        ) {
+            TileIconRaw(tile, size * 0.68f, Modifier, airPlayState)
+        }
+        return
+    }
+    TileIconRaw(tile, size, modifier, airPlayState)
+}
+
+@Composable
+private fun TileIconRaw(tile: TileEntity, size: Dp, modifier: Modifier = Modifier, airPlayState: AirPlayState? = null) {
     val ctx = LocalContext.current
     val shape = RoundedCornerShape(size / 4)
 

@@ -1,6 +1,9 @@
 package com.cyprienbrisset.fukkatsunop.overlay
 
+import android.content.Context
 import android.media.AudioManager
+import android.net.wifi.WifiManager
+import android.os.BatteryManager
 import android.provider.Settings
 import android.view.View
 import android.view.WindowManager
@@ -65,6 +68,21 @@ private val BG_PANEL = Color(0xF2131313)
 private val BG_TAB = Color(0xEE1C1C1C)
 private val TRACK_INACTIVE = Color(0xFF2E2E2E)
 
+private fun batteryPct(ctx: Context): Int =
+    (ctx.getSystemService(Context.BATTERY_SERVICE) as BatteryManager)
+        .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+
+private fun wifiSsid(ctx: Context): String? {
+    val wm = ctx.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+    val ssid = wm.connectionInfo?.ssid?.removePrefix("\"")?.removeSuffix("\"")
+    return if (ssid.isNullOrEmpty() || ssid == "<unknown ssid>") null else ssid
+}
+
+private fun formatTime(): String {
+    val t = java.time.LocalTime.now()
+    return "%02d:%02d".format(t.hour, t.minute)
+}
+
 @Composable
 fun OverlayPanel(
     windowManager: WindowManager,
@@ -128,6 +146,26 @@ fun OverlayPanel(
                         .padding(horizontal = 20.dp, vertical = 18.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
+                    // Status row: time, WiFi, battery
+                    var timeStr by remember { mutableStateOf(formatTime()) }
+                    LaunchedEffect(Unit) {
+                        while (true) { kotlinx.coroutines.delay(10_000); timeStr = formatTime() }
+                    }
+                    val battery = remember { batteryPct(ctx) }
+                    val ssid = remember { wifiSsid(ctx) }
+                    val batteryColor = when {
+                        battery < 20 -> Color(0xFFFF6B6B)
+                        battery < 40 -> Color(0xFFFFCC00)
+                        else -> Kinari.copy(alpha = 0.5f)
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text(timeStr, color = Kinari.copy(alpha = 0.7f), fontFamily = Mincho, fontSize = 11.sp)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            if (ssid != null) Text(ssid, color = Kinari.copy(alpha = 0.45f), fontFamily = Mincho, fontSize = 9.sp, maxLines = 1)
+                            Text("$battery%", color = batteryColor, fontFamily = Mincho, fontSize = 11.sp)
+                        }
+                    }
+
                     Text("Contrôles", color = Kinari.copy(alpha = 0.4f), fontFamily = Mincho, fontSize = 10.sp, fontWeight = FontWeight.Medium)
 
                     // Brightness
