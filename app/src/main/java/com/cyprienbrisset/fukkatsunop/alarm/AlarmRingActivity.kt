@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -123,30 +124,35 @@ class AlarmRingActivity : ComponentActivity() {
                         Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = veilAlpha)))
                     }
 
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        if (videoResId == 0) WatermarkKanji("鈴", size = 260.sp)
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(Modifier.fillMaxSize()) {
+                        // Heure centrée — ne gêne pas la vidéo
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.align(Alignment.Center),
+                        ) {
+                            if (videoResId == 0) WatermarkKanji("鈴", size = 260.sp)
                             Text("RÉVEIL", color = Shu, fontFamily = Mincho, fontSize = 15.sp, letterSpacing = 4.sp)
                             Spacer(Modifier.height(10.dp))
                             Text(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
                                 fontFamily = Mincho, color = Kinari, fontSize = 78.sp)
-                            Spacer(Modifier.height(36.dp))
-                            androidx.compose.foundation.layout.Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(18.dp),
+                        }
+                        // Boutons en bas
+                        androidx.compose.foundation.layout.Row(
+                            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(18.dp),
+                        ) {
+                            SumiChoiceChip("Snooze $snoozeMinutes", selected = false, onClick = {
+                                if (alarmId >= 0) AlarmForegroundService.snooze(this@AlarmRingActivity, alarmId, snoozeMinutes)
+                                finish()
+                            })
+                            Box(
+                                Modifier.size(104.dp).clip(CircleShape)
+                                    .border(BorderStroke(3.dp, Shu), CircleShape)
+                                    .clickable { AlarmForegroundService.stop(this@AlarmRingActivity); finish() },
+                                contentAlignment = Alignment.Center,
                             ) {
-                                SumiChoiceChip("Snooze $snoozeMinutes", selected = false, onClick = {
-                                    if (alarmId >= 0) AlarmForegroundService.snooze(this@AlarmRingActivity, alarmId, snoozeMinutes)
-                                    finish()
-                                })
-                                Box(
-                                    Modifier.size(104.dp).clip(CircleShape)
-                                        .border(BorderStroke(3.dp, Shu), CircleShape)
-                                        .clickable { AlarmForegroundService.stop(this@AlarmRingActivity); finish() },
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text("Arrêter", color = Kinari, fontFamily = Mincho, fontSize = 15.sp, textAlign = TextAlign.Center)
-                                }
+                                Text("Arrêter", color = Kinari, fontFamily = Mincho, fontSize = 15.sp, textAlign = TextAlign.Center)
                             }
                         }
                     }
