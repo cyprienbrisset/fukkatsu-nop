@@ -62,6 +62,19 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     private val _recentApps = MutableStateFlow<List<RecentApp>>(emptyList())
     val recentApps = _recentApps.asStateFlow()
 
+    data class RamInfo(val totalMb: Long, val availMb: Long, val lowMemory: Boolean)
+    private val _ramInfo = MutableStateFlow<RamInfo?>(null)
+    val ramInfo = _ramInfo.asStateFlow()
+    private val _ramFreedMb = MutableStateFlow<Long?>(null)
+    val ramFreedMb = _ramFreedMb.asStateFlow()
+
+    fun refreshRam() {
+        val am = getApplication<Application>().getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val info = ActivityManager.MemoryInfo()
+        am.getMemoryInfo(info)
+        _ramInfo.value = RamInfo(info.totalMem / 1_048_576L, info.availMem / 1_048_576L, info.lowMemory)
+    }
+
     val weatherEffectsEnabled: StateFlow<Boolean> = settings.weatherEffectsEnabled
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
@@ -102,9 +115,19 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun clearRecents() {
+        refreshRam()
+        val availBefore = _ramInfo.value?.availMb ?: 0L
         _recentApps.value.forEach { killApp(it.packageName) }
         _recentApps.value = emptyList()
+        viewModelScope.launch {
+            delay(600)
+            refreshRam()
+            val freed = (_ramInfo.value?.availMb ?: 0L) - availBefore
+            _ramFreedMb.value = if (freed > 0) freed else null
+        }
     }
+
+    fun clearRamFreed() { _ramFreedMb.value = null }
 
     fun deleteTile(tile: TileEntity) = viewModelScope.launch { repo.delete(tile) }
 

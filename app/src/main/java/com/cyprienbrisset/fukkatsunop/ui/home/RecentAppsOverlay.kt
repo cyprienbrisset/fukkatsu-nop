@@ -21,10 +21,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -47,10 +50,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cyprienbrisset.fukkatsunop.data.tile.TileEntity
 import com.cyprienbrisset.fukkatsunop.data.tile.TileType
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
+import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
+import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Sumi
+import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -79,7 +87,13 @@ fun RecentAppsOverlay(
     onLaunchApp: (String) -> Unit,
     onDismissApp: (String) -> Unit,
     onClearAll: () -> Unit,
+    vm: HomeViewModel = viewModel(),
 ) {
+    val ramInfo by vm.ramInfo.collectAsState()
+    val ramFreed by vm.ramFreedMb.collectAsState()
+
+    LaunchedEffect(Unit) { vm.refreshRam() }
+
     Box(
         Modifier
             .fillMaxSize()
@@ -93,16 +107,60 @@ fun RecentAppsOverlay(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
+            // ── RAM bar ──────────────────────────────────────────────────────
+            val ram = ramInfo
+            if (ram != null) {
+                val usedMb = ram.totalMb - ram.availMb
+                val usedFraction = (usedMb.toFloat() / ram.totalMb).coerceIn(0f, 1f)
+                val barColor = when {
+                    usedFraction > 0.85f -> Color(0xFFFF6B6B)
+                    usedFraction > 0.65f -> Color(0xFFFFCC00)
+                    else -> AccentShu
+                }
+                Column(
+                    Modifier.padding(horizontal = 64.dp).clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() },
+                    ) {},
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text("RAM", color = SumiMuted, fontFamily = Mincho, fontSize = 10.sp, letterSpacing = 2.sp)
+                        val freedText = if (ramFreed != null && ramFreed!! > 0) "  +${ramFreed} Mo libérés" else ""
+                        Text(
+                            "${usedMb} / ${ram.totalMb} Mo$freedText",
+                            color = if (ramFreed != null) AccentShu else SumiMuted,
+                            fontFamily = Mincho,
+                            fontSize = 10.sp,
+                        )
+                    }
+                    LinearProgressIndicator(
+                        progress = { usedFraction },
+                        modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)),
+                        color = barColor,
+                        trackColor = Color.White.copy(alpha = 0.1f),
+                        strokeCap = StrokeCap.Round,
+                    )
+                }
+                Spacer(Modifier.height(28.dp))
+            }
+
             if (apps.isEmpty()) {
                 Text(
                     "Aucune application récente",
                     color = Color.White.copy(alpha = 0.45f),
+                    fontFamily = Mincho,
                     fontSize = 15.sp,
                 )
             } else {
                 Text(
                     "APPS RÉCENTES",
                     color = Color.White.copy(alpha = 0.4f),
+                    fontFamily = Mincho,
                     fontSize = 11.sp,
                     letterSpacing = 3.sp,
                 )
@@ -111,14 +169,16 @@ fun RecentAppsOverlay(
                     horizontalArrangement = Arrangement.spacedBy(24.dp),
                     modifier = Modifier
                         .padding(horizontal = 48.dp)
-                        // Absorb clicks on the row so the background dismiss doesn't fire for card taps
                         .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {},
                 ) {
                     apps.take(6).forEach { app ->
                         RecentAppCard(
                             app = app,
                             onClick = { onLaunchApp(app.packageName); onDismiss() },
-                            onDismiss = { onDismissApp(app.packageName) },
+                            onDismiss = {
+                                onDismissApp(app.packageName)
+                                vm.refreshRam()
+                            },
                         )
                     }
                 }
@@ -126,12 +186,24 @@ fun RecentAppsOverlay(
                 Text(
                     "↑  Glisser vers le haut pour fermer",
                     color = Color.White.copy(alpha = 0.28f),
+                    fontFamily = Mincho,
                     fontSize = 11.sp,
                     letterSpacing = 1.sp,
                 )
                 Spacer(Modifier.height(12.dp))
-                TextButton(onClick = { onClearAll(); onDismiss() }) {
-                    Text("Tout fermer", color = Shu, fontSize = 13.sp, letterSpacing = 1.sp)
+                TextButton(onClick = {
+                    onClearAll()
+                    // don't dismiss immediately — show freed RAM then close
+                }) {
+                    Text("Tout fermer", color = Shu, fontFamily = Mincho, fontSize = 13.sp, letterSpacing = 1.sp)
+                }
+                // Auto-dismiss after showing freed RAM
+                LaunchedEffect(ramFreed) {
+                    if (ramFreed != null) {
+                        kotlinx.coroutines.delay(1400)
+                        vm.clearRamFreed()
+                        onDismiss()
+                    }
                 }
             }
         }
