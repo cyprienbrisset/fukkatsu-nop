@@ -114,7 +114,9 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
                     vm.recordLaunch(pkg, tile.label)
             }
             TileType.WEB -> ctx.startActivity(
-                Intent(ctx, WebAppActivity::class.java).putExtra(WebAppActivity.EXTRA_URL, tile.url)
+                Intent(ctx, WebAppActivity::class.java)
+                    .putExtra(WebAppActivity.EXTRA_URL, tile.url)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
             TileType.AIRPLAY -> {
                 val st = vm.airPlayState.value

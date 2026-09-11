@@ -23,7 +23,7 @@ class LaunchIntentResolver(private val isLaunchable: (String) -> Boolean) {
         /** Launches [pkg]; returns true on success. */
         fun launch(context: Context, pkg: String): Boolean {
             val intent = context.packageManager.getLaunchIntentForPackage(pkg) ?: return false
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
             context.startActivity(intent)
             return true
         }

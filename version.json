@@ -1,6 +1,6 @@
 {
-  "versionCode": 21,
-  "versionName": "1.0.21",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.21/fukkatsu-nop-v1.0.21.apk",
-  "notes": "Boutons Arrêter/Snooze déplacés en bas de l'écran au réveil (ne gêne plus la vidéo lever de soleil)"
+  "versionCode": 22,
+  "versionName": "1.0.22",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.22/fukkatsu-nop-v1.0.22.apk",
+  "notes": "Fix bouton home overlay + fix pile de navigation infinie entre apps"
 }

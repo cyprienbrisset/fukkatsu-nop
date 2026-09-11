@@ -47,6 +47,7 @@ import com.cyprienbrisset.fukkatsunop.data.settings.SettingsRepository
 import com.cyprienbrisset.fukkatsunop.system.DarkModeManager
 import com.cyprienbrisset.fukkatsunop.ui.theme.applyAccentOverride
 import kotlinx.coroutines.launch
+import com.cyprienbrisset.fukkatsunop.overlay.OverlayService
 import com.cyprienbrisset.fukkatsunop.system.FirmwareWatcher
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
 import com.cyprienbrisset.fukkatsunop.ui.AppNav
@@ -164,6 +165,19 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+    override fun onResume() {
+        super.onResume()
+        if (android.provider.Settings.canDrawOverlays(this) && !OverlayService.isRunning) {
+            startService(Intent(this, OverlayService::class.java))
+        }
+    }
+
+    @Suppress("OVERRIDE_DEPRECATION")
+    override fun onBackPressed() {
+        // Prevent back from traversing out of the launcher into previously-visited apps.
+        moveTaskToBack(false)
+    }
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 42 && grantResults.firstOrNull() == android.content.pm.PackageManager.PERMISSION_GRANTED) {
