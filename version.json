@@ -2,5 +2,5 @@
   "versionCode": 27,
   "versionName": "1.0.27",
   "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.27/fukkatsu-nop-v1.0.27.apk",
-  "notes": "Vérification des mises à jour au démarrage de l'app"
+  "notes": "Bannière de mise à jour sur l'écran d'accueil + vérification au démarrage"
 }

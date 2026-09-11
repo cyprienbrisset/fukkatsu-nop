@@ -63,6 +63,7 @@ import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import com.cyprienbrisset.fukkatsunop.airplay.AirPlayService
 import com.cyprienbrisset.fukkatsunop.airplay.AirPlayState
+import com.cyprienbrisset.fukkatsunop.system.UpdateChecker
 import com.cyprienbrisset.fukkatsunop.ui.airplay.AirPlayActivity
 import com.cyprienbrisset.fukkatsunop.ui.screensaver.SumiSaverActivity
 import com.cyprienbrisset.fukkatsunop.web.WebAppActivity
@@ -93,6 +94,11 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
     var reorderMode by remember { mutableStateOf(false) }
     val isDark by DarkModeManager.isDarkFlow.collectAsState()
     val saverMode by vm.saverMode.collectAsStateWithLifecycle()
+    var updateVersion by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(Unit) {
+        UpdateChecker.check(ctx)
+        updateVersion = UpdateChecker.availableVersionName(ctx)
+    }
 
     LaunchedEffect(airPlayState) {
         // Mirror mode only — extended display is auto-launched by AirPlayService
@@ -432,6 +438,26 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
                     .padding(horizontal = 36.dp, vertical = 14.dp),
             ) {
                 Text("Terminé", color = OnShu, fontFamily = Mincho, fontSize = 16.sp)
+            }
+        }
+
+        // Update banner
+        if (updateVersion != null) {
+            Box(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = if (landscape) 20.dp else 80.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(AccentShu.copy(alpha = 0.92f))
+                    .clickable { onOpenSettings() }
+                    .padding(horizontal = 22.dp, vertical = 10.dp),
+            ) {
+                Text(
+                    "↑  Mise à jour $updateVersion disponible — Appuyer pour installer",
+                    color = OnShu,
+                    fontFamily = Mincho,
+                    fontSize = 12.sp,
+                )
             }
         }
 
