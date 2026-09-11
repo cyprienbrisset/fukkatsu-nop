@@ -85,7 +85,7 @@ fun MeetTab(state: TabState<List<CalendarEvent>>, onRetry: () -> Unit) {
 
     when (state) {
         is TabState.Loading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
-            CircularProgressIndicator(color = Shu)
+            CircularProgressIndicator(color = AccentShu)
         }
         is TabState.Error -> Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -198,11 +198,11 @@ private fun JoinByCodeCard() {
             ),
             keyboardActions = KeyboardActions(onGo = { join() }),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Shu,
+                focusedBorderColor = AccentShu,
                 unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                 focusedTextColor = MaterialTheme.colorScheme.onSurface,
                 unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                cursorColor = Shu,
+                cursorColor = AccentShu,
             ),
         )
         Box(

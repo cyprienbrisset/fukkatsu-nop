@@ -59,6 +59,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
 
@@ -114,7 +115,7 @@ fun VolumeSlider(modifier: Modifier = Modifier) {
 
     val isBtActive = activeBtName != null
     val btIconColor by animateColorAsState(
-        targetValue = if (isBtActive) Shu else SumiMuted,
+        targetValue = if (isBtActive) AccentShu else SumiMuted,
         animationSpec = tween(300),
         label = "bt-color",
     )
@@ -136,7 +137,7 @@ fun VolumeSlider(modifier: Modifier = Modifier) {
             value = vol,
             onValueChange = { v -> vol = v; am.setStreamVolume(AudioManager.STREAM_MUSIC, v.toInt(), 0) },
             valueRange = 0f..max,
-            colors = SliderDefaults.colors(thumbColor = Shu, activeTrackColor = Shu),
+            colors = SliderDefaults.colors(thumbColor = AccentShu, activeTrackColor = AccentShu),
             modifier = Modifier.weight(1f),
         )
 
@@ -145,7 +146,7 @@ fun VolumeSlider(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .size(36.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(if (isBtActive) Shu.copy(alpha = 0.12f) else Color.Transparent)
+                .background(if (isBtActive) AccentShu.copy(alpha = 0.12f) else Color.Transparent)
                 .clickable { showPicker = true },
             contentAlignment = Alignment.Center,
         ) {
@@ -215,7 +216,7 @@ private fun BluetoothDevicePicker(
                 Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 22.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Rounded.Bluetooth, null, tint = Shu, modifier = Modifier.size(26.dp))
+                Icon(Icons.Rounded.Bluetooth, null, tint = AccentShu, modifier = Modifier.size(26.dp))
                 Spacer(Modifier.size(14.dp))
                 Text(
                     "Sortie audio",
@@ -229,10 +230,10 @@ private fun BluetoothDevicePicker(
                     Box(
                         Modifier
                             .clip(RoundedCornerShape(20.dp))
-                            .background(Shu.copy(alpha = 0.15f))
+                            .background(AccentShu.copy(alpha = 0.15f))
                             .padding(horizontal = 14.dp, vertical = 6.dp),
                     ) {
-                        Text(activeName, fontFamily = Mincho, color = Shu, fontSize = 13.sp)
+                        Text(activeName, fontFamily = Mincho, color = AccentShu, fontSize = 13.sp)
                     }
                 }
             }
@@ -291,7 +292,7 @@ private fun DeviceRow(name: String, isConnected: Boolean, isActive: Boolean) {
     Row(
         Modifier
             .fillMaxWidth()
-            .background(if (isActive) Shu.copy(alpha = 0.07f) else Color.Transparent)
+            .background(if (isActive) AccentShu.copy(alpha = 0.07f) else Color.Transparent)
             .padding(horizontal = 28.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -299,14 +300,14 @@ private fun DeviceRow(name: String, isConnected: Boolean, isActive: Boolean) {
         Icon(
             if (isConnected) Icons.Rounded.BluetoothAudio else Icons.Rounded.SpeakerPhone,
             null,
-            tint = if (isActive) Shu else if (isConnected) Color(0xFF4CAF50) else SumiMuted,
+            tint = if (isActive) AccentShu else if (isConnected) Color(0xFF4CAF50) else SumiMuted,
             modifier = Modifier.size(24.dp),
         )
         Column(Modifier.weight(1f)) {
             Text(
                 name,
                 fontFamily = Mincho,
-                color = if (isActive) Shu else MaterialTheme.colorScheme.onSurface,
+                color = if (isActive) AccentShu else MaterialTheme.colorScheme.onSurface,
                 fontSize = 17.sp,
                 fontWeight = if (isActive) FontWeight.Medium else FontWeight.Normal,
             )
@@ -314,14 +315,14 @@ private fun DeviceRow(name: String, isConnected: Boolean, isActive: Boolean) {
                 Text(
                     if (isActive) "Actif · Audio en cours" else "Connecté",
                     fontFamily = Mincho,
-                    color = if (isActive) Shu.copy(alpha = 0.7f) else Color(0xFF4CAF50).copy(alpha = 0.8f),
+                    color = if (isActive) AccentShu.copy(alpha = 0.7f) else Color(0xFF4CAF50).copy(alpha = 0.8f),
                     fontSize = 13.sp,
                 )
             }
         }
         if (isActive) {
             Box(
-                Modifier.size(10.dp).clip(CircleShape).background(Shu)
+                Modifier.size(10.dp).clip(CircleShape).background(AccentShu)
             )
         }
     }

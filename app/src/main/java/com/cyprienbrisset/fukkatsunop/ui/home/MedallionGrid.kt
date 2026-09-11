@@ -50,6 +50,7 @@ import com.cyprienbrisset.fukkatsunop.airplay.AirPlayState
 import com.cyprienbrisset.fukkatsunop.data.tile.TileEntity
 import com.cyprienbrisset.fukkatsunop.data.tile.TileType
 import com.cyprienbrisset.fukkatsunop.ui.sumi.Medallion
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -124,7 +125,7 @@ fun MedallionGrid(
             Box(
                 modifier = Modifier.then(
                     if (isAirPlayLive)
-                        Modifier.border(2.dp, Shu, androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                        Modifier.border(2.dp, AccentShu, androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
                     else Modifier
                 )
             ) {
@@ -236,7 +237,7 @@ private fun BadgedTileIcon(tile: TileEntity, badgeCount: Int, airPlayState: AirP
                     .defaultMinSize(minWidth = 18.dp)
                     .height(18.dp)
                     .clip(CircleShape)
-                    .background(Shu)
+                    .background(AccentShu)
                     .padding(horizontal = 4.dp),
                 contentAlignment = Alignment.Center,
             ) {

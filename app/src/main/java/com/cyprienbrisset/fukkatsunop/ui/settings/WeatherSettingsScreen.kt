@@ -124,7 +124,7 @@ fun WeatherSettingsScreen(onBack: () -> Unit, vm: WeatherSettingsViewModel = vie
                         modifier = Modifier.weight(1f),
                     )
                     if (alreadyAdded) {
-                        Text("✓", color = Shu, fontSize = 14.sp)
+                        Text("✓", color = AccentShu, fontSize = 14.sp)
                     }
                 }
             }

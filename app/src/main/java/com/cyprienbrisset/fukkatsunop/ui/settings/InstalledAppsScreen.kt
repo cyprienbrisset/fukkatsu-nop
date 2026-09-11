@@ -43,6 +43,7 @@ import com.cyprienbrisset.fukkatsunop.ui.sumi.HankoSeal
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.OnShu
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiLine
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
@@ -127,7 +128,7 @@ private fun AppRow(app: InstalledApp, onUninstall: () -> Unit) {
         Box(
             Modifier
                 .clip(RoundedCornerShape(10.dp))
-                .background(Shu)
+                .background(AccentShu)
                 .clickable { onUninstall() }
                 .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {

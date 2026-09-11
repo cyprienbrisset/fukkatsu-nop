@@ -61,6 +61,7 @@ import com.cyprienbrisset.fukkatsunop.ui.sumi.SumiPrimaryButton
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.OnShu
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiLine
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
@@ -180,7 +181,7 @@ private fun SumiSearchField(
                 onValueChange = onValueChange,
                 singleLine = true,
                 textStyle = TextStyle(color = Kinari, fontSize = 16.sp),
-                cursorBrush = SolidColor(Shu),
+                cursorBrush = SolidColor(AccentShu),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { onSearch() }),
                 modifier = Modifier.fillMaxWidth(),
@@ -209,7 +210,7 @@ private fun AppResults(
         is StoreUi.Idle -> {}
         is StoreUi.Loading -> {
             Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = Shu)
+                CircularProgressIndicator(color = AccentShu)
             }
         }
         is StoreUi.Error -> {
@@ -227,7 +228,7 @@ private fun AppResults(
                 if (!isAuthError) {
                     Spacer(Modifier.height(12.dp))
                     TextButton(onClick = onRetry) {
-                        Text("Réessayer", color = Shu)
+                        Text("Réessayer", color = AccentShu)
                     }
                 }
             }
@@ -274,7 +275,7 @@ private fun AppCard(app: StoreApp, pct: Int?, onInstall: () -> Unit, onOpen: () 
         Spacer(Modifier.width(12.dp))
         when {
             pct == null -> Box(
-                Modifier.clip(RoundedCornerShape(12.dp)).background(Shu)
+                Modifier.clip(RoundedCornerShape(12.dp)).background(AccentShu)
                     .clickable { onInstall() }.padding(horizontal = 18.dp, vertical = 10.dp),
             ) { Text("Installer", color = OnShu, fontFamily = Mincho, fontSize = 14.sp) }
             pct in 0..99 -> Box(
@@ -288,7 +289,7 @@ private fun AppCard(app: StoreApp, pct: Int?, onInstall: () -> Unit, onOpen: () 
             else -> Box(
                 Modifier.clip(RoundedCornerShape(12.dp)).background(SumiSurface)
                     .clickable { onInstall() }.padding(horizontal = 16.dp, vertical = 10.dp),
-            ) { Text("Réessayer", color = Shu, fontFamily = Mincho, fontSize = 14.sp) }
+            ) { Text("Réessayer", color = AccentShu, fontFamily = Mincho, fontSize = 14.sp) }
         }
     }
 }

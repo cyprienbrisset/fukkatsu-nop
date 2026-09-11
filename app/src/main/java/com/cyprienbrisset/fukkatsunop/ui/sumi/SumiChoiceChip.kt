@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.OnShu
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiLine
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiSurface
@@ -28,8 +29,8 @@ fun SumiChoiceChip(text: String, selected: Boolean, onClick: () -> Unit, modifie
     val shape: Shape = if (circle) CircleShape else RoundedCornerShape(14.dp)
     Box(
         modifier.height(if (circle) 52.dp else 56.dp).clip(shape)
-            .background(if (selected) Shu else SumiSurface)
-            .border(BorderStroke(1.dp, if (selected) Shu else SumiLine), shape)
+            .background(if (selected) AccentShu else SumiSurface)
+            .border(BorderStroke(1.dp, if (selected) AccentShu else SumiLine), shape)
             .clickable { onClick() }
             .padding(horizontal = if (circle) 0.dp else 20.dp),
         contentAlignment = Alignment.Center,

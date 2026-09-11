@@ -28,6 +28,7 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.cyprienbrisset.fukkatsunop.ui.sumi.SumiPrimaryButton
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
 
@@ -44,7 +45,7 @@ fun GoogleAuthScreen(
         when (authState) {
             is AuthState.Loading -> {
                 CircularProgressIndicator(
-                    color = Shu,
+                    color = AccentShu,
                     modifier = Modifier.align(Alignment.Center),
                 )
             }
@@ -61,7 +62,7 @@ fun GoogleAuthScreen(
                         text = "復活",
                         fontFamily = Mincho,
                         fontSize = 56.sp,
-                        color = Shu,
+                        color = AccentShu,
                     )
                     Text(
                         text = "Mode Google",
@@ -81,7 +82,7 @@ fun GoogleAuthScreen(
                             text = authState.error,
                             fontFamily = Mincho,
                             fontSize = 13.sp,
-                            color = Shu,
+                            color = AccentShu,
                             textAlign = TextAlign.Center,
                         )
                     }
@@ -110,7 +111,7 @@ fun GoogleAuthScreen(
                         text = authState.userCode,
                         fontFamily = Mincho,
                         fontSize = 40.sp,
-                        color = Shu,
+                        color = AccentShu,
                         letterSpacing = 6.sp,
                     )
                     Spacer(Modifier.height(6.dp))
@@ -127,7 +128,7 @@ fun GoogleAuthScreen(
                         textAlign = TextAlign.Center,
                     )
                     Spacer(Modifier.height(28.dp))
-                    CircularProgressIndicator(color = Shu, modifier = Modifier.size(28.dp))
+                    CircularProgressIndicator(color = AccentShu, modifier = Modifier.size(28.dp))
                     Spacer(Modifier.height(8.dp))
                     Text(
                         text = "En attente d'autorisation…",

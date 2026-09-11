@@ -29,6 +29,7 @@ import com.cyprienbrisset.fukkatsunop.airplay.AirPlayState
 import com.cyprienbrisset.fukkatsunop.data.tile.TileEntity
 import com.cyprienbrisset.fukkatsunop.data.tile.TileType
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.Dispatchers
@@ -132,7 +133,7 @@ fun TileIcon(tile: TileEntity, size: Dp, modifier: Modifier = Modifier, airPlayS
                 else                       -> "En attente"
             }
             val statusColor = when (airState) {
-                is AirPlayState.Streaming -> Shu
+                is AirPlayState.Streaming -> AccentShu
                 is AirPlayState.Error     -> Kinari
                 else                      -> Color.Gray
             }

@@ -99,7 +99,7 @@ fun AmbientBanner(
                     ) {
                         Text(
                             "${weather.temperatureC}°",
-                            color = Shu,
+                            color = AccentShu,
                             fontSize = tempSize,
                             fontWeight = FontWeight.Light,
                         )
@@ -166,7 +166,7 @@ fun HomeBranding(portrait: Boolean, compact: Boolean = false, modifier: Modifier
             "復活",
             fontFamily = Mincho,
             fontWeight = FontWeight.Medium,
-            color = Shu,
+            color = AccentShu,
             fontSize = kanjiSize,
         )
         Text(

@@ -179,7 +179,7 @@ private fun NewEventDialog(
                 LabeledField("Début", startStr, "14:00") { startStr = it }
                 LabeledField("Fin", endStr, "15:00") { endStr = it }
                 if (error != null) {
-                    Text(error!!, color = Shu, fontFamily = Mincho, fontSize = 13.sp)
+                    Text(error!!, color = AccentShu, fontFamily = Mincho, fontSize = 13.sp)
                 }
             }
         },
@@ -221,11 +221,11 @@ private fun LabeledField(label: String, value: String, placeholder: String, onVa
             placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp) },
             singleLine = true,
             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Shu,
+                focusedBorderColor = AccentShu,
                 unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                 focusedTextColor = MaterialTheme.colorScheme.onSurface,
                 unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                cursorColor = Shu,
+                cursorColor = AccentShu,
             ),
         )
     }

@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.OnShu
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiLine
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
@@ -34,8 +35,8 @@ fun SegmentedChoice(options: List<Segment>, selectedIndex: Int, onSelect: (Int) 
             val on = i == selectedIndex
             Column(
                 Modifier.weight(1f).height(64.dp).clip(RoundedCornerShape(14.dp))
-                    .background(if (on) Shu else SumiSurface)
-                    .border(BorderStroke(1.dp, if (on) Shu else SumiLine), RoundedCornerShape(14.dp))
+                    .background(if (on) AccentShu else SumiSurface)
+                    .border(BorderStroke(1.dp, if (on) AccentShu else SumiLine), RoundedCornerShape(14.dp))
                     .clickable { onSelect(i) },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,

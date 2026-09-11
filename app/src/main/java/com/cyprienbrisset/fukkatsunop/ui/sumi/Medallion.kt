@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -73,7 +74,7 @@ fun Medallion(
             Modifier.size(discSize).clip(CircleShape)
                 .background(if (dashed) Color.Transparent else MaterialTheme.colorScheme.surface)
                 .border(
-                    BorderStroke(if (focused) 2.dp else 1.dp, if (focused) Shu else MaterialTheme.colorScheme.outline),
+                    BorderStroke(if (focused) 2.dp else 1.dp, if (focused) AccentShu else MaterialTheme.colorScheme.outline),
                     CircleShape,
                 )
         } else {

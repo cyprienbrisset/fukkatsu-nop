@@ -140,7 +140,7 @@ private fun SpacesPane(
 ) {
     when (state) {
         is TabState.Loading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
-            CircularProgressIndicator(color = Shu)
+            CircularProgressIndicator(color = AccentShu)
         }
 
         is TabState.Error -> Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
@@ -276,7 +276,7 @@ private fun MessagesPane(
 
         when (state) {
             is TabState.Loading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
-                CircularProgressIndicator(color = Shu)
+                CircularProgressIndicator(color = AccentShu)
             }
 
             is TabState.Error -> Box(Modifier.fillMaxSize().padding(32.dp), Alignment.Center) {
@@ -333,7 +333,7 @@ private fun MessageRow(msg: ChatMessage) {
     ) {
         // Sender avatar
         Box(
-            Modifier.size(36.dp).clip(CircleShape).background(Shu.copy(alpha = 0.2f)),
+            Modifier.size(36.dp).clip(CircleShape).background(AccentShu.copy(alpha = 0.2f)),
             contentAlignment = Alignment.Center,
         ) {
             Text(initial, fontFamily = Mincho, fontSize = 14.sp, color = Kinari)

@@ -36,6 +36,7 @@ import com.cyprienbrisset.fukkatsunop.store.AppDetail
 import com.cyprienbrisset.fukkatsunop.store.StoreApp
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.OnShu
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,7 +86,7 @@ fun AppDetailSheet(
                                     repeat(full) { append('★') }
                                     repeat(5 - full) { append('☆') }
                                 },
-                                color = Shu, fontSize = 14.sp,
+                                color = AccentShu, fontSize = 14.sp,
                             )
                             Spacer(Modifier.width(6.dp))
                             Text("%.1f".format(d.ratingAverage), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
@@ -100,7 +101,7 @@ fun AppDetailSheet(
             if (loading) {
                 Spacer(Modifier.height(48.dp))
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Shu, modifier = Modifier.size(32.dp))
+                    CircularProgressIndicator(color = AccentShu, modifier = Modifier.size(32.dp))
                 }
                 return@Column
             }
@@ -139,7 +140,7 @@ fun AppDetailSheet(
 private fun DetailInstallButton(pct: Int?, onInstall: () -> Unit, onOpen: () -> Unit, modifier: Modifier = Modifier) {
     when {
         pct == null -> Box(
-            modifier.clip(RoundedCornerShape(14.dp)).background(Shu).clickable { onInstall() }.padding(vertical = 14.dp),
+            modifier.clip(RoundedCornerShape(14.dp)).background(AccentShu).clickable { onInstall() }.padding(vertical = 14.dp),
             contentAlignment = Alignment.Center,
         ) { Text("Installer", color = OnShu, fontFamily = Mincho, fontSize = 16.sp) }
         pct in 0..99 -> Box(
@@ -156,6 +157,6 @@ private fun DetailInstallButton(pct: Int?, onInstall: () -> Unit, onOpen: () -> 
         else -> Box(
             modifier.clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceVariant).clickable { onInstall() }.padding(vertical = 14.dp),
             contentAlignment = Alignment.Center,
-        ) { Text("Réessayer", color = Shu, fontFamily = Mincho, fontSize = 16.sp) }
+        ) { Text("Réessayer", color = AccentShu, fontFamily = Mincho, fontSize = 16.sp) }
     }
 }

@@ -48,6 +48,7 @@ import com.cyprienbrisset.fukkatsunop.ui.sumi.WatermarkKanji
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.MyPortalTheme
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -131,7 +132,7 @@ class AlarmRingActivity : ComponentActivity() {
                             modifier = Modifier.align(Alignment.Center),
                         ) {
                             if (videoResId == 0) WatermarkKanji("鈴", size = 260.sp)
-                            Text("RÉVEIL", color = Shu, fontFamily = Mincho, fontSize = 15.sp, letterSpacing = 4.sp)
+                            Text("RÉVEIL", color = AccentShu, fontFamily = Mincho, fontSize = 15.sp, letterSpacing = 4.sp)
                             Spacer(Modifier.height(10.dp))
                             Text(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
                                 fontFamily = Mincho, color = Kinari, fontSize = 78.sp)
@@ -148,7 +149,7 @@ class AlarmRingActivity : ComponentActivity() {
                             })
                             Box(
                                 Modifier.size(104.dp).clip(CircleShape)
-                                    .border(BorderStroke(3.dp, Shu), CircleShape)
+                                    .border(BorderStroke(3.dp, AccentShu), CircleShape)
                                     .clickable { AlarmForegroundService.stop(this@AlarmRingActivity); finish() },
                                 contentAlignment = Alignment.Center,
                             ) {

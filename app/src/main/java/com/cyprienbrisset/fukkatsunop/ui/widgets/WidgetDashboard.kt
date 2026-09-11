@@ -75,6 +75,7 @@ import com.cyprienbrisset.fukkatsunop.ui.sumi.WatermarkKanji
 import androidx.compose.material3.MaterialTheme
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.OnShu
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import kotlin.math.roundToInt
 
@@ -230,11 +231,11 @@ fun WidgetDashboard() {
                             .clickable { editMode = false },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Rounded.Check, contentDescription = "Terminer", tint = Shu, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Rounded.Check, contentDescription = "Terminer", tint = AccentShu, modifier = Modifier.size(18.dp))
                     }
                 }
                 Box(
-                    Modifier.size(36.dp).clip(CircleShape).background(Shu).clickable { showPicker = true },
+                    Modifier.size(36.dp).clip(CircleShape).background(AccentShu).clickable { showPicker = true },
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(Icons.Rounded.Add, contentDescription = "Ajouter un widget", tint = OnShu, modifier = Modifier.size(18.dp))
@@ -318,7 +319,7 @@ fun WidgetDashboard() {
                         saveLayouts(ctx, layouts)
                         AppWidgetHostHelper.deleteId(ctx, id)
                         pendingDeleteId = null
-                    }) { Text("Supprimer", color = Shu, fontFamily = Mincho) }
+                    }) { Text("Supprimer", color = AccentShu, fontFamily = Mincho) }
                 },
                 dismissButton = {
                     TextButton(onClick = { pendingDeleteId = null }) {

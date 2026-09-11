@@ -54,6 +54,7 @@ import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
 import com.cyprienbrisset.fukkatsunop.ui.AppNav
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.MyPortalTheme
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import kotlinx.coroutines.delay
 
@@ -227,7 +228,7 @@ private fun SplashOverlay(onDone: () -> Unit) {
                 text = "復活",
                 fontFamily = Mincho,
                 fontWeight = FontWeight.Medium,
-                color = Shu,
+                color = AccentShu,
                 fontSize = 128.sp,
                 modifier = Modifier.scale(scale),
             )

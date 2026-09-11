@@ -173,7 +173,7 @@ private fun UpdateOverlay(pct: Int) {
                         .height(6.dp)
                         .clip(RoundedCornerShape(3.dp)),
                     color = AccentShu,
-                    trackColor = Shu.copy(alpha = 0.25f),
+                    trackColor = AccentShu.copy(alpha = 0.25f),
                 )
                 Text(
                     text = "$pct%",
@@ -188,7 +188,7 @@ private fun UpdateOverlay(pct: Int) {
                         .height(6.dp)
                         .clip(RoundedCornerShape(3.dp)),
                     color = AccentShu,
-                    trackColor = Shu.copy(alpha = 0.25f),
+                    trackColor = AccentShu.copy(alpha = 0.25f),
                 )
             }
 

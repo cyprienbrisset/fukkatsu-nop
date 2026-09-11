@@ -10,7 +10,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 
 private val DarkScheme = darkColorScheme(
-    primary = Shu,
+    primary = AccentShu,
     onPrimary = OnShu,
     background = Sumi,
     onBackground = Kinari,
@@ -23,7 +23,7 @@ private val DarkScheme = darkColorScheme(
 )
 
 private val LightScheme = lightColorScheme(
-    primary = Shu,
+    primary = AccentShu,
     onPrimary = OnShu,
     background = Washi,
     onBackground = Ink,

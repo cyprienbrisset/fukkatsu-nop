@@ -44,6 +44,7 @@ import com.cyprienbrisset.fukkatsunop.ui.sumi.SumiPrimaryButton
 import com.cyprienbrisset.fukkatsunop.ui.theme.Gothic
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiSurface
@@ -88,7 +89,7 @@ private fun MailInbox(
 ) {
     when (state) {
         is TabState.Loading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
-            CircularProgressIndicator(color = Shu)
+            CircularProgressIndicator(color = AccentShu)
         }
 
         is TabState.Error -> Box(
@@ -160,7 +161,7 @@ private fun MessageRow(message: MailMessage, onOpen: (String) -> Unit) {
             Modifier
                 .size(8.dp)
                 .clip(CircleShape)
-                .background(Shu)
+                .background(AccentShu)
                 .alpha(if (message.isUnread) 1f else 0f),
         )
         Spacer(Modifier.width(8.dp))
@@ -246,7 +247,7 @@ private fun MailReader(
 
         when (bodyState) {
             is TabState.Loading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
-                CircularProgressIndicator(color = Shu)
+                CircularProgressIndicator(color = AccentShu)
             }
 
             is TabState.Error -> Box(
@@ -282,7 +283,7 @@ private fun MailReader(
                             color = Kinari,
                         )
                     }
-                    HorizontalDivider(color = Shu, thickness = 1.dp)
+                    HorizontalDivider(color = AccentShu, thickness = 1.dp)
                 }
 
                 // Body

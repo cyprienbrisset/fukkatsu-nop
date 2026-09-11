@@ -48,6 +48,7 @@ import com.cyprienbrisset.fukkatsunop.system.DarkModeManager
 import com.cyprienbrisset.fukkatsunop.ui.sumi.HankoSeal
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,7 +106,7 @@ fun DarkModeScheduleScreen(onBack: () -> Unit) {
             Switch(
                 checked = schedule.enabled,
                 onCheckedChange = { save(schedule.copy(enabled = it)) },
-                colors = SwitchDefaults.colors(checkedThumbColor = Shu, checkedTrackColor = Shu.copy(alpha = 0.35f)),
+                colors = SwitchDefaults.colors(checkedThumbColor = AccentShu, checkedTrackColor = AccentShu.copy(alpha = 0.35f)),
             )
         }
 
@@ -183,10 +184,10 @@ fun DarkModeScheduleScreen(onBack: () -> Unit) {
                     state = state,
                     colors = TimePickerDefaults.colors(
                         clockDialColor = MaterialTheme.colorScheme.surfaceVariant,
-                        selectorColor = Shu,
+                        selectorColor = AccentShu,
                         containerColor = MaterialTheme.colorScheme.surface,
-                        timeSelectorSelectedContainerColor = Shu.copy(alpha = 0.2f),
-                        timeSelectorSelectedContentColor = Shu,
+                        timeSelectorSelectedContainerColor = AccentShu.copy(alpha = 0.2f),
+                        timeSelectorSelectedContentColor = AccentShu,
                     ),
                 )
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -201,7 +202,7 @@ fun DarkModeScheduleScreen(onBack: () -> Unit) {
                         save(new)
                         pickerFor = null
                     }) {
-                        Text("OK", fontFamily = Mincho, color = Shu, fontWeight = FontWeight.SemiBold)
+                        Text("OK", fontFamily = Mincho, color = AccentShu, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -232,7 +233,7 @@ private fun TimeRow(
         Text(
             "%02d:%02d".format(hour, minute),
             fontFamily = Mincho,
-            color = Shu,
+            color = AccentShu,
             fontSize = 22.sp,
             fontWeight = FontWeight.Medium,
         )

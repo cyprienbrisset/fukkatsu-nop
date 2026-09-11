@@ -29,6 +29,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cyprienbrisset.fukkatsunop.ui.sumi.HankoSeal
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiLine
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
@@ -53,7 +54,7 @@ fun AlarmsScreen(onBack: () -> Unit, onAdd: () -> Unit, onEdit: (Long) -> Unit =
                     }
                     Switch(checked = a.enabled, onCheckedChange = { vm.toggle(a, it) })
                     Spacer(Modifier.width(8.dp))
-                    Text("✕", color = Shu, fontSize = 20.sp, modifier = Modifier.padding(8.dp).clickable(onClick = { vm.delete(a) }))
+                    Text("✕", color = AccentShu, fontSize = 20.sp, modifier = Modifier.padding(8.dp).clickable(onClick = { vm.delete(a) }))
                 }
                 Box(Modifier.fillMaxWidth().height(1.dp).background(SumiLine))
             }

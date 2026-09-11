@@ -304,7 +304,7 @@ fun SettingsScreen(
                 TextButton(onClick = {
                     val n = editingAirPlay.trim().ifBlank { "Portal" }
                     AirPlayPrefs.setName(ctx, n); airPlayName = n; showAirPlayDialog = false
-                }) { Text("OK", color = Shu) }
+                }) { Text("OK", color = AccentShu) }
             },
             dismissButton = { TextButton(onClick = { showAirPlayDialog = false }) { Text("Annuler") } },
             containerColor = MaterialTheme.colorScheme.surface,
@@ -320,15 +320,15 @@ private fun CatItem(cat: CatDef, active: Boolean, onClick: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .height(56.dp)
-            .background(if (active) Shu.copy(alpha = 0.08f) else Color.Transparent)
+            .background(if (active) AccentShu.copy(alpha = 0.08f) else Color.Transparent)
             .clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.width(3.dp).height(36.dp).background(if (active) Shu else Color.Transparent))
+        Box(Modifier.width(3.dp).height(36.dp).background(if (active) AccentShu else Color.Transparent))
         Spacer(Modifier.width(16.dp))
-        Text(cat.kanji, fontFamily = Mincho, fontSize = 18.sp, color = if (active) Shu else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
+        Text(cat.kanji, fontFamily = Mincho, fontSize = 18.sp, color = if (active) AccentShu else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
         Spacer(Modifier.width(14.dp))
-        Text(cat.label, fontSize = 15.sp, color = if (active) Shu else MaterialTheme.colorScheme.onBackground)
+        Text(cat.label, fontSize = 15.sp, color = if (active) AccentShu else MaterialTheme.colorScheme.onBackground)
     }
 }
 
@@ -361,7 +361,7 @@ private fun DisplayPanelContent(
                 when (accentOverride) {
                     "SAKURA" -> "Rose sakura (printemps)"
                     "MOMIJI" -> "Momiji automnal"
-                    "SHU"    -> "Shu vermillon"
+                    "SHU"    -> "AccentShu vermillon"
                     else     -> "Automatique (saisonnier)"
                 },
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
@@ -373,7 +373,7 @@ private fun DisplayPanelContent(
                 "AUTO"   to AccentShu,
                 "SAKURA" to Sakura,
                 "MOMIJI" to Momiji,
-                "SHU"    to Shu,
+                "SHU"    to AccentShu,
             ).forEach { (key, color) ->
                 val selected = accentOverride == key
                 Box(
@@ -466,7 +466,7 @@ private fun SystemPanelContent(
             when {
                 isDownloading -> {}
                 !modelReady -> Box(Modifier.clickable { onVoiceDownload() }) {
-                    Text("Télécharger", color = Shu, fontSize = 15.sp, fontFamily = Mincho)
+                    Text("Télécharger", color = AccentShu, fontSize = 15.sp, fontFamily = Mincho)
                 }
                 else -> Switch(
                     checked = voiceEnabled, onCheckedChange = onVoiceToggle,
@@ -608,7 +608,7 @@ private fun CreditsScreen(onBack: () -> Unit) {
             Spacer(Modifier.height(48.dp))
             Text(
                 "復活",
-                fontFamily = Mincho, fontSize = 48.sp, color = Shu.copy(alpha = 0.12f),
+                fontFamily = Mincho, fontSize = 48.sp, color = AccentShu.copy(alpha = 0.12f),
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
         }
@@ -620,7 +620,7 @@ private fun LicenceSection(title: String, items: List<LicenceItem>) {
     Text(
         title,
         fontSize = 10.sp, letterSpacing = 2.sp, fontFamily = Mincho,
-        color = Shu, modifier = Modifier.padding(bottom = 10.dp),
+        color = AccentShu, modifier = Modifier.padding(bottom = 10.dp),
     )
     items.forEach { item ->
         Row(
@@ -680,7 +680,7 @@ private fun SettingRow(text: String, subtitle: String? = null, chevron: Boolean 
             if (subtitle != null) Text(subtitle, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), fontSize = 12.sp, fontFamily = Mincho)
         }
         Spacer(Modifier.width(10.dp))
-        if (chevron) Text("›", color = Shu, fontSize = 22.sp)
+        if (chevron) Text("›", color = AccentShu, fontSize = 22.sp)
     }
     Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
 }

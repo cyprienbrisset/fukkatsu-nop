@@ -58,11 +58,11 @@ import androidx.compose.ui.unit.sp
 import com.cyprienbrisset.fukkatsunop.system.DarkModeManager
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 
 private val BG_PANEL = Color(0xF2131313)
 private val BG_TAB = Color(0xEE1C1C1C)
-private val TRACK_ACTIVE = Shu
 private val TRACK_INACTIVE = Color(0xFF2E2E2E)
 
 @Composable
@@ -104,7 +104,7 @@ fun OverlayPanel(
     // Wrap in MaterialTheme so Compose Material3 components work outside an Activity
     MaterialTheme(
         colorScheme = androidx.compose.material3.darkColorScheme(
-            primary = Shu,
+            primary = AccentShu,
             surface = BG_PANEL,
             onSurface = Kinari,
         )
@@ -128,7 +128,7 @@ fun OverlayPanel(
 
                     // Brightness
                     ControlSlider(
-                        icon = { Icon(Icons.Rounded.WbSunny, null, tint = Shu, modifier = Modifier.size(18.dp)) },
+                        icon = { Icon(Icons.Rounded.WbSunny, null, tint = AccentShu, modifier = Modifier.size(18.dp)) },
                         label = "Luminosité",
                         value = brightness / 255f,
                         enabled = canWrite,
@@ -144,7 +144,7 @@ fun OverlayPanel(
 
                     // Volume
                     ControlSlider(
-                        icon = { Icon(Icons.Rounded.VolumeUp, null, tint = Shu, modifier = Modifier.size(18.dp)) },
+                        icon = { Icon(Icons.Rounded.VolumeUp, null, tint = AccentShu, modifier = Modifier.size(18.dp)) },
                         label = "Volume",
                         value = volume / maxVol,
                         onValueChange = { f ->
@@ -227,7 +227,7 @@ fun OverlayPanel(
                         },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Rounded.Home, contentDescription = "Accueil", tint = Shu, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Rounded.Home, contentDescription = "Accueil", tint = AccentShu, modifier = Modifier.size(20.dp))
                 }
                 // Expand/collapse handle — only when controls are enabled
                 if (showControls) {
@@ -283,8 +283,8 @@ private fun ControlSlider(
                 enabled = enabled,
                 modifier = Modifier.fillMaxWidth().height(28.dp),
                 colors = SliderDefaults.colors(
-                    thumbColor = Shu,
-                    activeTrackColor = TRACK_ACTIVE,
+                    thumbColor = AccentShu,
+                    activeTrackColor = AccentShu,
                     inactiveTrackColor = TRACK_INACTIVE,
                 ),
             )

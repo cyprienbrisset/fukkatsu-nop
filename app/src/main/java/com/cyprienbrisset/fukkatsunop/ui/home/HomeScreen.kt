@@ -59,6 +59,7 @@ import com.cyprienbrisset.fukkatsunop.ui.sumi.WatermarkKanji
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.OnShu
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import com.cyprienbrisset.fukkatsunop.airplay.AirPlayService
 import com.cyprienbrisset.fukkatsunop.airplay.AirPlayState
@@ -426,7 +427,7 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 32.dp)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(Shu)
+                    .background(AccentShu)
                     .clickable { reorderMode = false }
                     .padding(horizontal = 36.dp, vertical = 14.dp),
             ) {

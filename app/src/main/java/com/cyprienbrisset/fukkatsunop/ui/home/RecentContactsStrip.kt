@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.cyprienbrisset.fukkatsunop.integration.RecentContact
 import androidx.compose.material3.MaterialTheme
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 
 @Composable
@@ -92,7 +93,7 @@ private fun ContactBubble(contact: RecentContact) {
                         .align(Alignment.BottomEnd)
                         .offset(x = 2.dp, y = 2.dp)
                         .clip(CircleShape)
-                        .background(Shu)
+                        .background(AccentShu)
                         .clickable { runCatching { contact.callIntent.send() } },
                     contentAlignment = Alignment.Center,
                 ) {
@@ -132,7 +133,7 @@ private fun AvatarCircle(name: String, avatar: Bitmap?, onClick: () -> Unit) {
         } else {
             Text(
                 name.take(1).uppercase(),
-                color = Shu,
+                color = AccentShu,
                 fontFamily = Mincho,
                 fontSize = 22.sp,
             )

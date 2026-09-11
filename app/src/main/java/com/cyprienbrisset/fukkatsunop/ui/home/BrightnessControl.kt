@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -134,7 +135,7 @@ private fun BrightnessIndicator(brightness: Float) {
                     .fillMaxWidth()
                     .fillMaxHeight(brightness)
                     .clip(RoundedCornerShape(3.dp))
-                    .background(Shu),
+                    .background(AccentShu),
             )
         }
     }

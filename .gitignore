@@ -16,3 +16,7 @@ local.properties
 
 # Visual companion (brainstorming)
 .superpowers/
+remotion/node_modules/
+app/src/main/res/raw/.claude/
+remotion/
+docs/superpowers/

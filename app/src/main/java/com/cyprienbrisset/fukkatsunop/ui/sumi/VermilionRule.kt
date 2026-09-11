@@ -10,14 +10,15 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 
 @Composable
 fun HorizontalVermilionRule(modifier: Modifier = Modifier, length: Dp = 120.dp, thickness: Dp = 1.dp) {
-    Box(modifier.width(length).height(thickness).background(Brush.horizontalGradient(listOf(Shu, Color.Transparent))))
+    Box(modifier.width(length).height(thickness).background(Brush.horizontalGradient(listOf(AccentShu, Color.Transparent))))
 }
 
 @Composable
 fun VerticalVermilionRule(modifier: Modifier = Modifier, length: Dp = 120.dp, thickness: Dp = 1.dp) {
-    Box(modifier.width(thickness).height(length).background(Brush.verticalGradient(listOf(Color.Transparent, Shu, Color.Transparent))))
+    Box(modifier.width(thickness).height(length).background(Brush.verticalGradient(listOf(Color.Transparent, AccentShu, Color.Transparent))))
 }

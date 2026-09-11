@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cyprienbrisset.fukkatsunop.data.tile.TileEntity
 import com.cyprienbrisset.fukkatsunop.data.tile.TileType
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -125,9 +126,9 @@ fun QuickActionsSheet(
             }
 
             QaRow(
-                icon = { Icon(Icons.Rounded.Delete, null, tint = Shu) },
+                icon = { Icon(Icons.Rounded.Delete, null, tint = AccentShu) },
                 label = "Retirer la tuile",
-                labelColor = Shu,
+                labelColor = AccentShu,
             ) { onRemove(); onDismiss() }
         }
     }

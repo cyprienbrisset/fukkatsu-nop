@@ -55,6 +55,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.compose.material3.MaterialTheme
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 
 private data class AppGroup(
@@ -126,7 +127,7 @@ fun WidgetPickerSheet(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text("ウィジェット", color = Shu, fontFamily = Mincho, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                        Text("ウィジェット", color = AccentShu, fontFamily = Mincho, fontSize = 11.sp, fontWeight = FontWeight.Medium)
                         Text("Choisir un widget", color = MaterialTheme.colorScheme.onSurface, fontFamily = Mincho, fontWeight = FontWeight.Medium, fontSize = 20.sp)
                     }
                     Box(
@@ -291,10 +292,10 @@ private fun PickerItem(
         }
 
         Box(
-            Modifier.size(30.dp).clip(CircleShape).background(Shu.copy(alpha = 0.15f)),
+            Modifier.size(30.dp).clip(CircleShape).background(AccentShu.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Rounded.Add, contentDescription = "Ajouter", tint = Shu, modifier = Modifier.size(16.dp))
+            Icon(Icons.Rounded.Add, contentDescription = "Ajouter", tint = AccentShu, modifier = Modifier.size(16.dp))
         }
     }
 

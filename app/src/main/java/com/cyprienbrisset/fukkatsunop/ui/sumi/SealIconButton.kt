@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cyprienbrisset.fukkatsunop.ui.theme.OnShu
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 
 @Composable
@@ -32,7 +33,7 @@ fun SealIconButton(
         modifier
             .size(size)
             .clip(shape)
-            .background(Shu)
+            .background(AccentShu)
             .then(if (active) Modifier.border(BorderStroke(2.dp, OnShu), shape) else Modifier)
             .clickable { onClick() },
         contentAlignment = Alignment.Center,

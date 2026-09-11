@@ -42,6 +42,7 @@ import com.cyprienbrisset.fukkatsunop.media.NowPlaying
 import com.cyprienbrisset.fukkatsunop.ui.theme.Ink2
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.OnShu
+import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiLine
 import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
@@ -97,7 +98,7 @@ fun NowPlayingBar(
                 modifier = Modifier.size(42.dp).clickable { onPrev() },
             )
             Box(
-                Modifier.size(60.dp).clip(CircleShape).background(Shu).clickable { onToggle() },
+                Modifier.size(60.dp).clip(CircleShape).background(AccentShu).clickable { onToggle() },
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -138,8 +139,8 @@ private fun SeekBar(np: NowPlaying, onSeek: (Long) -> Unit) {
             },
             enabled = np.canSeek,
             colors = SliderDefaults.colors(
-                thumbColor = Shu,
-                activeTrackColor = Shu,
+                thumbColor = AccentShu,
+                activeTrackColor = AccentShu,
                 inactiveTrackColor = SumiLine,
                 disabledThumbColor = SumiMuted,
                 disabledActiveTrackColor = SumiMuted,

@@ -187,7 +187,7 @@ fun RecentAppsOverlay(
                 )
                 Spacer(Modifier.height(12.dp))
                 TextButton(onClick = { onClearAll() }) {
-                    Text("Tout fermer", color = Shu, fontFamily = Mincho, fontSize = 13.sp, letterSpacing = 1.sp)
+                    Text("Tout fermer", color = AccentShu, fontFamily = Mincho, fontSize = 13.sp, letterSpacing = 1.sp)
                 }
                 LaunchedEffect(ramFreed) {
                     if (ramFreed != null) {
