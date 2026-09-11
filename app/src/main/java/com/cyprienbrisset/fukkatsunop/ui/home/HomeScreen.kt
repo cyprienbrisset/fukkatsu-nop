@@ -58,7 +58,6 @@ import com.cyprienbrisset.fukkatsunop.ui.sumi.VerticalVermilionRule
 import com.cyprienbrisset.fukkatsunop.ui.sumi.WatermarkKanji
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
-import com.cyprienbrisset.fukkatsunop.ui.theme.BgTone
 import com.cyprienbrisset.fukkatsunop.ui.theme.OnShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
 import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
@@ -162,7 +161,6 @@ fun HomeScreen(onOpenSettings: () -> Unit, onAddTile: () -> Unit, onOpenAlarms: 
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
-            .background(BgTone)
             .pointerInput(Unit) {
                 var accumulated = 1f
                 detectTransformGestures { _, _, zoom, _ ->

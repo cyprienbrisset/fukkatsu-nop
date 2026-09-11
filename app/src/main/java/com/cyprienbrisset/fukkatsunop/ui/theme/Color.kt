@@ -38,18 +38,41 @@ val AccentShu: Color get() {
     }
 }
 
-// ── Background tone ──────────────────────────────────────────────────────────
-private val _bgToneState = mutableStateOf("DEFAULT")
-fun applyBgTone(tone: String) { _bgToneState.value = tone }
-val BgTone: Color get() = when (_bgToneState.value) {
+// ── Background tone — mode-aware ─────────────────────────────────────────────
+private val _bgToneDarkState  = mutableStateOf("DEFAULT")
+private val _bgToneLightState = mutableStateOf("DEFAULT")
+private var _currentDark      = true
+
+private fun darkBgFor(tone: String): Color = when (tone) {
+    "SHU"    -> Color(0xFF160608)
+    "SAKURA" -> Color(0xFF150810)
+    "MOMIJI" -> Color(0xFF150A05)
     "INDIGO" -> Color(0xFF080C1A)
     "MATCHA" -> Color(0xFF060E08)
     "NUIT"   -> Color(0xFF0D0714)
     "OR"     -> Color(0xFF130F06)
-    "SAKURA" -> Color(0xFF150810)
-    "MOMIJI" -> Color(0xFF150A05)
-    "SHU"    -> Color(0xFF160608)
-    else     -> Color(0xFF0D0E12)
+    else     -> Color(0xFF0D0E12)   // DEFAULT
+}
+
+private fun lightBgFor(tone: String): Color = when (tone) {
+    "SHU"    -> Color(0xFFF5ECEA)
+    "SAKURA" -> Color(0xFFF5EDF1)
+    "MOMIJI" -> Color(0xFFF5EFEA)
+    "INDIGO" -> Color(0xFFEEEFF8)
+    "MATCHA" -> Color(0xFFEEF3EE)
+    "NUIT"   -> Color(0xFFF1EEF7)
+    "OR"     -> Color(0xFFF5F0E5)
+    else     -> Color(0xFFF2EDE3)   // DEFAULT = Washi
+}
+
+fun applyBgToneDark(tone: String) {
+    _bgToneDarkState.value = tone
+    if (_currentDark) _sumi.value = darkBgFor(tone)
+}
+
+fun applyBgToneLight(tone: String) {
+    _bgToneLightState.value = tone
+    if (!_currentDark) _sumi.value = lightBgFor(tone)
 }
 
 // ── Icon shape ────────────────────────────────────────────────────────────────
@@ -58,7 +81,6 @@ fun applyIconShape(enabled: Boolean) { _iconShapeState.value = enabled }
 val IconShapeEnabled: Boolean get() = _iconShapeState.value
 
 // ── Raw palette values ───────────────────────────────────────────────────────
-private val SumiRaw        = Color(0xFF0D0E12)
 private val Ink2Raw        = Color(0xFF15171C)
 private val SumiSurfaceRaw = Color(0xFF191C23)
 private val SumiLineRaw    = Color(0xFF242832)
@@ -75,7 +97,7 @@ val InkMuted     = Color(0xFF4A4640)
 // ── Theme-reactive palette ───────────────────────────────────────────────────
 // Backed by Compose State so any read during composition is tracked and
 // triggers recomposition when the theme changes — no composable changes needed.
-private val _sumi        = mutableStateOf(SumiRaw)
+private val _sumi        = mutableStateOf(darkBgFor("DEFAULT"))
 private val _ink2        = mutableStateOf(Ink2Raw)
 private val _sumiSurface = mutableStateOf(SumiSurfaceRaw)
 private val _sumiLine    = mutableStateOf(SumiLineRaw)
@@ -89,13 +111,13 @@ val SumiLine:    Color get() = _sumiLine.value
 val Kinari:      Color get() = _kinari.value
 val SumiMuted:   Color get() = _sumiMuted.value
 
-// Light-mode card and sub-surface colors — distinctly lighter than the Washi page bg
-// so cards float visibly on the parchment background (same logic as white cards on gray in MD3)
-val WashiCard    = Color(0xFFFAF8F4)  // near-white card surface
-private val WashiSubCard = Color(0xFFE0DBD0)  // darker slot (artwork placeholder, etc.)
+// Light-mode card and sub-surface colors
+val WashiCard        = Color(0xFFFAF8F4)
+private val WashiSubCard = Color(0xFFE0DBD0)
 
 fun applyColorPalette(dark: Boolean) {
-    _sumi.value        = if (dark) SumiRaw        else Washi
+    _currentDark = dark
+    _sumi.value        = if (dark) darkBgFor(_bgToneDarkState.value) else lightBgFor(_bgToneLightState.value)
     _ink2.value        = if (dark) Ink2Raw        else WashiSubCard
     _sumiSurface.value = if (dark) SumiSurfaceRaw else WashiCard
     _sumiLine.value    = if (dark) SumiLineRaw    else WashiLine

@@ -1,6 +1,6 @@
 {
-  "versionCode": 29,
-  "versionName": "1.0.29",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.29/fukkatsu-nop-v1.0.29.apk",
-  "notes": "Transitions, palettes, teinte fond, icônes uniformes, heure+batterie+WiFi dans overlay, badges, haptic"
+  "versionCode": 30,
+  "versionName": "1.0.30",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.30/fukkatsu-nop-v1.0.30.apk",
+  "notes": "Mode jour/nuit corrigé, fond séparé par mode (nuit + jour), palettes visibles"
 }

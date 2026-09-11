@@ -70,7 +70,6 @@ import com.cyprienbrisset.fukkatsunop.ui.home.HomeViewModel
 import com.cyprienbrisset.fukkatsunop.ui.sumi.HankoSeal
 import com.cyprienbrisset.fukkatsunop.data.settings.SettingsRepository as Repo
 import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
-import com.cyprienbrisset.fukkatsunop.ui.theme.BgTone
 import com.cyprienbrisset.fukkatsunop.ui.theme.Indigo
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Matcha
@@ -353,9 +352,10 @@ private fun DisplayPanelContent(
     val ctx2 = LocalContext.current
     val scope2 = rememberCoroutineScope()
     val settingsRepo2 = remember(ctx2) { Repo(ctx2) }
-    val accentOverride by settingsRepo2.accentOverride.collectAsState(initial = "AUTO")
-    val bgToneOverride by settingsRepo2.bgTone.collectAsState(initial = "DEFAULT")
-    val iconShape by settingsRepo2.iconShape.collectAsState(initial = false)
+    val accentOverride  by settingsRepo2.accentOverride.collectAsState(initial = "AUTO")
+    val bgToneDark      by settingsRepo2.bgToneDark.collectAsState(initial = "DEFAULT")
+    val bgToneLight     by settingsRepo2.bgToneLight.collectAsState(initial = "DEFAULT")
+    val iconShape       by settingsRepo2.iconShape.collectAsState(initial = false)
 
     // ── Accent palette ────────────────────────────────────────────────────────
     val accentPalette = listOf(
@@ -409,16 +409,16 @@ private fun DisplayPanelContent(
     }
     Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
 
-    // ── Fond d'écran (teinte) ─────────────────────────────────────────────────
-    val bgPalette = listOf(
-        "DEFAULT" to androidx.compose.ui.graphics.Color(0xFF0D0E12),
-        "SHU"     to androidx.compose.ui.graphics.Color(0xFF160608),
-        "SAKURA"  to androidx.compose.ui.graphics.Color(0xFF150810),
-        "MOMIJI"  to androidx.compose.ui.graphics.Color(0xFF150A05),
-        "INDIGO"  to androidx.compose.ui.graphics.Color(0xFF080C1A),
-        "MATCHA"  to androidx.compose.ui.graphics.Color(0xFF060E08),
-        "NUIT"    to androidx.compose.ui.graphics.Color(0xFF0D0714),
-        "OR"      to androidx.compose.ui.graphics.Color(0xFF130F06),
+    // ── Fond mode nuit ────────────────────────────────────────────────────────
+    val bgDarkPalette = listOf(
+        "DEFAULT" to androidx.compose.ui.graphics.Color(0xFF2A2B30),
+        "SHU"     to androidx.compose.ui.graphics.Color(0xFF3D1214),
+        "SAKURA"  to androidx.compose.ui.graphics.Color(0xFF3A1E28),
+        "MOMIJI"  to androidx.compose.ui.graphics.Color(0xFF3A2010),
+        "INDIGO"  to androidx.compose.ui.graphics.Color(0xFF101840),
+        "MATCHA"  to androidx.compose.ui.graphics.Color(0xFF0E2414),
+        "NUIT"    to androidx.compose.ui.graphics.Color(0xFF201038),
+        "OR"      to androidx.compose.ui.graphics.Color(0xFF302010),
     )
     Row(
         Modifier.fillMaxWidth().heightIn(min = 64.dp),
@@ -426,23 +426,55 @@ private fun DisplayPanelContent(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column(Modifier.weight(1f)) {
-            Text("Teinte du fond", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
-            Text("Teinte subtile de l'écran d'accueil", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), fontSize = 12.sp, fontFamily = Mincho)
+            Text("Fond — mode nuit", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
+            Text(if (bgToneDark == "DEFAULT") "Noir encre (défaut)" else bgToneDark.lowercase().replaceFirstChar { it.uppercase() },
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), fontSize = 12.sp, fontFamily = Mincho)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            bgPalette.forEach { (key, color) ->
-                val selected = bgToneOverride == key
+            bgDarkPalette.forEach { (key, previewColor) ->
+                val selected = bgToneDark == key
                 Box(
-                    Modifier
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(if (key == "DEFAULT") androidx.compose.ui.graphics.Color(0xFF2A2A2A) else color.copy(red = color.red * 3.5f, green = color.green * 3.5f, blue = color.blue * 3.5f).run { androidx.compose.ui.graphics.Color(red.coerceAtMost(1f), green.coerceAtMost(1f), blue.coerceAtMost(1f)) })
+                    Modifier.size(28.dp).clip(CircleShape).background(previewColor)
                         .then(if (selected) Modifier.border(2.dp, Kinari, CircleShape) else Modifier)
-                        .clickable { scope2.launch { settingsRepo2.setBgTone(key) } },
+                        .clickable { scope2.launch { settingsRepo2.setBgToneDark(key) } },
                     contentAlignment = Alignment.Center,
-                ) {
-                    if (selected) Text("✓", color = Kinari, fontSize = 11.sp)
-                }
+                ) { if (selected) Text("✓", color = Kinari, fontSize = 11.sp) }
+            }
+        }
+    }
+    Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+
+    // ── Fond mode jour ────────────────────────────────────────────────────────
+    val bgLightPalette = listOf(
+        "DEFAULT" to androidx.compose.ui.graphics.Color(0xFFF2EDE3),
+        "SHU"     to androidx.compose.ui.graphics.Color(0xFFF5ECEA),
+        "SAKURA"  to androidx.compose.ui.graphics.Color(0xFFF5EDF1),
+        "MOMIJI"  to androidx.compose.ui.graphics.Color(0xFFF5EFEA),
+        "INDIGO"  to androidx.compose.ui.graphics.Color(0xFFEEEFF8),
+        "MATCHA"  to androidx.compose.ui.graphics.Color(0xFFEEF3EE),
+        "NUIT"    to androidx.compose.ui.graphics.Color(0xFFF1EEF7),
+        "OR"      to androidx.compose.ui.graphics.Color(0xFFF5F0E5),
+    )
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 64.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text("Fond — mode jour", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
+            Text(if (bgToneLight == "DEFAULT") "Washi (défaut)" else bgToneLight.lowercase().replaceFirstChar { it.uppercase() },
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), fontSize = 12.sp, fontFamily = Mincho)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            bgLightPalette.forEach { (key, previewColor) ->
+                val selected = bgToneLight == key
+                Box(
+                    Modifier.size(28.dp).clip(CircleShape).background(previewColor)
+                        .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                        .then(if (selected) Modifier.border(2.dp, AccentShu, CircleShape) else Modifier)
+                        .clickable { scope2.launch { settingsRepo2.setBgToneLight(key) } },
+                    contentAlignment = Alignment.Center,
+                ) { if (selected) Text("✓", color = AccentShu, fontSize = 11.sp) }
             }
         }
     }

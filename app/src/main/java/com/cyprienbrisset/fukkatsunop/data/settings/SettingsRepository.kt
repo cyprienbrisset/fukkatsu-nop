@@ -27,7 +27,8 @@ class SettingsRepository(private val context: Context) {
     private val SAVER_MODE       = booleanPreferencesKey("saver_mode")
     private val PRESENCE_ENABLED = booleanPreferencesKey("presence_enabled")
     private val ACCENT_OVERRIDE   = stringPreferencesKey("accent_override")
-    private val BG_TONE           = stringPreferencesKey("bg_tone")
+    private val BG_TONE_DARK      = stringPreferencesKey("bg_tone_dark")
+    private val BG_TONE_LIGHT     = stringPreferencesKey("bg_tone_light")
     private val ICON_SHAPE        = booleanPreferencesKey("icon_shape")
 
     val weatherCities: Flow<List<WeatherLocation>> = context.dataStore.data.map { p ->
@@ -95,11 +96,11 @@ class SettingsRepository(private val context: Context) {
         context.dataStore.edit { it[ACCENT_OVERRIDE] = value }
     }
 
-    val bgTone: Flow<String> = context.dataStore.data.map { p -> p[BG_TONE] ?: "DEFAULT" }
+    val bgToneDark: Flow<String>  = context.dataStore.data.map { p -> p[BG_TONE_DARK]  ?: "DEFAULT" }
+    val bgToneLight: Flow<String> = context.dataStore.data.map { p -> p[BG_TONE_LIGHT] ?: "DEFAULT" }
 
-    suspend fun setBgTone(value: String) {
-        context.dataStore.edit { it[BG_TONE] = value }
-    }
+    suspend fun setBgToneDark(value: String)  { context.dataStore.edit { it[BG_TONE_DARK]  = value } }
+    suspend fun setBgToneLight(value: String) { context.dataStore.edit { it[BG_TONE_LIGHT] = value } }
 
     val iconShape: Flow<Boolean> = context.dataStore.data.map { p -> p[ICON_SHAPE] ?: false }
 
