@@ -103,52 +103,47 @@ fun RecentAppsOverlay(
             },
         contentAlignment = Alignment.Center,
     ) {
+        // ── RAM chip — top right ─────────────────────────────────────────────
+        val ram = ramInfo
+        if (ram != null) {
+            val usedMb = ram.totalMb - ram.availMb
+            val usedFraction = (usedMb.toFloat() / ram.totalMb).coerceIn(0f, 1f)
+            val chipColor = when {
+                usedFraction > 0.85f -> Color(0xFFFF6B6B)
+                usedFraction > 0.65f -> Color(0xFFFFCC00)
+                else -> SumiMuted
+            }
+            Column(
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 20.dp, end = 28.dp)
+                    .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {},
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    if (ramFreed != null && ramFreed!! > 0) "+${ramFreed} Mo libérés"
+                    else "RAM  ${usedMb} / ${ram.totalMb} Mo",
+                    color = if (ramFreed != null) AccentShu else chipColor,
+                    fontFamily = Mincho,
+                    fontSize = 9.sp,
+                    letterSpacing = 1.sp,
+                )
+                LinearProgressIndicator(
+                    progress = { usedFraction },
+                    modifier = Modifier.width(80.dp).height(2.dp).clip(RoundedCornerShape(1.dp)),
+                    color = chipColor,
+                    trackColor = Color.White.copy(alpha = 0.1f),
+                    strokeCap = StrokeCap.Round,
+                )
+            }
+        }
+
+        // ── App cards — centered ─────────────────────────────────────────────
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            // ── RAM bar ──────────────────────────────────────────────────────
-            val ram = ramInfo
-            if (ram != null) {
-                val usedMb = ram.totalMb - ram.availMb
-                val usedFraction = (usedMb.toFloat() / ram.totalMb).coerceIn(0f, 1f)
-                val barColor = when {
-                    usedFraction > 0.85f -> Color(0xFFFF6B6B)
-                    usedFraction > 0.65f -> Color(0xFFFFCC00)
-                    else -> AccentShu
-                }
-                Column(
-                    Modifier.padding(horizontal = 64.dp).clickable(
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() },
-                    ) {},
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text("RAM", color = SumiMuted, fontFamily = Mincho, fontSize = 10.sp, letterSpacing = 2.sp)
-                        val freedText = if (ramFreed != null && ramFreed!! > 0) "  +${ramFreed} Mo libérés" else ""
-                        Text(
-                            "${usedMb} / ${ram.totalMb} Mo$freedText",
-                            color = if (ramFreed != null) AccentShu else SumiMuted,
-                            fontFamily = Mincho,
-                            fontSize = 10.sp,
-                        )
-                    }
-                    LinearProgressIndicator(
-                        progress = { usedFraction },
-                        modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)),
-                        color = barColor,
-                        trackColor = Color.White.copy(alpha = 0.1f),
-                        strokeCap = StrokeCap.Round,
-                    )
-                }
-                Spacer(Modifier.height(28.dp))
-            }
-
             if (apps.isEmpty()) {
                 Text(
                     "Aucune application récente",
@@ -191,13 +186,9 @@ fun RecentAppsOverlay(
                     letterSpacing = 1.sp,
                 )
                 Spacer(Modifier.height(12.dp))
-                TextButton(onClick = {
-                    onClearAll()
-                    // don't dismiss immediately — show freed RAM then close
-                }) {
+                TextButton(onClick = { onClearAll() }) {
                     Text("Tout fermer", color = Shu, fontFamily = Mincho, fontSize = 13.sp, letterSpacing = 1.sp)
                 }
-                // Auto-dismiss after showing freed RAM
                 LaunchedEffect(ramFreed) {
                     if (ramFreed != null) {
                         kotlinx.coroutines.delay(1400)

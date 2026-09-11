@@ -1,6 +1,6 @@
 {
-  "versionCode": 24,
-  "versionName": "1.0.24",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.24/fukkatsu-nop-v1.0.24.apk",
-  "notes": "Gestionnaire mémoire : barre RAM en temps réel + Mo libérés après fermeture des apps"
+  "versionCode": 25,
+  "versionName": "1.0.25",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.25/fukkatsu-nop-v1.0.25.apk",
+  "notes": "RAM chip discret en haut à droite de la vue apps récentes"
 }
