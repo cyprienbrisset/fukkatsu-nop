@@ -1,6 +1,6 @@
 {
-  "versionCode": 26,
-  "versionName": "1.0.26",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.26/fukkatsu-nop-v1.0.26.apk",
-  "notes": "Couleur d'accent appliquée partout : boutons, player, contacts, overlay, alarmes, store, réglages"
+  "versionCode": 27,
+  "versionName": "1.0.27",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.27/fukkatsu-nop-v1.0.27.apk",
+  "notes": "Vérification des mises à jour au démarrage de l'app"
 }

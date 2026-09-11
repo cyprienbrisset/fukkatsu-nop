@@ -50,6 +50,7 @@ import kotlinx.coroutines.launch
 import com.cyprienbrisset.fukkatsunop.overlay.OverlayPrefs
 import com.cyprienbrisset.fukkatsunop.overlay.OverlayService
 import com.cyprienbrisset.fukkatsunop.system.FirmwareWatcher
+import com.cyprienbrisset.fukkatsunop.system.UpdateChecker
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
 import com.cyprienbrisset.fukkatsunop.ui.AppNav
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
@@ -115,6 +116,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         FirmwareWatcher.init(this)
+        lifecycleScope.launch { UpdateChecker.check(this@MainActivity) }
 
         // Request RECORD_AUDIO if voice enabled
         if (VoiceService.isEnabled(this)) {
