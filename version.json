@@ -1,6 +1,6 @@
 {
-  "versionCode": 31,
-  "versionName": "1.0.31",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.31/fukkatsu-nop-v1.0.31.apk",
-  "notes": "Contrôles système : luminosité auto, mode nuit Portal, WiFi, Bluetooth avec appareils jumelés"
+  "versionCode": 32,
+  "versionName": "1.0.32",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.32/fukkatsu-nop-v1.0.32.apk",
+  "notes": "Contrôles système 100% in-app : WiFi (réseaux mémorisés), BT (connecter/déconnecter), sans ouvrir les réglages Android"
 }

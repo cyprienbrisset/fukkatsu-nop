@@ -1,6 +1,8 @@
 package com.cyprienbrisset.fukkatsunop.ui.settings
 
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothProfile
 import android.content.Intent
 import android.net.wifi.WifiManager
 import android.provider.Settings
@@ -272,7 +274,6 @@ fun SettingsScreen(
                                         }
                                     },
                                     onUpdate = { UpdateChecker.startUpdate(ctx) },
-                                    onSystem  = { ctx.startActivity(Intent(Settings.ACTION_SETTINGS)) },
                                 )
                             }
                         }
@@ -632,22 +633,23 @@ private fun SystemPanelContent(
     // ── WiFi ───────────────────────────────────────────────────────────────────
     val wifiMgr = remember { ctx.applicationContext.getSystemService(android.content.Context.WIFI_SERVICE) as WifiManager }
     var wifiOn by remember { mutableStateOf(wifiMgr.isWifiEnabled) }
-    val wifiSsid = remember(wifiOn) {
+    val currentSsid = remember(wifiOn) {
         if (wifiOn) wifiMgr.connectionInfo?.ssid?.trim('"')?.takeIf { it != "<unknown ssid>" } else null
+    }
+    @Suppress("DEPRECATION")
+    val savedNetworks = remember(wifiOn) {
+        if (wifiOn) runCatching { wifiMgr.configuredNetworks?.filter { !it.SSID.isNullOrBlank() } ?: emptyList() }.getOrElse { emptyList() }
+        else emptyList()
     }
     Row(
         Modifier.fillMaxWidth().heightIn(min = 64.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Column(
-            Modifier.weight(1f).clickable {
-                ctx.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-            }
-        ) {
+        Column(Modifier.weight(1f)) {
             Text("WiFi", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
             Text(
-                wifiSsid ?: if (wifiOn) "Actif" else "Désactivé",
+                currentSsid ?: if (wifiOn) "Actif" else "Désactivé",
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                 fontSize = 12.sp, fontFamily = Mincho,
             )
@@ -662,14 +664,56 @@ private fun SystemPanelContent(
             colors = SwitchDefaults.colors(checkedThumbColor = AccentShu, checkedTrackColor = AccentShu.copy(alpha = 0.4f)),
         )
     }
+    if (wifiOn && savedNetworks.isNotEmpty()) {
+        savedNetworks.forEach { config ->
+            val ssid = config.SSID?.trim('"') ?: return@forEach
+            val isCurrent = ssid == currentSsid
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .clickable(enabled = !isCurrent) {
+                        @Suppress("DEPRECATION")
+                        wifiMgr.disconnect()
+                        @Suppress("DEPRECATION")
+                        wifiMgr.enableNetwork(config.networkId, true)
+                        @Suppress("DEPRECATION")
+                        wifiMgr.reconnect()
+                    }
+                    .padding(start = 16.dp, end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    ssid,
+                    color = if (isCurrent) AccentShu else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.82f),
+                    fontSize = 15.sp,
+                )
+                if (isCurrent) Text("✓", color = AccentShu, fontSize = 15.sp)
+            }
+            Box(Modifier.fillMaxWidth().padding(start = 16.dp).height(1.dp).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)))
+        }
+    }
     Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
 
     // ── Bluetooth ──────────────────────────────────────────────────────────────
     val btAdapter = remember { (ctx.getSystemService(android.content.Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter }
     var btOn by remember { mutableStateOf(btAdapter?.isEnabled == true) }
+    var connectedBtAddresses by remember { mutableStateOf(emptySet<String>()) }
     LaunchedEffect(Unit) {
         while (true) {
             btOn = btAdapter?.isEnabled == true
+            if (btOn && btAdapter != null) {
+                btAdapter.getProfileProxy(ctx, object : BluetoothProfile.ServiceListener {
+                    override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
+                        connectedBtAddresses = proxy.connectedDevices.map { it.address }.toSet()
+                        btAdapter.closeProfileProxy(profile, proxy)
+                    }
+                    override fun onServiceDisconnected(profile: Int) {}
+                }, BluetoothProfile.A2DP)
+            } else {
+                connectedBtAddresses = emptySet()
+            }
             kotlinx.coroutines.delay(2000)
         }
     }
@@ -681,11 +725,7 @@ private fun SystemPanelContent(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Column(
-            Modifier.weight(1f).clickable {
-                ctx.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-            }
-        ) {
+        Column(Modifier.weight(1f)) {
             Text("Bluetooth", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
             Text(
                 when {
@@ -710,32 +750,54 @@ private fun SystemPanelContent(
     }
     if (btOn && pairedDevices.isNotEmpty()) {
         pairedDevices.forEach { device ->
+            val isConnected = device.address in connectedBtAddresses
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
-                    .clickable {
-                        ctx.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                    }
-                    .padding(start = 16.dp),
+                    .height(60.dp)
+                    .padding(start = 16.dp, end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Column {
+                Column(Modifier.weight(1f)) {
                     Text(
                         device.name ?: device.address,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.82f),
                         fontSize = 15.sp,
                     )
-                    Text(device.address, color = SumiMuted, fontSize = 11.sp, fontFamily = Mincho)
+                    Text(
+                        if (isConnected) "Connecté" else "Jumelé",
+                        color = if (isConnected) AccentShu else SumiMuted,
+                        fontSize = 11.sp, fontFamily = Mincho,
+                    )
+                }
+                Box(
+                    Modifier
+                        .background(
+                            if (isConnected) MaterialTheme.colorScheme.outline else AccentShu.copy(alpha = 0.15f),
+                            RoundedCornerShape(6.dp),
+                        )
+                        .clickable {
+                            btAdapter?.getProfileProxy(ctx, object : BluetoothProfile.ServiceListener {
+                                override fun onServiceConnected(profile: Int, proxy: BluetoothProfile) {
+                                    runCatching {
+                                        val m = if (isConnected) "disconnect" else "connect"
+                                        proxy.javaClass.getMethod(m, BluetoothDevice::class.java).invoke(proxy, device)
+                                    }
+                                }
+                                override fun onServiceDisconnected(profile: Int) {}
+                            }, BluetoothProfile.A2DP)
+                        }
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                ) {
+                    Text(
+                        if (isConnected) "Déconnecter" else "Connecter",
+                        color = if (isConnected) MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f) else AccentShu,
+                        fontSize = 13.sp, fontFamily = Mincho,
+                    )
                 }
             }
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp)
-                    .height(1.dp)
-                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
-            )
+            Box(Modifier.fillMaxWidth().padding(start = 16.dp).height(1.dp).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)))
         }
     }
 }
@@ -747,7 +809,6 @@ private fun DevicePanelContent(
     updatePct: Int,
     onVerifier: () -> Unit,
     onUpdate: () -> Unit,
-    onSystem: () -> Unit,
 ) {
     SettingRow(
         text = if (verifierDisabled) "Vérificateur désactivé ✓" else "Désactiver le vérificateur",
@@ -771,7 +832,6 @@ private fun DevicePanelContent(
         SettingRow("Version ${BuildConfig.VERSION_NAME}", subtitle = "À jour", chevron = false) {}
     }
     SettingRow("Surveillance firmware", subtitle = FirmwareWatcher.currentBuild(), chevron = false) {}
-    SettingRow("Réglages système", subtitle = "Paramètres Android") { onSystem() }
 }
 
 // ── Licences full-screen ─────────────────────────────────────────────────────
