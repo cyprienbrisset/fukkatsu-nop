@@ -1,6 +1,8 @@
 package com.cyprienbrisset.fukkatsunop.ui.settings
 
+import android.bluetooth.BluetoothManager
 import android.content.Intent
+import android.net.wifi.WifiManager
 import android.provider.Settings
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -520,6 +522,7 @@ private fun SystemPanelContent(
     onVoiceDownload: () -> Unit,
     onPresenceToggle: (Boolean) -> Unit,
 ) {
+    val ctx = LocalContext.current
     SettingRow(
         text = if (overlayRunning) "Contrôles flottants actifs ✓" else "Contrôles flottants",
         subtitle = if (overlayRunning) "Appuyer pour désactiver" else "Boutons multitâche et volume en superposition",
@@ -588,6 +591,153 @@ private fun SystemPanelContent(
         checked = presenceEnabled,
         onCheckedChange = onPresenceToggle,
     )
+    Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+
+    // ── Luminosité automatique ─────────────────────────────────────────────────
+    var autoBrightness by remember {
+        mutableStateOf(
+            Settings.System.getInt(ctx.contentResolver, Settings.System.SCREEN_BRIGHTNESS_MODE, 0) ==
+            Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC
+        )
+    }
+    SettingSwitch(
+        text = "Luminosité automatique",
+        subtitle = if (autoBrightness) "Ajustée selon la lumière ambiante" else "Manuelle",
+        checked = autoBrightness,
+        onCheckedChange = { enabled ->
+            Settings.System.putInt(
+                ctx.contentResolver, Settings.System.SCREEN_BRIGHTNESS_MODE,
+                if (enabled) Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC
+                else Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL,
+            )
+            autoBrightness = enabled
+        },
+    )
+
+    // ── Mode nuit natif Portal ─────────────────────────────────────────────────
+    var nightMode by remember {
+        mutableStateOf(Settings.Secure.getInt(ctx.contentResolver, "night_display_activated", 0) == 1)
+    }
+    SettingSwitch(
+        text = "Mode nuit Portal",
+        subtitle = if (nightMode) "Filtre lumière bleue actif" else "Désactivé",
+        checked = nightMode,
+        onCheckedChange = { enabled ->
+            Settings.Secure.putInt(ctx.contentResolver, "night_display_activated", if (enabled) 1 else 0)
+            nightMode = enabled
+        },
+    )
+    Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+
+    // ── WiFi ───────────────────────────────────────────────────────────────────
+    val wifiMgr = remember { ctx.applicationContext.getSystemService(android.content.Context.WIFI_SERVICE) as WifiManager }
+    var wifiOn by remember { mutableStateOf(wifiMgr.isWifiEnabled) }
+    val wifiSsid = remember(wifiOn) {
+        if (wifiOn) wifiMgr.connectionInfo?.ssid?.trim('"')?.takeIf { it != "<unknown ssid>" } else null
+    }
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 64.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(
+            Modifier.weight(1f).clickable {
+                ctx.startActivity(Intent(Settings.ACTION_WIFI_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
+        ) {
+            Text("WiFi", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
+            Text(
+                wifiSsid ?: if (wifiOn) "Actif" else "Désactivé",
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                fontSize = 12.sp, fontFamily = Mincho,
+            )
+        }
+        Switch(
+            checked = wifiOn,
+            onCheckedChange = { enabled ->
+                @Suppress("DEPRECATION")
+                wifiMgr.setWifiEnabled(enabled)
+                wifiOn = enabled
+            },
+            colors = SwitchDefaults.colors(checkedThumbColor = AccentShu, checkedTrackColor = AccentShu.copy(alpha = 0.4f)),
+        )
+    }
+    Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
+
+    // ── Bluetooth ──────────────────────────────────────────────────────────────
+    val btAdapter = remember { (ctx.getSystemService(android.content.Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter }
+    var btOn by remember { mutableStateOf(btAdapter?.isEnabled == true) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            btOn = btAdapter?.isEnabled == true
+            kotlinx.coroutines.delay(2000)
+        }
+    }
+    val pairedDevices = remember(btOn) {
+        if (btOn) btAdapter?.bondedDevices?.toList() ?: emptyList() else emptyList()
+    }
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 64.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(
+            Modifier.weight(1f).clickable {
+                ctx.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
+        ) {
+            Text("Bluetooth", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
+            Text(
+                when {
+                    !btOn -> "Désactivé"
+                    pairedDevices.isEmpty() -> "Actif — aucun appareil jumelé"
+                    pairedDevices.size == 1 -> "1 appareil jumelé"
+                    else -> "${pairedDevices.size} appareils jumelés"
+                },
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                fontSize = 12.sp, fontFamily = Mincho,
+            )
+        }
+        Switch(
+            checked = btOn,
+            onCheckedChange = { enabled ->
+                @Suppress("DEPRECATION")
+                if (enabled) btAdapter?.enable() else btAdapter?.disable()
+                btOn = enabled
+            },
+            colors = SwitchDefaults.colors(checkedThumbColor = AccentShu, checkedTrackColor = AccentShu.copy(alpha = 0.4f)),
+        )
+    }
+    if (btOn && pairedDevices.isNotEmpty()) {
+        pairedDevices.forEach { device ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .clickable {
+                        ctx.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    }
+                    .padding(start = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column {
+                    Text(
+                        device.name ?: device.address,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.82f),
+                        fontSize = 15.sp,
+                    )
+                    Text(device.address, color = SumiMuted, fontSize = 11.sp, fontFamily = Mincho)
+                }
+            }
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp)
+                    .height(1.dp)
+                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+            )
+        }
+    }
 }
 
 @Composable
