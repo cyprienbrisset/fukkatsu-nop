@@ -1,6 +1,6 @@
 {
-  "versionCode": 22,
-  "versionName": "1.0.22",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.22/fukkatsu-nop-v1.0.22.apk",
-  "notes": "Fix bouton home overlay + fix pile de navigation infinie entre apps"
+  "versionCode": 23,
+  "versionName": "1.0.23",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.23/fukkatsu-nop-v1.0.23.apk",
+  "notes": "Bouton home toujours visible dans les apps — contrôles flottants séparés du bouton home"
 }

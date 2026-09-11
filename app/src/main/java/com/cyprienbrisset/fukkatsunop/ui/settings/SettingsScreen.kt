@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cyprienbrisset.fukkatsunop.BuildConfig
 import com.cyprienbrisset.fukkatsunop.airplay.AirPlayPrefs
+import com.cyprienbrisset.fukkatsunop.overlay.OverlayPrefs
 import com.cyprienbrisset.fukkatsunop.overlay.OverlayService
 import com.cyprienbrisset.fukkatsunop.system.FirmwareWatcher
 import com.cyprienbrisset.fukkatsunop.system.UpdateChecker
@@ -113,7 +114,7 @@ fun SettingsScreen(
     var voiceEnabled     by remember { mutableStateOf(VoiceService.isEnabled(ctx)) }
     var modelReady       by remember { mutableStateOf(VoiceModelManager.isModelReady(ctx)) }
     val voiceDownloadProgress by VoiceModelManager.downloadProgress.collectAsState()
-    var overlayRunning   by remember { mutableStateOf(OverlayService.isRunning) }
+    var overlayRunning   by remember { mutableStateOf(OverlayPrefs.isControlsEnabled()) }
     var verifierDisabled by remember {
         mutableStateOf(runCatching {
             Settings.Global.getInt(ctx.contentResolver, "package_verifier_enable", 1) == 0
@@ -228,15 +229,15 @@ fun SettingsScreen(
                                 overlayRunning, airPlayName, voiceEnabled, modelReady, voiceDownloadProgress,
                                 presenceEnabled = presenceEnabled,
                                 onOverlay = {
-                                    if (overlayRunning) {
-                                        ctx.startService(Intent(ctx, OverlayService::class.java).apply { action = OverlayService.ACTION_STOP })
-                                        overlayRunning = false
+                                    if (!Settings.canDrawOverlays(ctx)) {
+                                        ctx.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                                     } else {
-                                        if (!Settings.canDrawOverlays(ctx)) {
-                                            ctx.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                                        } else {
+                                        val next = !overlayRunning
+                                        OverlayPrefs.setControlsEnabled(ctx, next)
+                                        overlayRunning = next
+                                        // Ensure service is running (for the home button)
+                                        if (!OverlayService.isRunning) {
                                             ctx.startForegroundService(Intent(ctx, OverlayService::class.java))
-                                            overlayRunning = true
                                         }
                                     }
                                 },

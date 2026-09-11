@@ -47,6 +47,7 @@ import com.cyprienbrisset.fukkatsunop.data.settings.SettingsRepository
 import com.cyprienbrisset.fukkatsunop.system.DarkModeManager
 import com.cyprienbrisset.fukkatsunop.ui.theme.applyAccentOverride
 import kotlinx.coroutines.launch
+import com.cyprienbrisset.fukkatsunop.overlay.OverlayPrefs
 import com.cyprienbrisset.fukkatsunop.overlay.OverlayService
 import com.cyprienbrisset.fukkatsunop.system.FirmwareWatcher
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
@@ -106,6 +107,7 @@ class MainActivity : ComponentActivity() {
             notifPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
         DarkModeManager.initFromSystem(this)
+        OverlayPrefs.init(this)
         lifecycleScope.launch {
             SettingsRepository(this@MainActivity).accentOverride.collect { override ->
                 applyAccentOverride(override)

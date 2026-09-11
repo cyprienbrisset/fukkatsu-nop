@@ -40,6 +40,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -76,7 +77,10 @@ fun OverlayPanel(
     val maxVol = remember { audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) }
     val canWrite = remember { Settings.System.canWrite(ctx) }
 
+    val showControls by OverlayPrefs.controlsEnabled.collectAsState()
     var expanded by remember { mutableStateOf(false) }
+    // Collapse panel when controls are disabled from settings
+    LaunchedEffect(showControls) { if (!showControls) expanded = false }
     var isDark by remember { mutableStateOf(DarkModeManager.isDark(ctx)) }
     var volume by remember { mutableFloatStateOf(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()) }
     var brightness by remember {
@@ -206,12 +210,12 @@ fun OverlayPanel(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
                 horizontalAlignment = Alignment.End,
             ) {
-                // Home button — always visible, tap to return to Fukkatsu.
+                // Home button — always visible regardless of controls pref.
                 Box(
                     Modifier
                         .width(40.dp)
                         .height(44.dp)
-                        .clip(RoundedCornerShape(topStart = 14.dp))
+                        .clip(RoundedCornerShape(topStart = if (showControls) 14.dp else 14.dp, bottomStart = if (showControls) 0.dp else 14.dp))
                         .background(BG_TAB)
                         .clickable {
                             ctx.startActivity(
@@ -225,28 +229,30 @@ fun OverlayPanel(
                 ) {
                     Icon(Icons.Rounded.Home, contentDescription = "Accueil", tint = Shu, modifier = Modifier.size(20.dp))
                 }
-                // Expand/collapse handle
-                Box(
-                    Modifier
-                        .width(40.dp)
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(bottomStart = 14.dp))
-                        .background(BG_TAB)
-                        .clickable { expanded = !expanded },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(5.dp),
+                // Expand/collapse handle — only when controls are enabled
+                if (showControls) {
+                    Box(
+                        Modifier
+                            .width(40.dp)
+                            .height(48.dp)
+                            .clip(RoundedCornerShape(bottomStart = 14.dp))
+                            .background(BG_TAB)
+                            .clickable { expanded = !expanded },
+                        contentAlignment = Alignment.Center,
                     ) {
-                        Icon(
-                            if (expanded) Icons.Rounded.ChevronRight else Icons.Rounded.ChevronLeft,
-                            contentDescription = null,
-                            tint = Kinari.copy(alpha = 0.5f),
-                            modifier = Modifier.size(16.dp),
-                        )
-                        Icon(Icons.Rounded.WbSunny, contentDescription = null, tint = Kinari.copy(alpha = 0.3f), modifier = Modifier.size(11.dp))
-                        Icon(Icons.Rounded.VolumeUp, contentDescription = null, tint = Kinari.copy(alpha = 0.3f), modifier = Modifier.size(11.dp))
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(5.dp),
+                        ) {
+                            Icon(
+                                if (expanded) Icons.Rounded.ChevronRight else Icons.Rounded.ChevronLeft,
+                                contentDescription = null,
+                                tint = Kinari.copy(alpha = 0.5f),
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Icon(Icons.Rounded.WbSunny, contentDescription = null, tint = Kinari.copy(alpha = 0.3f), modifier = Modifier.size(11.dp))
+                            Icon(Icons.Rounded.VolumeUp, contentDescription = null, tint = Kinari.copy(alpha = 0.3f), modifier = Modifier.size(11.dp))
+                        }
                     }
                 }
             }
