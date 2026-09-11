@@ -90,14 +90,18 @@ fun OverlayPanel(
         )
     }
 
-    // Resync sliders each time the panel opens
+    // Resync sliders while the panel is open — catches external changes (system controls, etc.)
+    var isDragging by remember { mutableStateOf(false) }
     LaunchedEffect(expanded) {
-        if (expanded) {
-            volume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
-            brightness = runCatching {
-                Settings.System.getInt(ctx.contentResolver, Settings.System.SCREEN_BRIGHTNESS).toFloat()
-            }.getOrDefault(128f)
-            isDark = DarkModeManager.isDark(ctx)
+        while (expanded) {
+            if (!isDragging) {
+                volume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()
+                brightness = runCatching {
+                    Settings.System.getInt(ctx.contentResolver, Settings.System.SCREEN_BRIGHTNESS).toFloat()
+                }.getOrDefault(128f)
+                isDark = DarkModeManager.isDark(ctx)
+            }
+            kotlinx.coroutines.delay(500)
         }
     }
 
@@ -133,6 +137,8 @@ fun OverlayPanel(
                         value = brightness / 255f,
                         enabled = canWrite,
                         hint = if (!canWrite) "Autorisation requise" else null,
+                        onDragStart = { isDragging = true },
+                        onDragEnd = { isDragging = false },
                         onValueChange = { f ->
                             brightness = (f * 255).coerceIn(5f, 255f)
                             if (canWrite) {
@@ -147,6 +153,8 @@ fun OverlayPanel(
                         icon = { Icon(Icons.Rounded.VolumeUp, null, tint = AccentShu, modifier = Modifier.size(18.dp)) },
                         label = "Volume",
                         value = volume / maxVol,
+                        onDragStart = { isDragging = true },
+                        onDragEnd = { isDragging = false },
                         onValueChange = { f ->
                             volume = (f * maxVol).coerceIn(0f, maxVol.toFloat())
                             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume.toInt(), 0)
@@ -267,6 +275,8 @@ private fun ControlSlider(
     value: Float,
     enabled: Boolean = true,
     hint: String? = null,
+    onDragStart: () -> Unit = {},
+    onDragEnd: () -> Unit = {},
     onValueChange: (Float) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -279,7 +289,8 @@ private fun ControlSlider(
         } else {
             Slider(
                 value = value,
-                onValueChange = onValueChange,
+                onValueChange = { onDragStart(); onValueChange(it) },
+                onValueChangeFinished = onDragEnd,
                 enabled = enabled,
                 modifier = Modifier.fillMaxWidth().height(28.dp),
                 colors = SliderDefaults.colors(
