@@ -1,6 +1,6 @@
 {
-  "versionCode": 20,
-  "versionName": "1.0.20",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.20/fukkatsu-nop-v1.0.20.apk",
-  "notes": "Slider volume fixe sur les alarmes (10–100 %) · Migration Room v7 · Retry météo + hint ↺ · registerForActivityResult · StoreScreen erreurs différenciées · Timber logging"
+  "versionCode": 21,
+  "versionName": "1.0.21",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.21/fukkatsu-nop-v1.0.21.apk",
+  "notes": "Boutons Arrêter/Snooze déplacés en bas de l'écran au réveil (ne gêne plus la vidéo lever de soleil)"
 }
