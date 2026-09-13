@@ -1,6 +1,6 @@
 {
-  "versionCode": 32,
-  "versionName": "1.0.32",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.32/fukkatsu-nop-v1.0.32.apk",
-  "notes": "Contrôles système 100% in-app : WiFi (réseaux mémorisés), BT (connecter/déconnecter), sans ouvrir les réglages Android"
+  "versionCode": 33,
+  "versionName": "1.0.33",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.33/fukkatsu-nop-v1.0.33.apk",
+  "notes": "Overlay : une seule maison, plus de doublon — setupOverlay déplacé dans onCreate"
 }

@@ -42,14 +42,14 @@ class OverlayService : Service() {
     override fun onCreate() {
         super.onCreate()
         owner.init()
+        owner.start()
         isRunning = true
+        setupOverlay()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) { stopSelf(); return START_NOT_STICKY }
         startForeground(42, buildNotification())
-        owner.start()
-        setupOverlay()
         return START_STICKY
     }
 

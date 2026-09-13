@@ -220,25 +220,10 @@ fun OverlayPanel(
                             DarkModeManager.apply(ctx, next)
                             isDark = next
                         }
-                        // Home
-                        ActionButton(
-                            icon = { Icon(Icons.Rounded.Home, null, tint = Kinari, modifier = Modifier.size(18.dp)) },
-                            label = "Accueil",
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            ctx.startActivity(
-                                android.content.Intent(android.content.Intent.ACTION_MAIN).apply {
-                                    addCategory(android.content.Intent.CATEGORY_HOME)
-                                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                }
-                            )
-                        }
-                    }
-                    Row(Modifier.fillMaxWidth()) {
                         // Stop overlay
                         ActionButton(
                             icon = { Icon(Icons.Rounded.PowerSettingsNew, null, tint = Color(0xFFFF6B6B), modifier = Modifier.size(18.dp)) },
-                            label = "Fermer l'overlay",
+                            label = "Fermer",
                             modifier = Modifier.weight(1f),
                         ) { onStop() }
                     }
