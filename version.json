@@ -1,6 +1,6 @@
 {
-  "versionCode": 33,
-  "versionName": "1.0.33",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/v1.0.33/fukkatsu-nop-v1.0.33.apk",
-  "notes": "Overlay : une seule maison, plus de doublon — setupOverlay déplacé dans onCreate"
+  "versionCode": 36,
+  "versionName": "2.0",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/2.0/fukkatsu-nop-v2.0.apk",
+  "notes": "Écran Mac : recopie AirPlay fluide jusqu'à 60 i/s. Luminosité et volume au glisser sur l'accueil, volume dans la carte musique. Retour sur l'accueil corrigé. Licence GPL-3.0."
 }
