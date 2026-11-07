@@ -1,5 +1,7 @@
 package com.cyprienbrisset.fukkatsunop.airplay
 
+import timber.log.Timber
+
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
@@ -24,6 +26,7 @@ object AirPlayPrefs {
 class MdnsAdvertiser(private val context: Context, private val name: String = AirPlayPrefs.getName(context)) {
     private var nsdManager: NsdManager? = null
     private var listener: NsdManager.RegistrationListener? = null
+    private var raopListener: NsdManager.RegistrationListener? = null
     private var multicastLock: WifiManager.MulticastLock? = null
 
     fun start() {
@@ -33,23 +36,20 @@ class MdnsAdvertiser(private val context: Context, private val name: String = Ai
             it.acquire()
         }
 
-        // Derive a stable deviceid from the Ed25519 public key
-        val pk = AirPlayPairing.edPublicKeyBytes
-        val deviceId = "%02X:%02X:%02X:%02X:%02X:%02X".format(
-            pk[0], pk[1], pk[2], pk[3], pk[4], pk[5])
-        val pkHex = pk.joinToString("") { "%02x".format(it) }
-
-        val serviceInfo = NsdServiceInfo().apply {
+        AirPlayPairing.init(context)
+        Timber.d("AirPlay identity: name=$name txt=${AirPlayIdentity.airplayTxt()}")
+        val airplay = NsdServiceInfo().apply {
             serviceName = name
             serviceType = "_airplay._tcp"
             port = 7000
-            setAttribute("deviceid", deviceId)
-            setAttribute("features", "0x5A7FFFF7,0x3E")
-            setAttribute("flags", "0x0")
-            setAttribute("model", "AppleTV6,2")
-            setAttribute("srcvers", "550.10")
-            setAttribute("pk", pkHex)
-            setAttribute("pi", deviceId)
+            AirPlayIdentity.airplayTxt().forEach { (k, v) -> setAttribute(k, v) }
+        }
+        // Macs also look for the RAOP (AirTunes) service of the same device, as UxPlay advertises it.
+        val raop = NsdServiceInfo().apply {
+            serviceName = AirPlayIdentity.raopName(name)
+            serviceType = "_raop._tcp"
+            port = 7000
+            AirPlayIdentity.raopTxt().forEach { (k, v) -> setAttribute(k, v) }
         }
 
         val reg = object : NsdManager.RegistrationListener {
@@ -58,14 +58,24 @@ class MdnsAdvertiser(private val context: Context, private val name: String = Ai
             override fun onServiceUnregistered(info: NsdServiceInfo) {}
             override fun onUnregistrationFailed(info: NsdServiceInfo, err: Int) {}
         }
+        val raopReg = object : NsdManager.RegistrationListener {
+            override fun onServiceRegistered(info: NsdServiceInfo) {}
+            override fun onRegistrationFailed(info: NsdServiceInfo, err: Int) {}
+            override fun onServiceUnregistered(info: NsdServiceInfo) {}
+            override fun onUnregistrationFailed(info: NsdServiceInfo, err: Int) {}
+        }
         listener = reg
+        raopListener = raopReg
         nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
-        nsdManager?.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, reg)
+        nsdManager?.registerService(airplay, NsdManager.PROTOCOL_DNS_SD, reg)
+        nsdManager?.registerService(raop, NsdManager.PROTOCOL_DNS_SD, raopReg)
     }
 
     fun stop() {
         listener?.let { runCatching { nsdManager?.unregisterService(it) } }
+        raopListener?.let { runCatching { nsdManager?.unregisterService(it) } }
         listener = null
+        raopListener = null
         nsdManager = null
         multicastLock?.release()
         multicastLock = null

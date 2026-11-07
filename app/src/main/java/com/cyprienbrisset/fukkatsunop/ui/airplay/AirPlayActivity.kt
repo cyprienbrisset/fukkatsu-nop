@@ -11,6 +11,14 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import com.cyprienbrisset.fukkatsunop.ui.fuji.FitToPortal
+import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiBackdrop
+import com.cyprienbrisset.fukkatsunop.ui.theme.MyPortalTheme
 import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -85,6 +93,24 @@ class AirPlayActivity : ComponentActivity() {
                 }
             }
         }
+
+        // Fuji waiting screen over the video until the first picture is decoded.
+        val waiting = androidx.compose.ui.platform.ComposeView(this).apply {
+            setContent {
+                val receiving by AirPlayReceiver.receivingVideo.collectAsState()
+                if (!receiving) {
+                    MyPortalTheme(darkTheme = true) {
+                        FitToPortal {
+                            Box(Modifier.fillMaxSize()) {
+                                FujiBackdrop()
+                                MacWaitingScreen(onClose = { vm.disconnect(); finish() })
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        frame.addView(waiting, 1, FrameLayout.LayoutParams(-1, -1))
 
         setContentView(frame)
 

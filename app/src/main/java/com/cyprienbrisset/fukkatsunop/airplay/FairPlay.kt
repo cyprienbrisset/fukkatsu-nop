@@ -3,8 +3,17 @@ package com.cyprienbrisset.fukkatsunop.airplay
 // FairPlay v3 fp-setup protocol implementation.
 // Phase 1 (16-byte request → 142-byte response): static lookup table indexed by req[14].
 // Phase 2 (164-byte request → 32-byte response): 12-byte header + echo of req[144..163].
-// Source: UxPlay fairplay_playfair.c (https://github.com/FDH2/UxPlay)
+// The 164-byte phase-2 request is the key message that later decrypts the stream key.
+// Source: UxPlay fairplay_playfair.c (https://github.com/FDH2/UxPlay), GPL-3.0.
 object FairPlay {
+
+    init { System.loadLibrary("playfair") }
+
+    /** Decrypts the 72-byte `ekey` of the first SETUP into the 16-byte session AES key. */
+    fun decrypt(keyMsg: ByteArray, ekey: ByteArray): ByteArray? =
+        if (keyMsg.size == 164 && ekey.size == 72) nativeDecrypt(keyMsg, ekey) else null
+
+    @JvmStatic private external fun nativeDecrypt(keyMsg: ByteArray, ekey: ByteArray): ByteArray?
 
     fun setupReply(mode: Int): ByteArray =
         SETUP_REPLIES.getOrElse(mode.coerceIn(0, 3)) { SETUP_REPLIES[0] }.clone()

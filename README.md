@@ -11,7 +11,7 @@
 [![Android 9/10](https://img.shields.io/badge/Android-9%20%2F%2010-3DDC84?style=flat-square&logo=android&logoColor=white)](https://github.com/cyprienbrisset/fukkatsu-nop)
 [![Portal Plus · Go · Mini](https://img.shields.io/badge/Meta%20Portal-Plus%20%7C%20Go%20%7C%20Mini-4267B2?style=flat-square)](https://github.com/cyprienbrisset/fukkatsu-nop)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://github.com/cyprienbrisset/fukkatsu-nop)
-[![Licence MIT](https://img.shields.io/badge/Licence-MIT-C1272D?style=flat-square)](LICENSE)
+[![Licence GPL-3.0](https://img.shields.io/badge/Licence-GPL--3.0-16212B?style=flat-square)](LICENSE)
 
 </div>
 
@@ -36,6 +36,12 @@ Après trois minutes sans contact, la luminosité baisse doucement ; un toucher 
 | | |
 |---|---|
 | ![Apps](docs/screenshots/apps.jpg) | ![Contrôles](docs/screenshots/controles.jpg) |
+
+---
+
+## Écran Mac (AirPlay)
+
+Le Portal sert de récepteur AirPlay pour un Mac : Centre de contrôle → Recopie de l'écran → choisir le Portal. Recopie de l'écran en H.264 jusqu'à 60 images par seconde (testée avec macOS 27 ; même protocole qu'UxPlay, compatible de macOS 12 Monterey à macOS 27). Le mode « écran séparé » est expérimental. La négociation suit celle d'[UxPlay](https://github.com/FDH2/UxPlay), dont le déchiffrement FairPlay (`playfair`, GPL-3.0) est compilé en bibliothèque native.
 
 ---
 
@@ -192,4 +198,6 @@ Nécessite Android Studio (JDK intégré) — pas de `java` global requis.
 
 ## Licence
 
-MIT — Copyright © 2024–2026 Cyprien Brisset
+GPL-3.0 — Copyright © 2024–2026 Cyprien Brisset
+
+Depuis la version 1.1.35, Fukkatsu est distribué sous licence GNU GPL v3 (texte complet dans [LICENSE](LICENSE)). La recopie d'écran du Mac utilise le déchiffrement FairPlay `playfair` d'[UxPlay](https://github.com/FDH2/UxPlay) (GPL-3.0), inclus dans `app/src/main/cpp/playfair/`. Les versions antérieures à la 1.1.35 restent disponibles sous licence MIT.

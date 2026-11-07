@@ -740,6 +740,8 @@ private val TECHNOLOGIES = listOf(
 private val REPOS = listOf(
     LicenceItem("Aurora Store", "Aurora OSS — inspiration FukkaStore", "GPL 3.0"),
     LicenceItem("AirReceiver", "Félix C. — implémentation AirPlay", "GPL 3.0"),
+    LicenceItem("UxPlay (playfair, protocole de recopie)", "Projet UxPlay et contributeurs — github.com/FDH2/UxPlay", "GPL 3.0"),
+    LicenceItem("Fukkatsu No P", "Cyprien Brisset — code source sur GitHub", "GPL 3.0"),
 )
 
 private val PHOTOS = listOf(

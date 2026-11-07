@@ -178,8 +178,10 @@ class MainActivity : ComponentActivity() {
 
     @Suppress("OVERRIDE_DEPRECATION")
     override fun onBackPressed() {
-        // Prevent back from traversing out of the launcher into previously-visited apps.
-        moveTaskToBack(false)
+        // Inner screens and open panels handle back themselves (NavHost, BackHandler).
+        // On the bare home screen, back does nothing: moving the launcher task back would
+        // reveal the last app the user closed.
+        if (onBackPressedDispatcher.hasEnabledCallbacks()) super.onBackPressed()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {

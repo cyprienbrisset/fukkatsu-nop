@@ -20,7 +20,7 @@ android {
         targetSdk = 37
         val major = 1
         val minor = 1
-        val build = 34
+        val build = 35
         versionCode = build
         versionName = "$major.$minor.$build"
 
@@ -58,6 +58,14 @@ android {
             optimization {
                 enable = false
             }
+        }
+    }
+    // Native playfair (UxPlay, GPL-3.0) decrypts the AirPlay mirroring stream key.
+    ndkVersion = "28.2.13676358"
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
         }
     }
     buildFeatures {

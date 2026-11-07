@@ -56,7 +56,7 @@ fun MacWaitingScreen(onClose: () -> Unit) {
     val (dot, status) = when {
         !visible -> FujiColors.Badge to "Écran Mac masqué"
         state is AirPlayState.Connecting -> FujiColors.Waiting to "Connexion du Mac…"
-        state is AirPlayState.Streaming -> FujiColors.Ok to "Mac connecté"
+        state is AirPlayState.Streaming -> FujiColors.Ok to "Mac connecté · réception de l'image…"
         state is AirPlayState.Error -> FujiColors.Badge to "Erreur : ${(state as AirPlayState.Error).msg}"
         else -> FujiColors.Waiting to "En attente du Mac · visible sous « $name »"
     }
@@ -84,7 +84,7 @@ fun MacWaitingScreen(onClose: () -> Unit) {
                 Text(status, color = FujiColors.Cream, fontFamily = Gothic, fontSize = 24.sp)
             }
 
-            if (visible) {
+            if (visible && state is AirPlayState.Waiting) {
                 Row(Modifier.fillMaxWidth().padding(top = 18.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                     Step(1, "Sur le Mac, ouvrez le ", "Centre de contrôle", " puis Recopie de l'écran", Modifier.weight(1f))
                     Step(2, "Choisissez ", name, " dans la liste", Modifier.weight(1f))
@@ -94,7 +94,7 @@ fun MacWaitingScreen(onClose: () -> Unit) {
                     "Pendant la diffusion, touchez l'écran pour afficher « Déconnecter »",
                     color = FujiColors.Faint, fontFamily = Gothic, fontSize = 20.sp, textAlign = TextAlign.Center,
                 )
-            } else {
+            } else if (!visible) {
                 FujiButton(
                     "Rendre le Portal visible", { ctx.startForegroundService(Intent(ctx, AirPlayService::class.java)) },
                     primary = true, height = 96.dp,

@@ -32,12 +32,13 @@ class AirPlayService : Service() {
                 else -> "En attente de connexion"
             }
             (getSystemService(NotificationManager::class.java)).notify(NOTIF_ID, buildNotification(text))
-            // Auto-launch AirPlayActivity for extended display when macOS initiates
-            if (state is AirPlayState.Streaming && state.isExtended) {
+            // Open the video screen as soon as the Mac streams, whatever the launcher shows:
+            // decoding must start with the first key frame (mirror and extended display alike).
+            if (state is AirPlayState.Streaming) {
                 startActivity(
                     Intent(this@AirPlayService, AirPlayActivity::class.java)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                        .putExtra(AirPlayActivity.EXTRA_EXTENDED, true)
+                        .putExtra(AirPlayActivity.EXTRA_EXTENDED, state.isExtended)
                 )
             }
         }.launchIn(scope)

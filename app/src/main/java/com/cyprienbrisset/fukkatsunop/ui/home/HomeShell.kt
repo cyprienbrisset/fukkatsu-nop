@@ -164,15 +164,14 @@ fun HomeShell(
         updateVersion = UpdateChecker.availableVersionName(ctx)
     }
 
-    // Mirror mode opens the full-screen receiver; extended display is launched by AirPlayService.
+    // Back closes the apps panel or the control centre.
+    androidx.activity.compose.BackHandler(enabled = panel != Panel.NONE) { panel = Panel.NONE }
+
+    // The video screen itself is opened by AirPlayService when the stream starts.
     LaunchedEffect(airPlayState) {
         val st = airPlayState
-        if (st is AirPlayState.Streaming && !st.isExtended) {
-            ctx.startActivity(Intent(ctx, AirPlayActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                putExtra(AirPlayActivity.EXTRA_EXTENDED, false)
-            })
-        }
+        // As soon as a Mac starts connecting, show the "ready to be a display" screen.
+        if (st is AirPlayState.Connecting) onOpenMac()
     }
 
     // Idle: close panels after 1 min, dim the screen after 3 min.

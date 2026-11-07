@@ -22,10 +22,32 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 object AirPlayPairing {
+    @Volatile private var storedSeed: ByteArray? = null
+
+    /**
+     * Loads (or creates once) the long-term Ed25519 seed, so the Portal keeps the same
+     * deviceid and pk across restarts — a Mac pairs against these values.
+     */
+    fun init(ctx: android.content.Context) {
+        if (storedSeed != null) return
+        val prefs = ctx.getSharedPreferences("airplay_prefs", android.content.Context.MODE_PRIVATE)
+        val saved = prefs.getString("ed25519_seed", null)?.let { android.util.Base64.decode(it, android.util.Base64.NO_WRAP) }
+        storedSeed = saved?.takeIf { it.size == 32 } ?: ByteArray(32).also {
+            SecureRandom().nextBytes(it)
+            prefs.edit().putString("ed25519_seed", android.util.Base64.encodeToString(it, android.util.Base64.NO_WRAP)).apply()
+        }
+    }
+
     val edKeyPair by lazy {
-        Ed25519KeyPairGenerator()
-            .also { it.init(Ed25519KeyGenerationParameters(SecureRandom())) }
-            .generateKeyPair()
+        val seed = storedSeed
+        if (seed != null) {
+            val priv = Ed25519PrivateKeyParameters(seed, 0)
+            org.bouncycastle.crypto.AsymmetricCipherKeyPair(priv.generatePublicKey(), priv)
+        } else {
+            Ed25519KeyPairGenerator()
+                .also { it.init(Ed25519KeyGenerationParameters(SecureRandom())) }
+                .generateKeyPair()
+        }
     }
 
     val edPublicKeyBytes: ByteArray get() =

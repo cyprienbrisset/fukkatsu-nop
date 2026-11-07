@@ -21,7 +21,9 @@ object AirPlayReceiver {
         _state.value = AirPlayState.Waiting
         _advertising.value = true
         mdns = MdnsAdvertiser(context).also { it.start() }
+        AirPlayPairing.init(context)
         server = AirPlayHttpServer(
+            serverName = AirPlayPrefs.getName(context),
             onConnecting = { _state.value = AirPlayState.Connecting },
             onSession = { isExtended ->
                 _state.value = AirPlayState.Streaming(isExtended)
@@ -30,8 +32,8 @@ object AirPlayReceiver {
                 renderer.detachSurface()
                 _state.value = AirPlayState.Waiting
             },
-            onVideoNal = { nal -> renderer.pushNalUnit(nal) },
-            onReconfigureCsd = { sps, pps -> renderer.reconfigureCsd(sps, pps) },
+            onCodecConfig = { cfg -> renderer.setConfig(cfg) },
+            onVideoFrame = { frame, key -> renderer.pushFrame(frame, key) },
         ).also { it.start() }
     }
 
@@ -42,6 +44,9 @@ object AirPlayReceiver {
         _state.value = AirPlayState.Waiting
         _advertising.value = false
     }
+
+    /** True once mirrored video is actually on screen. */
+    val receivingVideo: StateFlow<Boolean> get() = renderer.firstFrame
 
     fun attachSurface(surface: Surface) = renderer.attachSurface(surface)
     fun detachSurface() = renderer.detachSurface()
