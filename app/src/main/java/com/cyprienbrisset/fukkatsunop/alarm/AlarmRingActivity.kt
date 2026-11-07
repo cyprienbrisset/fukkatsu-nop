@@ -1,5 +1,19 @@
 package com.cyprienbrisset.fukkatsunop.alarm
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiColors
+import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiPhoto
+import com.cyprienbrisset.fukkatsunop.ui.fuji.FitToPortal
+import com.cyprienbrisset.fukkatsunop.ui.fuji.Moment
+import com.cyprienbrisset.fukkatsunop.ui.theme.Gothic
+import java.time.LocalDate
+import java.util.Locale
+
 import android.graphics.SurfaceTexture
 import android.media.MediaPlayer
 import android.os.Build
@@ -44,7 +58,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.cyprienbrisset.fukkatsunop.data.AppDatabase
 import com.cyprienbrisset.fukkatsunop.data.alarm.AlarmRepository
 import com.cyprienbrisset.fukkatsunop.ui.sumi.SumiChoiceChip
-import com.cyprienbrisset.fukkatsunop.ui.sumi.WatermarkKanji
 import com.cyprienbrisset.fukkatsunop.ui.theme.Kinari
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.MyPortalTheme
@@ -94,7 +107,7 @@ class AlarmRingActivity : ComponentActivity() {
                 label = "veil",
             )
 
-            MyPortalTheme(darkTheme = true) {
+            MyPortalTheme(darkTheme = true) { FitToPortal {
                 Box(Modifier.fillMaxSize().background(Color.Black)) {
                     if (videoResId != 0) {
                         AndroidView(
@@ -123,42 +136,62 @@ class AlarmRingActivity : ComponentActivity() {
                         )
                         // Voile qui s'efface progressivement sur 5 minutes
                         Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = veilAlpha)))
+
+                    } else {
+                        FujiPhoto(Moment.AUBE, Modifier.fillMaxSize())
+                        Box(Modifier.fillMaxSize().background(Color(0x40080A12)))
                     }
 
                     Box(Modifier.fillMaxSize()) {
-                        // Heure centrée — ne gêne pas la vidéo
+                        val shadow = TextStyle(shadow = Shadow(Color(0x80000000), blurRadius = 28f))
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.align(Alignment.Center),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.align(Alignment.TopCenter).padding(top = 110.dp),
                         ) {
-                            if (videoResId == 0) WatermarkKanji("鈴", size = 260.sp)
-                            Text("RÉVEIL", color = AccentShu, fontFamily = Mincho, fontSize = 15.sp, letterSpacing = 4.sp)
-                            Spacer(Modifier.height(10.dp))
-                            Text(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
-                                fontFamily = Mincho, color = Kinari, fontSize = 78.sp)
+                            Text("RÉVEIL", color = Color.White, fontFamily = Gothic, fontSize = 30.sp, fontWeight = FontWeight.Medium, letterSpacing = 2.sp, style = shadow)
+                            Text(
+                                LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
+                                color = Color.White, fontFamily = Gothic, fontSize = 300.sp, fontWeight = FontWeight.Light,
+                                letterSpacing = (-8).sp, lineHeight = 300.sp, style = shadow,
+                            )
+                            Text(
+                                LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.FRENCH)).replaceFirstChar { it.titlecase(Locale.FRENCH) },
+                                color = Color.White, fontFamily = Gothic, fontSize = 32.sp, style = shadow,
+                            )
                         }
-                        // Boutons en bas
-                        androidx.compose.foundation.layout.Row(
-                            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(18.dp),
+                        Row(
+                            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp),
+                            horizontalArrangement = Arrangement.spacedBy(28.dp),
                         ) {
-                            SumiChoiceChip("Snooze $snoozeMinutes", selected = false, onClick = {
+                            RingButton("Snooze", "$snoozeMinutes minutes de plus", primary = false) {
                                 if (alarmId >= 0) AlarmForegroundService.snooze(this@AlarmRingActivity, alarmId, snoozeMinutes)
                                 finish()
-                            })
-                            Box(
-                                Modifier.size(104.dp).clip(CircleShape)
-                                    .border(BorderStroke(3.dp, AccentShu), CircleShape)
-                                    .clickable { AlarmForegroundService.stop(this@AlarmRingActivity); finish() },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text("Arrêter", color = Kinari, fontFamily = Mincho, fontSize = 15.sp, textAlign = TextAlign.Center)
+                            }
+                            RingButton("Arrêter", "Bonne journée", primary = true) {
+                                AlarmForegroundService.stop(this@AlarmRingActivity); finish()
                             }
                         }
                     }
                 }
-            }
+            } }
+        }
+    }
+
+    @Composable
+    private fun RingButton(title: String, sub: String, primary: Boolean, onClick: () -> Unit) {
+        Column(
+            Modifier
+                .size(width = 560.dp, height = 150.dp)
+                .clip(RoundedCornerShape(75.dp))
+                .background(if (primary) FujiColors.Cream else FujiColors.GlassDark)
+                .clickable(onClick = onClick),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            val fg = if (primary) FujiColors.Ink else Color.White
+            Text(title, color = fg, fontFamily = Gothic, fontSize = 36.sp, fontWeight = if (primary) FontWeight.Bold else FontWeight.Medium)
+            Text(sub, color = fg.copy(alpha = 0.75f), fontFamily = Gothic, fontSize = 22.sp)
         }
     }
 

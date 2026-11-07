@@ -8,20 +8,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.cyprienbrisset.fukkatsunop.R
 
-val Mincho = FontFamily(
-    Font(R.font.shippori_mincho_regular, FontWeight.Normal),
-    Font(R.font.shippori_mincho_medium, FontWeight.Medium),
-)
 val Gothic = FontFamily(
+    Font(R.font.zen_kaku_gothic_new_light, FontWeight.Light),
     Font(R.font.zen_kaku_gothic_new_regular, FontWeight.Normal),
     Font(R.font.zen_kaku_gothic_new_medium, FontWeight.Medium),
+    Font(R.font.zen_kaku_gothic_new_bold, FontWeight.Bold),
 )
 
+// The Fuji redesign uses a single Japanese gothic family everywhere; the old serif
+// name is kept as an alias so screens that still reference it follow the new look.
+val Mincho = Gothic
+
 val PortalTypography = Typography(
-    titleLarge = TextStyle(fontFamily = Mincho, fontWeight = FontWeight.Medium, fontSize = 22.sp),
-    titleMedium = TextStyle(fontFamily = Gothic, fontWeight = FontWeight.Medium, fontSize = 17.sp),
-    bodyLarge = TextStyle(fontFamily = Gothic, fontSize = 16.sp),
-    bodyMedium = TextStyle(fontFamily = Gothic, fontSize = 14.sp),
-    labelLarge = TextStyle(fontFamily = Gothic, fontWeight = FontWeight.Medium, fontSize = 12.sp, letterSpacing = 3.sp),
-    labelMedium = TextStyle(fontFamily = Gothic, fontSize = 11.sp, letterSpacing = 2.5.sp),
+    displayLarge = TextStyle(fontFamily = Gothic, fontWeight = FontWeight.Light, fontSize = 220.sp, letterSpacing = (-6).sp),
+    headlineLarge = TextStyle(fontFamily = Gothic, fontWeight = FontWeight.Medium, fontSize = 46.sp),
+    headlineMedium = TextStyle(fontFamily = Gothic, fontWeight = FontWeight.Medium, fontSize = 36.sp),
+    titleLarge = TextStyle(fontFamily = Gothic, fontWeight = FontWeight.Medium, fontSize = 28.sp),
+    titleMedium = TextStyle(fontFamily = Gothic, fontWeight = FontWeight.Medium, fontSize = 23.sp),
+    bodyLarge = TextStyle(fontFamily = Gothic, fontSize = 22.sp),
+    bodyMedium = TextStyle(fontFamily = Gothic, fontSize = 20.sp),
+    bodySmall = TextStyle(fontFamily = Gothic, fontSize = 18.sp),
+    labelLarge = TextStyle(fontFamily = Gothic, fontWeight = FontWeight.Medium, fontSize = 20.sp, letterSpacing = 1.sp),
+    labelMedium = TextStyle(fontFamily = Gothic, fontSize = 18.sp, letterSpacing = 1.sp),
 )

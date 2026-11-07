@@ -17,31 +17,40 @@
 
 ---
 
-**復活** (*fukkatsu no p*, « renaissance ») transforme un Meta Portal en hub maison permanent. Testé sur le **Portal Plus 1ère génération** (Android 9, API 28), le **Portal 2ème génération** (Android 10, API 29), le **Portal Go** et le **Portal Mini** (1280×800 dp, mode compact automatique). L'interface s'inspire de la papeterie japonaise : encre Sumi profonde la nuit, parchemin Washi chaud le jour.
+**復活** (*fukkatsu no p*, « renaissance ») transforme un Meta Portal en hub maison permanent. Testé sur le **Portal Plus 1ère génération** (Android 9, API 28), le **Portal 2ème génération** (Android 10, API 29), le **Portal Go** et le **Portal Mini** (1280×800 dp, mode compact automatique). Depuis la version 1.1, l'interface est pensée pour le tactile et la distance : un écran ambiant plein écran sur une photo du mont Fuji qui change avec l'heure, et tout le reste à portée de doigt.
+
+![Écran ambiant au coucher du soleil](docs/screenshots/ambiant-soir.jpg)
 
 ---
 
 ## Ce que vous voyez au quotidien
 
-**Une horloge ambiante** occupe la gauche de l'écran en permanence — heure, date, météo en direct et prochain réveil d'un seul coup d'œil. Si plusieurs villes sont configurées, le nom de la ville et un indicateur de points s'affichent sous la température ; un swipe gauche/droite change de ville. Quand de la musique joue, la pochette et les commandes apparaissent dessous. Les six derniers contacts Messenger ou WhatsApp avec qui vous avez échangé sont également affichés.
+**L'écran ambiant** occupe tout l'écran : une photo du mont Fuji qui change à l'aube, en journée, au soir et la nuit, l'heure en très grand, la date et la météo. Touchez la météo pour passer à la ville suivante. Une carte en bas à droite tourne toutes les 12 secondes, à la manière de l'Echo Show : prochaine réunion Google Meet avec un bouton « Rejoindre », musique en cours avec ses commandes, prochain réveil.
 
-**La grille d'apps** à droite regroupe vos raccourcis en médaillons. Un tap lance l'app. Un badge rouge indique le nombre de notifications non lues. Appui long sur une tuile = actions rapides ; appui long dans la zone vide = mode réorganisation par glisser-déposer.
+**Les apps** apparaissent dès qu'on touche l'écran (ou avec le bouton « Apps ») : favoris en icônes de 140 dp sur la photo floutée, badges de notifications, contacts récents Messenger et WhatsApp, et quatre raccourcis — Agenda, Alarmes, Widgets, Toutes les apps.
 
-Le thème bascule automatiquement entre mode nuit (Sumi) et mode jour (Washi) selon l'heure configurable. Un bouton discret à côté des réglages permet de basculer manuellement à tout moment.
+**Le centre de contrôle** descend du haut de l'écran : Wi-Fi, Bluetooth, Ne pas déranger, mode nuit, Écran Mac, luminosité automatique, curseurs épais de luminosité et de volume, économiseur et extinction de l'écran.
+
+Après trois minutes sans contact, la luminosité baisse doucement ; un toucher la rétablit.
+
+| | |
+|---|---|
+| ![Apps](docs/screenshots/apps.jpg) | ![Contrôles](docs/screenshots/controles.jpg) |
 
 ---
 
 ## Gestes
 
+Rien n'est caché : chaque action a un bouton visible d'au moins 64 dp. Les gestes restent disponibles en raccourci.
+
 | Geste | Effet |
 |---|---|
-| Glisser **vers le haut** sur le logo | Recherche rapide parmi toutes les apps installées |
-| Glisser **vers le bas** sur le logo | Activer / couper le mode Ne Pas Déranger |
-| **Écarter deux doigts** (pinch-out) | Vue multitâche : cartes des apps récentes, glisser vers le haut pour fermer |
-| **Glisser le bord droit** de l'écran | Régler la luminosité (curseur vertical) |
-| **Glisser gauche/droite** sur la météo | Passer à la ville suivante / précédente (si multi-villes configurées) |
-| **Appui long** sur une tuile | Actions rapides : raccourcis, déplacer, supprimer |
-| **Appui long** dans la zone vide du grid | Entrer en mode réorganisation — glisser pour déplacer, « Terminé » pour quitter |
+| **Toucher** l'écran ambiant | Afficher les apps |
+| **Glisser vers le bas** | Ouvrir le centre de contrôle |
+| **Glisser vers le haut** | Afficher les apps |
+| **Écarter deux doigts** | Vue multitâche des apps récentes |
+| **Appui long** sur une app favorite | Déplacer, retirer, réorganiser |
+| **Appui long** dans « Toutes les apps » | Ajouter l'app aux favoris |
 
 ---
 
@@ -56,10 +65,9 @@ Scope limité à `calendar` (lecture/écriture). Aucune dépendance Gmail. Token
 
 ---
 
-## Mode compact — Portal Go &amp; Mini
+## Portal Go &amp; Mini
 
-Sur les appareils à résolution 1280×800 dp (Portal Go 10,1" et Portal Mini 8"), le launcher détecte automatiquement la taille d'écran et active un mode compact : horloge et kanjis réduits, espacement serré, grille avec tuiles plus petites. Aucune configuration manuelle requise.
-
+L'interface est dessinée pour les 1920 dp du Portal Plus. Sur les écrans plus étroits (Portal Go 10,1" et Portal Mini 8", 1280 dp), elle est réduite proportionnellement : même disposition, mêmes proportions, aucune configuration.
 ---
 
 ## Surveillance firmware
@@ -68,17 +76,16 @@ Un `AlarmManager` vérifie quotidiennement `android.os.Build.DISPLAY`. Si la val
 
 ---
 
-## Thèmes saisonniers et palette personnalisable
+## Le mont Fuji selon l'heure
 
-L'accent vermillon **朱** adopte une variante saisonnière automatique :
-
-| Saison | Mois | Couleur |
+| Moment | Heures | Photo |
 |---|---|---|
-| 桜 Sakura | Mars — Mai | Rose `#E8A0AF` |
-| 朱 Shu | Juin — Août, Déc. | Vermillon `#C1272D` |
-| 紅葉 Momiji | Septembre — Novembre | Orangé `#C85A14` |
+| Aube | 5 h – 8 h | Lever de soleil au lac Motosu — Alpsdake, CC BY-SA 4.0 |
+| Jour | 8 h – 17 h | Le Fuji depuis le lac Motosu — Alpsdake, CC BY-SA 4.0 |
+| Soir | 17 h – 20 h | Coucher de soleil depuis Fujimisaka — Yoshi Canopus, CC0 |
+| Nuit | 20 h – 5 h | *Fuji Under Polaris* — Victor Porof, CC BY-SA 3.0 |
 
-En mode **Auto**, la bascule est entièrement automatique selon le mois. Un sélecteur dans **Réglages → Affichage → Couleur d'accent** permet de forcer une palette à tout moment (quatre pastilles de couleur : Auto, Sakura, Momiji, Shu). La transition jour/nuit est animée avec un fondu de 600 ms sur toutes les couleurs du thème.
+Les écrans de contenu (réglages, alarmes, agenda…) reposent sur la photo du moment floutée, avec des surfaces en verre et la police japonaise **Zen Kaku Gothic New**. Le crédit de la photo affichée est visible en bas de l'écran ambiant.
 
 ---
 
@@ -132,30 +139,19 @@ Un panneau flottant accessible depuis n'importe quelle app :
 
 ---
 
-## Thème automatique
+## Mode nuit
 
-L'accent vermillon **朱** `#C1272D` reste invariant. Deux palettes :
-
-<table>
-<tr>
-<th align="center">🌙 Sumi — Nuit</th>
-<th align="center">☀️ Washi — Jour</th>
-</tr>
-<tr>
-<td>Fond quasi-noir <code>#0D0E12</code>, texte ivoire <code>#ECE7DD</code></td>
-<td>Fond parchemin <code>#F2EDE3</code>, texte encre <code>#14161C</code></td>
-</tr>
-</table>
-
-Le basculement se fait à l'heure configurée dans **Réglages → Mode nuit automatique** (AlarmManager, survit aux redémarrages). Un bouton dans l'écran d'accueil et l'overlay permet de forcer le mode à tout moment.
-
-Typographie **Noto Serif JP** (Mincho).
+Le mode nuit (assombrissement système du Portal) se bascule depuis le centre de contrôle ou automatiquement à l'heure configurée dans **Réglages → Affichage → Mode nuit automatique** (AlarmManager, survit aux redémarrages).
 
 ---
 
 ## Réveil intégré
 
-Un gestionnaire de réveils complet : création par heure et jours de la semaine, sonnerie personnalisable, montée en volume progressive. Le prochain réveil est affiché en permanence sur l'écran ambiant. Trois sonneries disponibles : Standard, Zen et **Asie/Japon** (musique d'ambiance japonaise — *Tunetank / Pixabay Content License*).
+Un gestionnaire de réveils pensé pour le matin : l'heure se règle avec de gros boutons ▲/▼, les jours en ronds de 100 dp, trois sonneries japonaises à écouter d'un toucher (Koto, Japan, Anime), snooze de 5, 10 ou 15 minutes, montée progressive du volume et **lever de soleil** — l'écran s'éclaire doucement avec une vidéo avant la sonnerie. À l'heure dite, l'écran de réveil affiche l'heure en très grand sur l'aube au lac Motosu, avec deux boutons de 150 dp : Snooze et Arrêter.
+
+| | |
+|---|---|
+| ![Édition d'une alarme](docs/screenshots/alarme-edition.jpg) | ![Réveil](docs/screenshots/reveil.jpg) |
 
 ---
 

@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -28,22 +30,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.cyprienbrisset.fukkatsunop.MainActivity
 import com.cyprienbrisset.fukkatsunop.system.UpdateProgress
-import com.cyprienbrisset.fukkatsunop.ui.theme.AccentShu
-import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
-import com.cyprienbrisset.fukkatsunop.ui.theme.Shu
-import com.cyprienbrisset.fukkatsunop.ui.theme.SumiMuted
+import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiBackdrop
+import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiColors
+import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiScreen
+import com.cyprienbrisset.fukkatsunop.ui.fuji.FitToPortal
+import com.cyprienbrisset.fukkatsunop.ui.theme.Gothic
 
 object Routes {
     const val HOME = "home"
@@ -54,41 +59,64 @@ object Routes {
     const val STORE = "store"
     const val INSTALLED_APPS = "installed_apps"
     const val DARK_SCHEDULE = "dark_schedule"
+    const val AGENDA = "agenda"
+    const val WIDGETS = "widgets"
+    const val SEARCH = "search"
+    const val MAC = "mac"
+}
+
+/**
+ * Screens written before the Fuji redesign were sized for close-up use; render them
+ * 30 % larger so their text and touch targets stay comfortable from a distance.
+ */
+@Composable
+fun LegacyScale(content: @Composable () -> Unit) {
+    val d = LocalDensity.current
+    CompositionLocalProvider(LocalDensity provides Density(d.density * 1.3f, d.fontScale), content = content)
 }
 
 @Composable
 fun AppNav() {
     val nav = rememberNavController()
     val updatePct by UpdateProgress.pct.collectAsState()
+    val entry by nav.currentBackStackEntryAsState()
+    val onHome = entry?.destination?.route.let { it == null || it == Routes.HOME }
 
-    // Retour à l'accueil quand l'utilisateur appuie sur Home (onNewIntent dans MainActivity).
+    // Back to the ambient screen when the Home key is pressed (onNewIntent in MainActivity).
     val goHome by MainActivity.goHome.collectAsState()
     LaunchedEffect(goHome) {
-        if (goHome > 0) nav.navigate(Routes.HOME) {
-            popUpTo(Routes.HOME) { inclusive = false }
-        }
+        if (goHome > 0) nav.navigate(Routes.HOME) { popUpTo(Routes.HOME) { inclusive = false } }
     }
     val updating = updatePct in 0..100
+    val back: () -> Unit = { nav.popBackStack() }
 
-    Box(Modifier.fillMaxSize()) {
+    FitToPortal {
+    Box(Modifier.fillMaxSize().background(Color.Black)) {
+        // Every screen but the ambient home sits on the blurred photo of the moment.
+        if (!onHome) FujiBackdrop()
+
         NavHost(
             navController = nav,
             startDestination = Routes.HOME,
-            enterTransition = { scaleIn(spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium), initialScale = 0.94f) + fadeIn(tween(260)) },
-            exitTransition = { scaleOut(tween(200), targetScale = 0.97f) + fadeOut(tween(200)) },
-            popEnterTransition = { scaleIn(tween(220), initialScale = 0.97f) + fadeIn(tween(220)) },
-            popExitTransition = { scaleOut(spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium), targetScale = 0.94f) + fadeOut(tween(260)) },
+            enterTransition = { scaleIn(spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMediumLow), initialScale = 0.96f) + fadeIn(tween(260)) },
+            exitTransition = { fadeOut(tween(180)) },
+            popEnterTransition = { fadeIn(tween(220)) },
+            popExitTransition = { scaleOut(tween(220), targetScale = 0.96f) + fadeOut(tween(220)) },
         ) {
             composable(Routes.HOME) {
                 com.cyprienbrisset.fukkatsunop.ui.home.HomeShell(
                     onOpenSettings = { nav.navigate(Routes.SETTINGS) },
                     onAddTile = { nav.navigate(Routes.TILE_EDIT) },
                     onOpenAlarms = { nav.navigate(Routes.ALARMS) },
+                    onOpenAgenda = { nav.navigate(Routes.AGENDA) },
+                    onOpenWidgets = { nav.navigate(Routes.WIDGETS) },
+                    onOpenSearch = { nav.navigate(Routes.SEARCH) },
+                    onOpenMac = { nav.navigate(Routes.MAC) },
                 )
             }
             composable(Routes.SETTINGS) {
                 com.cyprienbrisset.fukkatsunop.ui.settings.SettingsScreen(
-                    onBack = { nav.popBackStack() },
+                    onBack = back,
                     onTiles = { nav.navigate(Routes.TILE_EDIT) },
                     onWeather = { nav.navigate(Routes.SETTINGS + "/weather") },
                     onStore = { nav.navigate(Routes.STORE) },
@@ -96,21 +124,37 @@ fun AppNav() {
                     onDarkSchedule = { nav.navigate(Routes.DARK_SCHEDULE) },
                 )
             }
-            composable(Routes.INSTALLED_APPS) {
-                com.cyprienbrisset.fukkatsunop.ui.settings.InstalledAppsScreen(onBack = { nav.popBackStack() })
+            composable(Routes.AGENDA) {
+                com.cyprienbrisset.fukkatsunop.ui.google.GoogleScreen(onBack = back)
+            }
+            composable(Routes.WIDGETS) {
+                FujiScreen("Widgets", onBack = back) {
+                    LegacyScale { com.cyprienbrisset.fukkatsunop.ui.widgets.WidgetDashboard() }
+                }
+            }
+            composable(Routes.SEARCH) {
+                com.cyprienbrisset.fukkatsunop.ui.home.AllAppsScreen(onBack = back)
+            }
+            composable(Routes.MAC) {
+                com.cyprienbrisset.fukkatsunop.ui.airplay.MacWaitingScreen(onClose = back)
             }
             composable(Routes.STORE) {
-                com.cyprienbrisset.fukkatsunop.ui.store.StoreScreen(onBack = { nav.popBackStack() })
+                FujiScreen("FukkaStore", onBack = back) {
+                    LegacyScale { com.cyprienbrisset.fukkatsunop.ui.store.StoreBody() }
+                }
+            }
+            composable(Routes.INSTALLED_APPS) {
+                LegacyScale { com.cyprienbrisset.fukkatsunop.ui.settings.InstalledAppsScreen(onBack = back) }
             }
             composable(Routes.TILE_EDIT) {
-                com.cyprienbrisset.fukkatsunop.ui.settings.TileEditScreen(onBack = { nav.popBackStack() })
+                LegacyScale { com.cyprienbrisset.fukkatsunop.ui.settings.TileEditScreen(onBack = back) }
             }
             composable(Routes.SETTINGS + "/weather") {
-                com.cyprienbrisset.fukkatsunop.ui.settings.WeatherSettingsScreen(onBack = { nav.popBackStack() })
+                LegacyScale { com.cyprienbrisset.fukkatsunop.ui.settings.WeatherSettingsScreen(onBack = back) }
             }
             composable(Routes.ALARMS) {
                 com.cyprienbrisset.fukkatsunop.ui.alarms.AlarmsScreen(
-                    onBack = { nav.popBackStack() },
+                    onBack = back,
                     onAdd = { nav.navigate(Routes.ALARM_EDIT) },
                     onEdit = { id -> nav.navigate("${Routes.ALARM_EDIT}?id=$id") },
                 )
@@ -123,24 +167,17 @@ fun AppNav() {
                 }),
             ) { backStackEntry ->
                 val alarmId = backStackEntry.arguments?.getLong("id") ?: 0L
-                com.cyprienbrisset.fukkatsunop.ui.alarms.AlarmEditScreen(
-                    alarmId = alarmId,
-                    onDone = { nav.popBackStack() },
-                )
+                com.cyprienbrisset.fukkatsunop.ui.alarms.AlarmEditScreen(alarmId = alarmId, onDone = back)
             }
             composable(Routes.DARK_SCHEDULE) {
-                com.cyprienbrisset.fukkatsunop.ui.settings.DarkModeScheduleScreen(onBack = { nav.popBackStack() })
+                LegacyScale { com.cyprienbrisset.fukkatsunop.ui.settings.DarkModeScheduleScreen(onBack = back) }
             }
         }
 
-        AnimatedVisibility(
-            visible = updating,
-            enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = Modifier.fillMaxSize(),
-        ) {
+        AnimatedVisibility(visible = updating, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.fillMaxSize()) {
             UpdateOverlay(pct = updatePct)
         }
+    }
     }
 }
 
@@ -149,67 +186,32 @@ private fun UpdateOverlay(pct: Int) {
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.85f))
-            .pointerInput(Unit) {
-                detectTapGestures(onLongPress = { UpdateProgress.set(-1) })
-            },
+            .background(Color(0xE60A0E18))
+            .pointerInput(Unit) { detectTapGestures(onLongPress = { UpdateProgress.set(-1) }) },
         contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(28.dp),
             modifier = Modifier.padding(48.dp),
         ) {
             Text(
                 text = if (pct < 100) "Mise à jour en cours" else "Installation…",
-                color = Color.White,
-                fontFamily = Mincho,
-                fontSize = 22.sp,
+                color = FujiColors.Cream, fontFamily = Gothic, fontSize = 44.sp,
             )
-
+            val bar = Modifier.fillMaxWidth(0.5f).height(16.dp).clip(RoundedCornerShape(8.dp))
             if (pct < 100) {
-                LinearProgressIndicator(
-                    progress = { pct / 100f },
-                    modifier = Modifier
-                        .fillMaxWidth(0.6f)
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp)),
-                    color = AccentShu,
-                    trackColor = AccentShu.copy(alpha = 0.25f),
-                )
-                Text(
-                    text = "$pct%",
-                    color = AccentShu,
-                    fontFamily = Mincho,
-                    fontSize = 32.sp,
-                )
+                LinearProgressIndicator(progress = { pct / 100f }, modifier = bar, color = FujiColors.Cream, trackColor = FujiColors.GlassStrong)
+                Text("$pct %", color = FujiColors.Cream, fontFamily = Gothic, fontSize = 64.sp)
             } else {
-                LinearProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxWidth(0.6f)
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp)),
-                    color = AccentShu,
-                    trackColor = AccentShu.copy(alpha = 0.25f),
-                )
+                LinearProgressIndicator(modifier = bar, color = FujiColors.Cream, trackColor = FujiColors.GlassStrong)
             }
-
-            Spacer(Modifier.height(4.dp))
             Text(
-                text = "Ne pas éteindre ou quitter l'application",
-                color = SumiMuted,
-                fontFamily = Mincho,
-                fontSize = 14.sp,
-                textAlign = TextAlign.Center,
+                "Ne pas éteindre le Portal ni quitter l'application",
+                color = FujiColors.Muted, fontFamily = Gothic, fontSize = 24.sp, textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(24.dp))
-            Text(
-                text = "Appui long pour annuler",
-                color = SumiMuted.copy(alpha = 0.4f),
-                fontFamily = Mincho,
-                fontSize = 11.sp,
-                textAlign = TextAlign.Center,
-            )
+            Text("Appui long pour annuler", color = FujiColors.Faint, fontFamily = Gothic, fontSize = 20.sp)
         }
     }
 }

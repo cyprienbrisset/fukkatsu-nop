@@ -1,5 +1,25 @@
 package com.cyprienbrisset.fukkatsunop.ui.settings
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.Apps
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.PhoneAndroid
+import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.rounded.WbSunny
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.cyprienbrisset.fukkatsunop.ui.LegacyScale
+import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiColors
+import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiIconButton
+import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiSwitch
+import com.cyprienbrisset.fukkatsunop.ui.fuji.glass
+import com.cyprienbrisset.fukkatsunop.ui.theme.Gothic
+
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
@@ -90,14 +110,14 @@ import kotlinx.coroutines.launch
 
 private enum class Cat { HOME, DISPLAY, APPS, SYSTEM, DEVICE }
 
-private data class CatDef(val kanji: String, val label: String, val id: Cat)
+private data class CatDef(val icon: ImageVector, val label: String, val id: Cat)
 
 private val CATS = listOf(
-    CatDef("宅", "Écran d'accueil", Cat.HOME),
-    CatDef("映", "Affichage",       Cat.DISPLAY),
-    CatDef("庫", "Applications",    Cat.APPS),
-    CatDef("系", "Système",         Cat.SYSTEM),
-    CatDef("機", "Appareil",        Cat.DEVICE),
+    CatDef(Icons.Rounded.Home,          "Écran d'accueil", Cat.HOME),
+    CatDef(Icons.Rounded.WbSunny,       "Affichage",       Cat.DISPLAY),
+    CatDef(Icons.Rounded.Apps,          "Applications",    Cat.APPS),
+    CatDef(Icons.Rounded.Tune,          "Système",         Cat.SYSTEM),
+    CatDef(Icons.Rounded.PhoneAndroid,  "Appareil",        Cat.DEVICE),
 )
 
 // ── SettingsScreen ────────────────────────────────────────────────────────────
@@ -140,42 +160,43 @@ fun SettingsScreen(
 
     Box(Modifier.fillMaxSize()) {
 
-        // ── Two-panel layout ─────────────────────────────────────────────────
-        Row(Modifier.fillMaxSize().statusBarsPadding()) {
-
-            // ── Left panel — category list ───────────────────────────────────
-            Column(
-                Modifier
-                    .width(240.dp)
-                    .fillMaxHeight()
-                    .background(MaterialTheme.colorScheme.surface),
-            ) {
-                // Header
+        // ── Two-panel layout: categories left, glass panel right ─────────────
+        Row(
+            Modifier.fillMaxSize().padding(start = 72.dp, end = 72.dp, top = 48.dp, bottom = 48.dp),
+            horizontalArrangement = Arrangement.spacedBy(48.dp),
+        ) {
+            Column(Modifier.width(480.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 22.dp),
+                    Modifier.padding(bottom = 26.dp),
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
                 ) {
-                    HankoSeal("朱", size = 36.dp, onClick = onBack)
-                    Spacer(Modifier.width(12.dp))
-                    Text("Réglages", fontFamily = Mincho, fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground)
+                    FujiIconButton(Icons.AutoMirrored.Rounded.ArrowBack, "Retour", onBack)
+                    Text("Réglages", color = FujiColors.Cream, fontFamily = Gothic, fontSize = 46.sp, fontWeight = FontWeight.Medium)
                 }
-                Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
-
-                CATS.forEach { cat ->
-                    CatItem(cat, selected == cat.id) { selected = cat.id }
-                }
-
-                // Credits — séparé en bas
+                CATS.forEach { cat -> CatItem(cat, selected == cat.id) { selected = cat.id } }
+                CatItem(CatDef(Icons.Rounded.Info, "Licences et crédits", Cat.HOME), false) { showCredits = true }
                 Spacer(Modifier.weight(1f))
-                Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
-                CatItem(CatDef("礼", "Licences", Cat.HOME), false) { showCredits = true }
+                Text(
+                    "Fukkatsu ${BuildConfig.VERSION_NAME}" + (updateAvailable?.let { " · mise à jour $it disponible" } ?: " · à jour"),
+                    color = FujiColors.Faint, fontFamily = Gothic, fontSize = 19.sp,
+                    modifier = Modifier.padding(start = 28.dp),
+                )
             }
 
-            // ── Separator ────────────────────────────────────────────────────
-            Box(Modifier.width(1.dp).fillMaxHeight().background(MaterialTheme.colorScheme.outline))
-
-            // ── Right panel — content ────────────────────────────────────────
-            Column(Modifier.weight(1f).fillMaxHeight()) {
+            Column(
+                Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .glass(RoundedCornerShape(40.dp), FujiColors.Glass)
+                    .padding(horizontal = 44.dp, vertical = 40.dp),
+            ) {
+                Text(
+                    CATS.first { it.id == selected }.label,
+                    color = FujiColors.Cream, fontFamily = Gothic, fontSize = 36.sp, fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(bottom = 20.dp),
+                )
+                LegacyScale {
                 if (selected == Cat.HOME) {
                     // TileEditScreen a ses propres LazyVerticalGrid — embarqué directement.
                     TileEditScreen(onBack = {})
@@ -183,19 +204,6 @@ fun SettingsScreen(
                     // InstalledAppsScreen a une LazyColumn — embarquée directement.
                     InstalledAppsScreen(onBack = {})
                 } else {
-                // Panel title
-                val title = CATS.first { it.id == selected }.label
-                Text(
-                    title,
-                    fontFamily = Mincho,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 20.sp,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 22.dp),
-                )
-                Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
-
-                // Animated panel content
                 AnimatedContent(
                     targetState = selected,
                     transitionSpec = {
@@ -207,8 +215,8 @@ fun SettingsScreen(
                     Column(
                         Modifier
                             .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 32.dp, vertical = 8.dp),
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         when (cat) {
                             Cat.HOME    -> {} // handled above
@@ -277,10 +285,11 @@ fun SettingsScreen(
                                 )
                             }
                         }
-                        Spacer(Modifier.height(32.dp))
+                        Spacer(Modifier.height(24.dp))
                     }
                 }
-                } // end else (not Cat.HOME)
+                } // end else
+                } // end LegacyScale
             }
         }
 
@@ -290,7 +299,7 @@ fun SettingsScreen(
             enter   = slideInHorizontally { it },
             exit    = slideOutHorizontally { it },
         ) {
-            CreditsScreen(onBack = { showCredits = false })
+            LegacyScale { CreditsScreen(onBack = { showCredits = false }) }
         }
     }
 
@@ -326,16 +335,21 @@ private fun CatItem(cat: CatDef, active: Boolean, onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .height(56.dp)
-            .background(if (active) AccentShu.copy(alpha = 0.08f) else Color.Transparent)
-            .clickable { onClick() },
+            .height(104.dp)
+            .clip(RoundedCornerShape(34.dp))
+            .background(if (active) FujiColors.Cream else Color.Transparent)
+            .clickable { onClick() }
+            .padding(horizontal = 28.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(22.dp),
     ) {
-        Box(Modifier.width(3.dp).height(36.dp).background(if (active) AccentShu else Color.Transparent))
-        Spacer(Modifier.width(16.dp))
-        Text(cat.kanji, fontFamily = Mincho, fontSize = 18.sp, color = if (active) AccentShu else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f))
-        Spacer(Modifier.width(14.dp))
-        Text(cat.label, fontSize = 15.sp, color = if (active) AccentShu else MaterialTheme.colorScheme.onBackground)
+        Box(
+            Modifier.size(60.dp).clip(CircleShape).background(if (active) FujiColors.Ink.copy(alpha = 0.1f) else FujiColors.GlassStrong),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(cat.icon, null, tint = if (active) FujiColors.Ink else FujiColors.Cream, modifier = Modifier.size(30.dp))
+        }
+        Text(cat.label, color = if (active) FujiColors.Ink else FujiColors.Cream, fontFamily = Gothic, fontSize = 26.sp, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -355,133 +369,9 @@ private fun DisplayPanelContent(
     val ctx2 = LocalContext.current
     val scope2 = rememberCoroutineScope()
     val settingsRepo2 = remember(ctx2) { Repo(ctx2) }
-    val accentOverride  by settingsRepo2.accentOverride.collectAsState(initial = "AUTO")
-    val bgToneDark      by settingsRepo2.bgToneDark.collectAsState(initial = "DEFAULT")
-    val bgToneLight     by settingsRepo2.bgToneLight.collectAsState(initial = "DEFAULT")
+    // Accent colour and background tones were dropped with the Fuji redesign:
+    // the photo of the moment now sets the mood of every screen.
     val iconShape       by settingsRepo2.iconShape.collectAsState(initial = false)
-
-    // ── Accent palette ────────────────────────────────────────────────────────
-    val accentPalette = listOf(
-        "AUTO"   to AccentShu,
-        "SHU"    to Shu,
-        "SAKURA" to Sakura,
-        "MOMIJI" to Momiji,
-        "INDIGO" to Indigo,
-        "MATCHA" to Matcha,
-        "NUIT"   to Nuit,
-        "OR"     to Or,
-    )
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 68.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text("Couleur d'accent", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
-            Text(
-                when (accentOverride) {
-                    "SAKURA" -> "Sakura rose"
-                    "MOMIJI" -> "Momiji automnal"
-                    "SHU"    -> "Vermillon"
-                    "INDIGO" -> "Indigo nuit"
-                    "MATCHA" -> "Matcha vert"
-                    "NUIT"   -> "Nuit violette"
-                    "OR"     -> "Or ambré"
-                    else     -> "Automatique (saisonnier)"
-                },
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                fontSize = 12.sp, fontFamily = Mincho,
-            )
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            accentPalette.forEach { (key, color) ->
-                val selected = accentOverride == key
-                Box(
-                    Modifier
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(color.copy(alpha = if (selected) 1f else 0.38f))
-                        .then(if (selected) Modifier.border(2.dp, Kinari, CircleShape) else Modifier)
-                        .clickable { scope2.launch { settingsRepo2.setAccentOverride(key) } },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (selected) Text("✓", color = Kinari, fontSize = 11.sp)
-                }
-            }
-        }
-    }
-    Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
-
-    // ── Fond mode nuit ────────────────────────────────────────────────────────
-    val bgDarkPalette = listOf(
-        "DEFAULT" to androidx.compose.ui.graphics.Color(0xFF2A2B30),
-        "SHU"     to androidx.compose.ui.graphics.Color(0xFF3D1214),
-        "SAKURA"  to androidx.compose.ui.graphics.Color(0xFF3A1E28),
-        "MOMIJI"  to androidx.compose.ui.graphics.Color(0xFF3A2010),
-        "INDIGO"  to androidx.compose.ui.graphics.Color(0xFF101840),
-        "MATCHA"  to androidx.compose.ui.graphics.Color(0xFF0E2414),
-        "NUIT"    to androidx.compose.ui.graphics.Color(0xFF201038),
-        "OR"      to androidx.compose.ui.graphics.Color(0xFF302010),
-    )
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 64.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text("Fond — mode nuit", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
-            Text(if (bgToneDark == "DEFAULT") "Noir encre (défaut)" else bgToneDark.lowercase().replaceFirstChar { it.uppercase() },
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), fontSize = 12.sp, fontFamily = Mincho)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            bgDarkPalette.forEach { (key, previewColor) ->
-                val selected = bgToneDark == key
-                Box(
-                    Modifier.size(28.dp).clip(CircleShape).background(previewColor)
-                        .then(if (selected) Modifier.border(2.dp, Kinari, CircleShape) else Modifier)
-                        .clickable { scope2.launch { settingsRepo2.setBgToneDark(key) } },
-                    contentAlignment = Alignment.Center,
-                ) { if (selected) Text("✓", color = Kinari, fontSize = 11.sp) }
-            }
-        }
-    }
-    Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
-
-    // ── Fond mode jour ────────────────────────────────────────────────────────
-    val bgLightPalette = listOf(
-        "DEFAULT" to androidx.compose.ui.graphics.Color(0xFFF2EDE3),
-        "SHU"     to androidx.compose.ui.graphics.Color(0xFFF5ECEA),
-        "SAKURA"  to androidx.compose.ui.graphics.Color(0xFFF5EDF1),
-        "MOMIJI"  to androidx.compose.ui.graphics.Color(0xFFF5EFEA),
-        "INDIGO"  to androidx.compose.ui.graphics.Color(0xFFEEEFF8),
-        "MATCHA"  to androidx.compose.ui.graphics.Color(0xFFEEF3EE),
-        "NUIT"    to androidx.compose.ui.graphics.Color(0xFFF1EEF7),
-        "OR"      to androidx.compose.ui.graphics.Color(0xFFF5F0E5),
-    )
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 64.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text("Fond — mode jour", color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
-            Text(if (bgToneLight == "DEFAULT") "Washi (défaut)" else bgToneLight.lowercase().replaceFirstChar { it.uppercase() },
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), fontSize = 12.sp, fontFamily = Mincho)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            bgLightPalette.forEach { (key, previewColor) ->
-                val selected = bgToneLight == key
-                Box(
-                    Modifier.size(28.dp).clip(CircleShape).background(previewColor)
-                        .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-                        .then(if (selected) Modifier.border(2.dp, AccentShu, CircleShape) else Modifier)
-                        .clickable { scope2.launch { settingsRepo2.setBgToneLight(key) } },
-                    contentAlignment = Alignment.Center,
-                ) { if (selected) Text("✓", color = AccentShu, fontSize = 11.sp) }
-            }
-        }
-    }
-    Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
 
     // ── Icônes normalisées ────────────────────────────────────────────────────
     SettingSwitch(
@@ -864,6 +754,14 @@ private val REPOS = listOf(
     LicenceItem("AirReceiver", "Félix C. — implémentation AirPlay", "GPL 3.0"),
 )
 
+private val PHOTOS = listOf(
+    LicenceItem("Mont Fuji au lever du soleil, lac Motosu", "Alpsdake — Wikimedia Commons", "CC BY-SA 4.0"),
+    LicenceItem("Mont Fuji depuis le lac Motosu", "Alpsdake — Wikimedia Commons", "CC BY-SA 4.0"),
+    LicenceItem("Mont Fuji au soir depuis Fujimisaka", "Yoshi Canopus — Wikimedia Commons", "CC0"),
+    LicenceItem("Fuji Under Polaris", "Victor Porof — Wikimedia Commons", "CC BY-SA 3.0"),
+    LicenceItem("Zen Kaku Gothic New", "Yoshimichi Ohira — Google Fonts", "SIL Open Font License 1.1"),
+)
+
 private val AUTRES = listOf(
     LicenceItem("Meta Portal (Android 9)", "Meta Platforms — matériel cible", "Propriétaire"),
     LicenceItem("Material Design 3", "Google — système de design", "Apache 2.0"),
@@ -874,7 +772,7 @@ private fun CreditsScreen(onBack: () -> Unit) {
     Column(
         Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color(0xF00A0E18))
             .statusBarsPadding(),
     ) {
         Row(
@@ -900,6 +798,8 @@ private fun CreditsScreen(onBack: () -> Unit) {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 48.dp, vertical = 24.dp),
         ) {
+            LicenceSection("PHOTOS ET POLICE", PHOTOS)
+            Spacer(Modifier.height(28.dp))
             LicenceSection("MUSIQUE", MUSIC)
             Spacer(Modifier.height(28.dp))
             LicenceSection("TECHNOLOGIES", TECHNOLOGIES)
@@ -956,34 +856,41 @@ private fun SettingSwitch(
     text: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit,
 ) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 68.dp),
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 86.dp)
+            .clip(RoundedCornerShape(23.dp))
+            .background(FujiColors.Glass)
+            .clickable { onCheckedChange(!checked) }
+            .padding(horizontal = 25.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(18.dp),
     ) {
-        Column(Modifier.weight(1f)) {
-            Text(text, color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
-            Text(subtitle, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), fontSize = 12.sp, fontFamily = Mincho)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(text, color = FujiColors.Cream, fontFamily = Gothic, fontSize = 19.sp, fontWeight = FontWeight.Medium)
+            Text(subtitle, color = FujiColors.Muted, fontFamily = Gothic, fontSize = 15.sp)
         }
-        Switch(
-            checked = checked, onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(checkedThumbColor = AccentShu, checkedTrackColor = AccentShu.copy(alpha = 0.4f)),
-        )
+        Box(Modifier.scale(0.77f)) { FujiSwitch(checked, onCheckedChange) }
     }
-    Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
 }
 
 @Composable
 private fun SettingRow(text: String, subtitle: String? = null, chevron: Boolean = true, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 68.dp).clickable { onClick() },
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 86.dp)
+            .clip(RoundedCornerShape(23.dp))
+            .background(FujiColors.Glass)
+            .clickable { onClick() }
+            .padding(horizontal = 25.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(18.dp),
     ) {
-        Column(Modifier.weight(1f)) {
-            Text(text, color = MaterialTheme.colorScheme.onBackground, fontSize = 17.sp)
-            if (subtitle != null) Text(subtitle, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), fontSize = 12.sp, fontFamily = Mincho)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(text, color = FujiColors.Cream, fontFamily = Gothic, fontSize = 19.sp, fontWeight = FontWeight.Medium)
+            if (subtitle != null) Text(subtitle, color = FujiColors.Muted, fontFamily = Gothic, fontSize = 15.sp)
         }
-        Spacer(Modifier.width(10.dp))
-        if (chevron) Text("›", color = AccentShu, fontSize = 22.sp)
+        if (chevron) Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = FujiColors.Cream, modifier = Modifier.size(26.dp))
     }
-    Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
 }

@@ -19,8 +19,8 @@ android {
         minSdk = 28
         targetSdk = 37
         val major = 1
-        val minor = 0
-        val build = 33
+        val minor = 1
+        val build = 34
         versionCode = build
         versionName = "$major.$minor.$build"
 
@@ -37,21 +37,24 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    val signingProps = Properties().apply {
+        val f = rootProject.file("local.properties")
+        if (f.exists()) load(f.inputStream())
+    }
+    val hasKeystore = signingProps["KEYSTORE_PATH"] != null
+
     signingConfigs {
-        create("release") {
-            val localProps = Properties()
-            val localPropsFile = rootProject.file("local.properties")
-            if (localPropsFile.exists()) localProps.load(localPropsFile.inputStream())
-            storeFile = file(localProps["KEYSTORE_PATH"] as String)
-            storePassword = localProps["KEYSTORE_PASSWORD"] as String
-            keyAlias = localProps["KEY_ALIAS"] as String
-            keyPassword = localProps["KEY_PASSWORD"] as String
+        if (hasKeystore) create("release") {
+            storeFile = file(signingProps["KEYSTORE_PATH"] as String)
+            storePassword = signingProps["KEYSTORE_PASSWORD"] as String
+            keyAlias = signingProps["KEY_ALIAS"] as String
+            keyPassword = signingProps["KEY_PASSWORD"] as String
         }
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            if (hasKeystore) signingConfig = signingConfigs.getByName("release")
             optimization {
                 enable = false
             }

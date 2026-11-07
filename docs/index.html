@@ -1,938 +1,284 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>復活 Fukkatsu No P — Launcher pour Meta Portal</title>
-  <meta name="description" content="Fukkatsu No P transforme le Meta Portal (1ère et 2ème génération) en hub maison permanent. Esthétique encre japonaise, FukkaStore, dark mode auto, watchdog."/>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet"/>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --sumi:   #0D0E12; --sumi-2: #191C23; --sumi-3: #23262F;
-      --ivory:  #ECE7DD; --muted:  #9A9488; --muted2: #5A5750;
-      --shu:    #C1272D; --shu-dim: rgba(193,39,45,0.15);
-      --serif:  'Noto Serif JP', serif;
-      --sans:   'Noto Sans JP', sans-serif;
-    }
-    html { scroll-behavior: smooth; }
-    body { background: var(--sumi); color: var(--ivory); font-family: var(--sans); font-weight: 300; line-height: 1.7; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fukkatsu — launcher pour Meta Portal</title>
+<meta name="description" content="Fukkatsu transforme un Meta Portal en écran ambiant tactile : le mont Fuji selon l'heure, vos apps au toucher, alarmes lever de soleil, agenda Google, sans Google Services.">
+<meta property="og:title" content="Fukkatsu — launcher pour Meta Portal">
+<meta property="og:description" content="Le mont Fuji selon l'heure, vos apps au toucher. Un nouveau souffle pour votre Portal.">
+<meta property="og:image" content="https://cyprienbrisset.github.io/fukkatsu-nop/screenshots/ambiant-soir.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0e16; --bg2:#121722; --card:rgba(255,255,255,.06); --card2:rgba(255,255,255,.10);
+  --line:rgba(255,255,255,.12); --text:#f4f1ea; --muted:rgba(244,241,234,.72); --faint:rgba(244,241,234,.5);
+  --ink:#16212b; --sun:#f2c46b;
+  --radius:28px; --max:1180px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Zen Kaku Gothic New',system-ui,sans-serif;font-size:18px;line-height:1.6;-webkit-font-smoothing:antialiased}
+img{max-width:100%;height:auto;display:block}
+a{color:var(--text)}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
 
-    .icon { width: 20px; height: 20px; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; fill: none; display: block; flex-shrink: 0; }
-    .icon-lg { width: 22px; height: 22px; }
+/* Nav */
+nav{position:sticky;top:0;z-index:10;background:rgba(11,14,22,.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:28px;height:68px}
+.brand{font-weight:700;font-size:20px;text-decoration:none;display:flex;align-items:center;gap:10px}
+.brand span{font-weight:300;color:var(--muted)}
+nav ul{display:flex;gap:22px;list-style:none;margin:0 0 0 auto;padding:0}
+nav ul a{text-decoration:none;color:var(--muted);font-size:16px}
+nav ul a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 26px;border-radius:26px;font-weight:700;text-decoration:none;font-size:17px;white-space:nowrap}
+.btn.primary{background:var(--text);color:var(--ink)}
+.btn.ghost{background:var(--card2);color:var(--text)}
+.btn:hover{filter:brightness(1.06)}
+@media (max-width:860px){nav ul{display:none} nav .btn{margin-left:auto}}
+@media (max-width:560px){.brand span{display:none} nav .btn{height:44px;padding:0 18px} .moments{grid-template-columns:repeat(2,minmax(0,1fr))} .hero .ctas .btn{width:100%;justify-content:center}}
+html,body{overflow-x:hidden}
 
-    nav { position: sticky; top: 0; z-index: 100; background: rgba(13,14,18,0.88); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(193,39,45,0.14); }
-    .nav-inner { max-width: 1020px; margin: 0 auto; padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
-    .nav-logo { font-family: var(--serif); font-size: 1.05rem; letter-spacing: 0.05em; color: var(--ivory); text-decoration: none; display: flex; align-items: center; gap: 8px; }
-    .nav-logo .jp { color: var(--shu); }
-    .nav-links { display: flex; align-items: center; gap: 24px; }
-    .nav-links a { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color .2s; }
-    .nav-links a:hover { color: var(--ivory); }
-    .nav-cta { color: var(--shu) !important; border: 1px solid rgba(193,39,45,0.4); padding: 6px 18px; border-radius: 2px; transition: background .2s, color .2s !important; }
-    .nav-cta:hover { background: var(--shu) !important; color: #fff !important; }
+/* Hero */
+.hero{position:relative;padding:72px 0 40px;overflow:hidden}
+.hero h1{font-size:clamp(44px,7vw,88px);font-weight:300;line-height:1.02;letter-spacing:-2px;margin:0 0 20px}
+.hero p.lead{font-size:clamp(19px,2vw,23px);color:var(--muted);max-width:640px;margin:0 0 32px}
+.hero .ctas{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:56px}
+.kicker{display:inline-flex;gap:10px;align-items:center;font-size:15px;color:var(--muted);background:var(--card);border:1px solid var(--line);border-radius:20px;padding:6px 14px;margin-bottom:22px}
+.kicker b{color:var(--text);font-weight:500}
 
-    .container { max-width: 1020px; margin: 0 auto; padding: 0 32px; }
-    section { padding: 88px 0; border-top: 1px solid rgba(236,231,221,0.06); }
-    .section-tag { font-size: 0.68rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--shu); margin-bottom: 12px; }
-    h2 { font-family: var(--serif); font-size: clamp(1.6rem, 3.5vw, 2.2rem); font-weight: 400; line-height: 1.25; margin-bottom: 16px; }
-    .lead { color: var(--muted); font-size: 0.95rem; max-width: 580px; margin-bottom: 52px; }
+/* Device frame */
+.device{border-radius:26px;padding:12px;background:linear-gradient(#1b2030,#10131c);border:1px solid var(--line);box-shadow:0 40px 120px rgba(0,0,0,.55)}
+.device img{border-radius:16px;width:100%;aspect-ratio:16/9;object-fit:cover}
 
-    /* ── Hero ── */
-    header { position: relative; overflow: hidden; padding: 80px 32px 60px; }
-    header::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(193,39,45,0.10) 0%, transparent 65%), radial-gradient(ellipse 50% 50% at 80% 100%, rgba(193,39,45,0.05) 0%, transparent 55%); pointer-events: none; }
-    .hero-kanji { position: absolute; right: -2vw; top: 50%; transform: translateY(-52%); font-family: var(--serif); font-size: clamp(14rem, 28vw, 22rem); font-weight: 300; color: rgba(236,231,221,0.04); line-height: 1; pointer-events: none; user-select: none; }
-    .hero-inner { max-width: 1020px; margin: 0 auto; position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-    .hero-eyebrow { font-size: 0.7rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--shu); margin-bottom: 20px; }
-    h1 { font-family: var(--serif); font-size: clamp(2.4rem, 5vw, 3.8rem); font-weight: 300; line-height: 1.12; letter-spacing: -0.01em; margin-bottom: 20px; }
-    h1 .jp { display: block; font-size: 0.58em; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.08em; }
-    .hero-desc { color: var(--muted); font-size: 0.95rem; line-height: 1.75; margin-bottom: 36px; max-width: 400px; }
-    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
-    .btn-prim { background: var(--shu); color: #fff; text-decoration: none; padding: 11px 28px; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; border-radius: 2px; transition: background .2s; white-space: nowrap; }
-    .btn-prim:hover { background: #a8201f; }
-    .btn-sec { color: var(--ivory); text-decoration: none; padding: 11px 28px; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid rgba(236,231,221,0.18); border-radius: 2px; transition: border-color .2s; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
-    .btn-sec:hover { border-color: rgba(236,231,221,0.5); }
+/* Moments */
+.moments{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+.moments button{all:unset;cursor:pointer;border-radius:16px;overflow:hidden;border:2px solid transparent;position:relative}
+.moments button img{aspect-ratio:16/9;object-fit:cover;opacity:.7;transition:opacity .2s}
+.moments button[aria-pressed="true"]{border-color:var(--text)}
+.moments button[aria-pressed="true"] img,.moments button:hover img{opacity:1}
+.moments button span{position:absolute;left:10px;bottom:8px;font-size:14px;font-weight:500;text-shadow:0 1px 8px rgba(0,0,0,.7)}
+.moments button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 
-    /* ── Portal mockup ── */
-    .device-wrap { perspective: 900px; }
-    .device { background: #0A0B0E; border-radius: 18px; border: 1.5px solid rgba(255,255,255,0.07); box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 32px 72px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04); aspect-ratio: 8/5; width: 100%; padding: 16px 18px; display: flex; gap: 14px; transform: rotateX(4deg) rotateY(-6deg); transition: transform .4s ease; }
-    .device:hover { transform: rotateX(2deg) rotateY(-2deg); }
-    .device-left { flex: 0 0 36%; display: flex; flex-direction: column; gap: 4px; }
-    .mock-brand { font-family: var(--serif); font-size: 0.55rem; color: rgba(193,39,45,0.8); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 2px; }
-    .mock-time { font-family: var(--serif); font-size: 1.8rem; font-weight: 300; color: rgba(236,231,221,0.9); line-height: 1; margin-bottom: 2px; }
-    .mock-date { font-size: 0.42rem; color: rgba(154,148,136,0.9); letter-spacing: 0.06em; }
-    .mock-weather { font-size: 0.42rem; color: rgba(193,39,45,0.9); margin-top: 2px; }
-    .mock-alarm { font-size: 0.38rem; color: rgba(154,148,136,0.7); margin-top: 1px; }
-    .mock-sep { flex: 1; }
-    .mock-contacts { display: flex; gap: 3px; margin-top: auto; }
-    .mock-contact { width: 14px; height: 14px; border-radius: 50%; background: var(--sumi-3); border: 1px solid rgba(255,255,255,0.08); position: relative; }
-    .mock-badge { position: absolute; top: -2px; right: -2px; width: 5px; height: 5px; border-radius: 50%; background: var(--shu); }
-    .mock-np { margin-top: 6px; background: rgba(255,255,255,0.03); border-radius: 4px; padding: 4px 6px; }
-    .mock-np-top { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
-    .mock-np-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.1); flex-shrink: 0; }
-    .mock-np-title { font-size: 0.36rem; color: rgba(236,231,221,0.6); flex: 1; white-space: nowrap; overflow: hidden; }
-    .mock-np-bar { flex: 1; height: 1.5px; background: rgba(255,255,255,0.08); border-radius: 1px; overflow: hidden; }
-    .mock-np-fill { height: 100%; width: 42%; background: var(--shu); }
-    .mock-vol { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
-    .mock-vol-bar { flex: 1; height: 2px; background: rgba(255,255,255,0.1); border-radius: 1px; overflow: hidden; }
-    .mock-vol-fill { height: 100%; width: 65%; background: rgba(193,39,45,0.6); }
-    .mock-bt { width: 6px; height: 6px; border-radius: 1px; background: rgba(193,39,45,0.5); flex-shrink: 0; }
-    .device-rule { width: 1px; background: linear-gradient(to bottom, transparent, rgba(193,39,45,0.5) 30%, rgba(193,39,45,0.5) 70%, transparent); flex-shrink: 0; }
-    .device-right { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-    .mock-top-bar { display: flex; justify-content: flex-end; gap: 4px; margin-bottom: 6px; }
-    .mock-icon-btn { width: 12px; height: 12px; border-radius: 3px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; }
-    .mock-icon-dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(154,148,136,0.5); }
-    .mock-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-    .mock-tile { aspect-ratio: 1; border-radius: 6px; background: var(--sumi-2); border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; position: relative; }
-    .mock-tile .dot { width: 24%; height: 24%; border-radius: 50%; }
-    .mock-add { background: transparent; border: 1px dashed rgba(255,255,255,0.08) !important; }
-    .mock-tile-badge { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--shu); border: 1px solid #0A0B0E; font-size: 0.28rem; color: #fff; display: flex; align-items: center; justify-content: center; }
+/* Sections */
+section{padding:96px 0}
+section.alt{background:var(--bg2)}
+h2{font-size:clamp(32px,4vw,48px);font-weight:500;line-height:1.15;letter-spacing:-.5px;margin:0 0 18px}
+.section-lead{color:var(--muted);font-size:20px;max-width:720px;margin:0 0 48px}
+.feature{display:grid;grid-template-columns:1.35fr 1fr;gap:56px;align-items:center}
+.feature.rev{grid-template-columns:1fr 1.35fr}
+.feature.rev .shot{order:2}
+.feature h3{font-size:30px;font-weight:500;margin:0 0 14px;line-height:1.2}
+.feature p{color:var(--muted);margin:0 0 16px}
+.feature ul{list-style:none;padding:0;margin:20px 0 0;display:grid;gap:12px}
+.feature li{display:flex;gap:12px;align-items:flex-start}
+.feature li::before{content:"";flex:0 0 8px;height:8px;border-radius:4px;background:var(--text);margin-top:10px}
+.feature + .feature{margin-top:96px}
+.shot img{border-radius:18px;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.45);aspect-ratio:16/9;object-fit:cover;width:100%}
+@media (max-width:900px){.feature,.feature.rev{grid-template-columns:1fr;gap:28px}.feature.rev .shot{order:0}}
 
-    /* ── Screenshots section ── */
-    .screens-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
-    .screen-card { background: var(--sumi-2); border: 1px solid rgba(236,231,221,0.06); border-radius: 12px; overflow: hidden; }
-    .screen-preview { aspect-ratio: 16/10; background: var(--sumi); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    .screen-label { padding: 14px 18px; }
-    .screen-label h3 { font-family: var(--serif); font-size: 0.88rem; font-weight: 400; color: var(--ivory); margin-bottom: 4px; }
-    .screen-label p { font-size: 0.75rem; color: var(--muted); line-height: 1.5; }
+/* Pills grid */
+.pills{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.pill{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px}
+.pill b{display:block;font-size:20px;font-weight:500;margin-bottom:6px}
+.pill span{color:var(--muted);font-size:16px}
+@media (max-width:900px){.pills{grid-template-columns:1fr}}
 
-    /* mini mockups for screen cards */
-    .mini-device { background: #0A0B0E; border-radius: 10px; border: 1px solid rgba(255,255,255,0.07); width: 100%; max-width: 260px; padding: 10px 12px; display: flex; gap: 8px; }
-    .mini-left { flex: 0 0 38%; display: flex; flex-direction: column; gap: 3px; }
-    .mini-right { flex: 1; }
-    .mini-time { font-family: var(--serif); font-size: 1.3rem; font-weight: 300; color: rgba(236,231,221,0.85); line-height: 1; }
-    .mini-date { font-size: 0.32rem; color: rgba(154,148,136,0.8); letter-spacing: 0.05em; }
-    .mini-dot { width: 8px; height: 8px; border-radius: 50%; }
-    .mini-row { display: flex; gap: 3px; flex-wrap: wrap; margin-top: auto; }
-    .mini-rule { width: 1px; background: rgba(193,39,45,0.4); }
-    .mini-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
-    .mini-tile { aspect-ratio: 1; border-radius: 4px; background: var(--sumi-3); border: 1px solid rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; }
+.gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.gallery figure{margin:0}
+.gallery figcaption{color:var(--muted);font-size:16px;margin-top:12px}
+@media (max-width:760px){.gallery{grid-template-columns:1fr}}
 
-    /* overlay mockup */
-    .overlay-mock { background: rgba(13,14,18,0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; width: 180px; backdrop-filter: blur(20px); }
-    .overlay-title { font-family: var(--serif); font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--shu); margin-bottom: 10px; }
-    .overlay-slider { margin-bottom: 8px; }
-    .overlay-sl-label { font-size: 0.32rem; color: rgba(154,148,136,0.8); margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
-    .overlay-sl-track { height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
-    .overlay-sl-fill { height: 100%; background: var(--shu); border-radius: 2px; }
-    .overlay-sl-bt { display: flex; align-items: center; gap: 4px; margin-top: 6px; }
-    .overlay-sl-bt-icon { width: 12px; height: 12px; border-radius: 3px; background: rgba(193,39,45,0.12); border: 1px solid rgba(193,39,45,0.25); display: flex; align-items: center; justify-content: center; }
-    .overlay-sl-bt-name { font-size: 0.3rem; color: rgba(193,39,45,0.9); }
-    .overlay-btns { display: flex; gap: 6px; margin-top: 10px; }
-    .overlay-btn { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 5px; text-align: center; font-size: 0.3rem; color: var(--muted); }
-    .overlay-btn.active { background: rgba(193,39,45,0.12); border-color: rgba(193,39,45,0.3); color: var(--shu); }
+.badge{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--ink);background:var(--sun);border-radius:10px;padding:3px 10px;margin-left:10px;vertical-align:middle}
 
-    /* splash mockup */
-    .splash-mock { background: var(--sumi); border-radius: 10px; border: 1px solid rgba(255,255,255,0.07); width: 200px; aspect-ratio: 8/5; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px; }
-    .splash-kanji { font-family: var(--serif); font-size: 3rem; font-weight: 400; color: var(--shu); line-height: 1; }
-    .splash-sub { font-size: 0.28rem; letter-spacing: 0.18em; color: rgba(236,231,221,0.35); text-transform: uppercase; }
+/* Install */
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:32px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px}
+.step i{font-style:normal;display:inline-flex;width:40px;height:40px;border-radius:20px;background:var(--text);color:var(--ink);font-weight:700;align-items:center;justify-content:center;margin-bottom:14px}
+.step b{display:block;font-size:19px;font-weight:500;margin-bottom:6px}
+.step span{color:var(--muted);font-size:16px}
+@media (max-width:900px){.steps{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){.steps{grid-template-columns:1fr}}
+pre{background:#05070c;border:1px solid var(--line);border-radius:20px;padding:24px;overflow-x:auto;font-size:15px;line-height:1.7;color:#d9d4ca;margin:0}
+pre .c{color:rgba(244,241,234,.45)}
 
-    /* BT picker mockup */
-    .bt-dialog { background: #141418; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); padding: 14px; width: 180px; }
-    .bt-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.07); }
-    .bt-icon { width: 12px; height: 12px; border-radius: 3px; background: rgba(193,39,45,0.15); border: 1px solid rgba(193,39,45,0.3); display: flex; align-items: center; justify-content: center; }
-    .bt-title { font-family: var(--serif); font-size: 0.5rem; color: var(--ivory); flex: 1; }
-    .bt-active-chip { background: rgba(193,39,45,0.12); border-radius: 10px; padding: 1px 6px; font-size: 0.28rem; color: var(--shu); }
-    .bt-row { display: flex; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
-    .bt-row:last-of-type { border-bottom: none; }
-    .bt-row-icon { width: 10px; height: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .bt-row-info { flex: 1; }
-    .bt-row-name { font-size: 0.34rem; color: var(--ivory); }
-    .bt-row-name.active { color: var(--shu); }
-    .bt-row-status { font-size: 0.28rem; color: rgba(76,175,80,0.9); }
-    .bt-row-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--shu); }
-    .bt-settings-row { display: flex; align-items: center; gap: 5px; padding-top: 7px; }
-    .bt-settings-row span { font-size: 0.3rem; color: var(--muted); }
-
-    /* ── Features ── */
-    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(236,231,221,0.05); border: 1px solid rgba(236,231,221,0.05); }
-    .feat-card { background: var(--sumi-2); padding: 32px 28px; transition: background .2s; }
-    .feat-card:hover { background: var(--sumi-3); }
-    .feat-icon { width: 44px; height: 44px; border-radius: 10px; background: var(--shu-dim); border: 1px solid rgba(193,39,45,0.22); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-    .feat-icon svg { stroke: var(--shu); }
-    .feat-card h3 { font-family: var(--serif); font-size: 0.95rem; font-weight: 400; margin-bottom: 8px; color: var(--ivory); }
-    .feat-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.65; }
-    .feat-new { display: inline-block; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--shu); border: 1px solid rgba(193,39,45,0.35); padding: 1px 7px; border-radius: 10px; margin-bottom: 8px; }
-
-    /* ── Gestes ── */
-    #gestes { background: var(--sumi-2); }
-    .gestures-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; }
-    .gesture-card { background: var(--sumi); border: 1px solid rgba(236,231,221,0.05); padding: 28px; display: flex; gap: 20px; align-items: flex-start; transition: border-color .2s; }
-    .gesture-card:hover { border-color: rgba(193,39,45,0.25); }
-    .gesture-icon { width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; background: rgba(13,14,18,0.6); border: 1px solid rgba(236,231,221,0.08); display: flex; align-items: center; justify-content: center; }
-    .gesture-icon svg { stroke: var(--ivory); opacity: 0.7; }
-    .gesture-trigger { font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--shu); margin-bottom: 6px; }
-    .gesture-card h3 { font-family: var(--serif); font-size: 0.9rem; font-weight: 400; color: var(--ivory); margin-bottom: 6px; }
-    .gesture-card p { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
-
-    /* ── Themes ── */
-    .themes-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
-    .theme-panel { padding: 40px 36px; position: relative; overflow: hidden; }
-    .theme-panel.night { background: #080910; border: 1px solid rgba(255,255,255,0.05); }
-    .theme-panel.day { background: #EDE8DE; border: 1px solid rgba(0,0,0,0.07); }
-    .theme-panel::after { content: attr(data-kanji); position: absolute; right: -8px; bottom: -16px; font-family: var(--serif); font-size: 7rem; font-weight: 300; line-height: 1; opacity: 0.06; pointer-events: none; }
-    .theme-panel.night::after { color: #fff; }
-    .theme-panel.day::after { color: #000; }
-    .theme-name { font-family: var(--serif); font-size: 1.2rem; font-weight: 300; margin-bottom: 4px; }
-    .theme-panel.night .theme-name { color: #ECE7DD; }
-    .theme-panel.day .theme-name { color: #14161C; }
-    .theme-time { font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 24px; }
-    .theme-panel.night .theme-time { color: #9A9488; }
-    .theme-panel.day .theme-time { color: #6E6B61; }
-    .palette { display: flex; gap: 6px; margin-bottom: 20px; }
-    .swatch { width: 32px; height: 32px; border-radius: 6px; position: relative; }
-    .swatch::after { content: ''; position: absolute; inset: 0; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15); }
-    .theme-desc { font-size: 0.78rem; line-height: 1.6; position: relative; z-index: 1; }
-    .theme-panel.night .theme-desc { color: #9A9488; }
-    .theme-panel.day .theme-desc { color: #6E6B61; }
-    .theme-accent { margin-top: 20px; height: 2px; width: 40px; background: var(--shu); }
-
-    /* ── FukkaStore ── */
-    .store-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-    .store-visual { position: relative; }
-    .store-card { background: var(--sumi-2); border: 1px solid rgba(236,231,221,0.07); border-radius: 12px; padding: 24px; }
-    .store-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(236,231,221,0.05); }
-    .store-row:last-child { border-bottom: none; }
-    .store-app-icon { width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; }
-    .store-app-name { flex: 1; font-size: 0.82rem; color: var(--ivory); }
-    .store-app-cat { font-size: 0.68rem; color: var(--muted); }
-    .store-install { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--shu); border: 1px solid rgba(193,39,45,0.35); padding: 4px 12px; border-radius: 2px; white-space: nowrap; cursor: default; }
-    .store-badge { position: absolute; top: -10px; right: -10px; background: var(--shu); color: #fff; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; }
-    .store-text h2 { margin-bottom: 16px; }
-    .store-bullets { list-style: none; margin-bottom: 32px; }
-    .store-bullets li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.85rem; color: var(--muted); padding: 6px 0; border-bottom: 1px solid rgba(236,231,221,0.05); }
-    .store-bullets li svg { stroke: var(--shu); margin-top: 3px; flex-shrink: 0; }
-
-    /* ── Install ── */
-    #install { background: var(--sumi-2); }
-    .install-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
-    .steps { list-style: none; counter-reset: s; }
-    .steps li { counter-increment: s; display: flex; gap: 18px; padding: 18px 0; border-bottom: 1px solid rgba(236,231,221,0.05); }
-    .steps li::before { content: counter(s); flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--shu); color: #fff; font-size: 0.72rem; font-weight: 400; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
-    .steps li strong { display: block; font-size: 0.88rem; color: var(--ivory); font-weight: 400; margin-bottom: 4px; }
-    .steps li span { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
-    .code-block { background: var(--sumi); border: 1px solid rgba(236,231,221,0.07); border-left: 2px solid var(--shu); border-radius: 0 4px 4px 0; padding: 24px; }
-    .code-block .label { font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted2); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-    .code-block .label svg { stroke: var(--muted2); width: 14px; height: 14px; }
-    .code-block pre { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; font-size: 0.78rem; color: #a0c897; line-height: 1.8; white-space: pre-wrap; }
-    .code-block .cm { color: var(--muted2); }
-
-    /* ── Footer ── */
-    footer { border-top: 1px solid rgba(236,231,221,0.06); padding: 56px 32px; }
-    .footer-inner { max-width: 1020px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
-    .footer-brand { font-family: var(--serif); font-size: 1.8rem; color: rgba(236,231,221,0.08); }
-    .footer-info p { font-size: 0.75rem; color: var(--muted2); }
-    .footer-info a { color: var(--muted); text-decoration: none; }
-    .footer-info a:hover { color: var(--shu); }
-    .footer-links { display: flex; gap: 20px; }
-    .footer-links a { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--muted); text-decoration: none; letter-spacing: 0.04em; transition: color .2s; }
-    .footer-links a:hover { color: var(--ivory); }
-    .footer-links svg { stroke: currentColor; }
-
-    @media (max-width: 820px) {
-      .hero-inner { grid-template-columns: 1fr; gap: 48px; }
-      .device-wrap { max-width: 480px; }
-      .features-grid { grid-template-columns: 1fr 1fr; }
-      .gestures-grid { grid-template-columns: 1fr; }
-      .themes-wrap { grid-template-columns: 1fr; }
-      .store-wrap { grid-template-columns: 1fr; }
-      .install-grid { grid-template-columns: 1fr; }
-      .screens-grid { grid-template-columns: 1fr 1fr; }
-      .hero-desc { max-width: none; }
-      .nav-links a:not(.nav-cta) { display: none; }
-      .footer-inner { flex-direction: column; text-align: center; }
-      .footer-links { justify-content: center; }
-    }
-    @media (max-width: 560px) {
-      .features-grid { grid-template-columns: 1fr; }
-      .screens-grid { grid-template-columns: 1fr; }
-      header { padding: 60px 20px 48px; }
-      section { padding: 64px 0; }
-    }
-  </style>
+footer{padding:56px 0 72px;border-top:1px solid var(--line);color:var(--faint);font-size:15px}
+footer .cols{display:grid;grid-template-columns:1fr 1.4fr;gap:40px}
+footer h4{color:var(--text);font-weight:500;font-size:16px;margin:0 0 10px}
+footer ul{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+footer a{color:var(--muted)}
+@media (max-width:760px){footer .cols{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 
-<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
-  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
-  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
-  <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
-  <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
-  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
-  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
-  <symbol id="i-sliders" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></symbol>
-  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
-  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
-  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></symbol>
-  <symbol id="i-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
-  <symbol id="i-arrow-up" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></symbol>
-  <symbol id="i-arrow-down" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></symbol>
-  <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
-  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
-  <symbol id="i-bluetooth" viewBox="0 0 24 24"><polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"/></symbol>
-  <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
-  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
-  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="2" x2="9" y2="4"/><line x1="15" y1="2" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="22"/><line x1="15" y1="20" x2="15" y2="22"/><line x1="2" y1="9" x2="4" y2="9"/><line x1="2" y1="15" x2="4" y2="15"/><line x1="20" y1="9" x2="22" y2="9"/><line x1="20" y1="15" x2="22" y2="15"/></symbol>
-  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></symbol>
-  <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></symbol>
-  <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></symbol>
-  <symbol id="i-terminal" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></symbol>
-  <symbol id="i-map" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></symbol>
-  <symbol id="i-press" viewBox="0 0 24 24"><path d="M9 11V6a2 2 0 0 1 2-2v0a2 2 0 0 1 2 2v5"/><path d="M13 11V9a2 2 0 0 1 2-2v0a2 2 0 0 1 2 2v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-1a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2"/><path d="M13 5V3"/></symbol>
-</svg>
-
-<nav>
-  <div class="nav-inner">
-    <a class="nav-logo" href="#"><span class="jp">復活</span> Fukkatsu No P</a>
-    <div class="nav-links">
-      <a href="#features">Fonctionnalités</a>
-      <a href="#screens">Aperçus</a>
-      <a href="#gestes">Gestes</a>
-      <a href="#install">Installation</a>
-      <a class="nav-cta" href="https://github.com/cyprienbrisset/fukkatsu-nop" target="_blank" rel="noopener">GitHub →</a>
-    </div>
+<nav aria-label="Navigation">
+  <div class="wrap">
+    <a class="brand" href="#top">Fukkatsu <span>pour Meta Portal</span></a>
+    <ul>
+      <li><a href="#ambiant">Écran ambiant</a></li>
+      <li><a href="#toucher">Au toucher</a></li>
+      <li><a href="#reveil">Réveil</a></li>
+      <li><a href="#ecrans">Écrans</a></li>
+      <li><a href="#installer">Installer</a></li>
+    </ul>
+    <a class="btn primary" href="https://github.com/cyprienbrisset/fukkatsu-nop/releases/latest">Télécharger</a>
   </div>
 </nav>
 
-<!-- ── Hero ── -->
-<header>
-  <div class="hero-kanji" aria-hidden="true">復</div>
-  <div class="hero-inner">
-    <div class="hero-text">
-      <p class="hero-eyebrow">Meta Portal Plus · Go · Mini · Android 9 / 10 · Sans GMS</p>
-      <h1>
-        <span class="jp">復活 fukkatsu no p</span>
-        Un hub maison qui s'éveille au quotidien
-      </h1>
-      <p class="hero-desc">
-        Remplace l'interface stock du Portal par un launcher permanent — horloge ambiante, météo multi-villes, contacts, musique, FukkaStore et contrôles système. Esthétique encre japonaise, mode nuit automatique, mode compact automatique sur Portal Go/Mini, zéro dépendance Google.
-      </p>
-      <div class="hero-btns">
-        <a class="btn-prim" href="https://github.com/cyprienbrisset/fukkatsu-nop/releases" target="_blank" rel="noopener">Télécharger</a>
-        <a class="btn-sec" href="https://github.com/cyprienbrisset/fukkatsu-nop" target="_blank" rel="noopener">
-          <svg class="icon"><use href="#i-github"/></svg>
-          Code source
-        </a>
-      </div>
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="kicker"><b>Version 1.1</b> · refonte complète pour l'écran tactile</div>
+    <h1>Un nouveau souffle<br>pour votre Portal.</h1>
+    <p class="lead">Fukkatsu (復活, « renaissance ») transforme un Meta Portal en écran ambiant : le mont Fuji au fil de la journée, l'heure en grand, et tout le reste à portée de doigt. Sans Google Services.</p>
+    <div class="ctas">
+      <a class="btn primary" href="https://github.com/cyprienbrisset/fukkatsu-nop/releases/latest">Télécharger l'APK</a>
+      <a class="btn ghost" href="https://github.com/cyprienbrisset/fukkatsu-nop">Code source sur GitHub</a>
     </div>
-    <div class="device-wrap">
-      <div class="device" role="img" aria-label="Aperçu de l'interface Fukkatsu No P">
-        <div class="device-left">
-          <div class="mock-brand">復活</div>
-          <div class="mock-time">21:34</div>
-          <div class="mock-date">Dim 7 sept · 17° Partiellement nuageux</div>
-          <div class="mock-alarm">⏰ 07:30 — Lun, Mar, Mer</div>
-          <div class="mock-sep"></div>
-          <div class="mock-contacts">
-            <div class="mock-contact" style="background:#2a2060"><div class="mock-badge"></div></div>
-            <div class="mock-contact" style="background:#1a4030"></div>
-            <div class="mock-contact" style="background:#3a1520"><div class="mock-badge"></div></div>
-            <div class="mock-contact" style="background:#1a2a40"></div>
-            <div class="mock-contact" style="background:#302010"></div>
-          </div>
-          <div class="mock-np">
-            <div class="mock-np-top">
-              <div class="mock-np-dot"></div>
-              <div class="mock-np-title">Nujabes — Feather</div>
-            </div>
-            <div class="mock-np-bar"><div class="mock-np-fill"></div></div>
-            <div class="mock-vol">
-              <div class="mock-vol-bar"><div class="mock-vol-fill"></div></div>
-              <div class="mock-bt" title="BT actif"></div>
-            </div>
-          </div>
-        </div>
-        <div class="device-rule"></div>
-        <div class="device-right">
-          <div class="mock-top-bar">
-            <div class="mock-icon-btn"><div class="mock-icon-dot" style="background:rgba(236,231,221,0.4)"></div></div>
-            <div class="mock-icon-btn"><div class="mock-icon-dot" style="background:rgba(193,39,45,0.6)"></div></div>
-          </div>
-          <div class="mock-grid">
-            <div class="mock-tile"><div class="dot" style="background:#4C5FD5;border-radius:50%"></div><div class="mock-tile-badge">3</div></div>
-            <div class="mock-tile"><div class="dot" style="background:#1DB954;border-radius:50%"></div></div>
-            <div class="mock-tile"><div class="dot" style="background:#4285F4;border-radius:50%"></div></div>
-            <div class="mock-tile"><div class="dot" style="background:#D58A4C;border-radius:50%"></div><div class="mock-tile-badge">1</div></div>
-            <div class="mock-tile"><div class="dot" style="background:#8A4CD5;border-radius:50%"></div></div>
-            <div class="mock-tile"><div class="dot" style="background:#4CB5D5;border-radius:50%"></div></div>
-            <div class="mock-tile"><div class="dot" style="background:#C1272D;border-radius:50%"></div></div>
-            <div class="mock-tile mock-add"></div>
-          </div>
-        </div>
-      </div>
+
+    <div class="device" id="ambiant">
+      <img id="moment-img" src="screenshots/ambiant-soir.jpg" alt="Écran ambiant de Fukkatsu au coucher du soleil : l'heure 18:30 en grand sur une photo du mont Fuji, la date et une carte « Prochain réveil »" width="1600" height="900">
+    </div>
+    <div class="moments" role="group" aria-label="Moments de la journée">
+      <button type="button" data-src="screenshots/ambiant-aube.jpg" data-alt="Écran ambiant à l'aube : lever de soleil derrière le Fuji sur le lac Motosu" aria-pressed="false"><img src="screenshots/ambiant-aube.jpg" alt="" loading="lazy"><span>Aube</span></button>
+      <button type="button" data-src="screenshots/ambiant-jour.jpg" data-alt="Écran ambiant en journée : le Fuji enneigé sous un ciel bleu" aria-pressed="false"><img src="screenshots/ambiant-jour.jpg" alt="" loading="lazy"><span>Jour</span></button>
+      <button type="button" data-src="screenshots/ambiant-soir.jpg" data-alt="Écran ambiant au coucher du soleil derrière le Fuji" aria-pressed="true"><img src="screenshots/ambiant-soir.jpg" alt="" loading="lazy"><span>Soir</span></button>
+      <button type="button" data-src="screenshots/ambiant-nuit.jpg" data-alt="Écran ambiant la nuit : filé d'étoiles au-dessus du sommet du Fuji" aria-pressed="false"><img src="screenshots/ambiant-nuit.jpg" alt="" loading="lazy"><span>Nuit</span></button>
     </div>
   </div>
 </header>
 
-<!-- ── Fonctionnalités ── -->
-<section id="features">
-  <div class="container">
-    <p class="section-tag">Fonctionnalités</p>
-    <h2>Tout sur un seul écran, en permanence</h2>
-    <p class="lead">Fukkatsu No P est conçu pour rester allumé — chaque information utile visible d'un coup d'œil, chaque action à portée d'un geste.</p>
-
-    <div class="features-grid">
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-clock"/></svg></div>
-        <h3>Horloge ambiante</h3>
-        <p>Heure, date, météo en direct et prochain réveil — toujours visibles en typographie Mincho, jour et nuit.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-grid"/></svg></div>
-        <h3>Grille d'apps</h3>
-        <p>Raccourcis personnalisables en médaillons avec badges de notifications. Glisser-déposer pour réorganiser, appui long pour les actions rapides.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-music"/></svg></div>
-        <h3>Lecture en cours</h3>
-        <p>Pochette, titre, commandes et barre de progression intégrés à l'écran principal. Tap pour ouvrir le lecteur.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-users"/></svg></div>
-        <h3>Contacts récents</h3>
-        <p>Vos six derniers contacts Messenger ou WhatsApp toujours à portée, sans ouvrir la messagerie.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-moon"/></svg></div>
-        <h3>Thème automatique</h3>
-        <p>Sumi profond la nuit, Washi chaud le jour — bascule programmée à l'heure choisie, ou manuellement en un tap depuis l'accueil ou l'overlay.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-bell"/></svg></div>
-        <h3>Réveil intégré</h3>
-        <p>Planificateur complet : heure, jours, sonnerie personnalisée et montée en volume progressive.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-bag"/></svg></div>
-        <h3>FukkaStore</h3>
-        <p>Catalogue Google Play complet sans GMS. Authentification Google unique, catégories, recherche, fiche complète — une pression pour installer.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-sliders"/></svg></div>
-        <h3>Overlay système</h3>
-        <p>Panneau flottant accessible depuis n'importe quelle app — volume, luminosité, mode nuit, retour accueil.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-bluetooth"/></svg></div>
-        <span class="feat-new">Nouveau</span>
-        <h3>Audio Bluetooth</h3>
-        <p>Icône interactive à côté du volume : appareil actif en un coup d'œil, liste des jumelés, ouverture des réglages Bluetooth.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-shield"/></svg></div>
-        <span class="feat-new">Nouveau</span>
-        <h3>Watchdog de crash</h3>
-        <p>Redémarrage automatique en 1 seconde si le launcher plante — sans dialogue système, sans intervention.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-zap"/></svg></div>
-        <span class="feat-new">Nouveau</span>
-        <h3>Splash screen</h3>
-        <p>Hanko seal 復 animé au démarrage — fondu entrant, maintien, fondu sortant. Aucun écran blanc interstitiel.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-search"/></svg></div>
-        <h3>Apps installées</h3>
-        <p>Liste de toutes les apps avec recherche intégrée et désinstallation directe depuis les réglages.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-calendar"/></svg></div>
-        <span class="feat-new">Nouveau</span>
-        <h3>Google Agenda &amp; Meet</h3>
-        <p>Troisième écran dédié : événements des 60 prochains jours, création en direct, et réunions Meet avec compte à rebours et bouton « Rejoindre ». Connexion via Device Flow — zéro navigateur sur le Portal.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-cpu"/></svg></div>
-        <span class="feat-new">Nouveau</span>
-        <h3>Surveillance firmware</h3>
-        <p>Vérification quotidienne de <code>Build.DISPLAY</code>. Si le Portal reçoit une mise à jour OTA, une notification haute priorité alerte immédiatement — pour vérifier que l'ADB et les overlays restent fonctionnels.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-leaf"/></svg></div>
-        <span class="feat-new">Nouveau</span>
-        <h3>Palette personnalisable</h3>
-        <p>L'accent vermillon 朱 adopte une variante saisonnière automatique : rose sakura 桜 (mars–mai), orangé momiji 紅葉 (sept.–nov.). Un sélecteur dans Réglages → Affichage permet de forcer la palette à tout moment — quatre pastilles Auto / Sakura / Momiji / Shu.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-mic"/></svg></div>
-        <span class="feat-new">Nouveau</span>
-        <h3>Commandes vocales locales</h3>
-        <p>Wake word « Portal » détecté en continu par Vosk — 100% embarqué, zéro cloud. Commandes : ouvre une app, mode nuit/jour, éteins l'écran. Le micro-réseau du Portal reprend vie, sans Alexa. Téléchargement du modèle avec barre de progression en temps réel.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-map"/></svg></div>
-        <span class="feat-new">Nouveau</span>
-        <h3>Météo multi-villes</h3>
-        <p>Jusqu'à 5 villes configurables dans les réglages. Swipe gauche/droite sur le bloc météo pour changer de ville — nom de la ville et indicateur de points sous la température.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-layers"/></svg></div>
-        <span class="feat-new">Nouveau</span>
-        <h3>Mode compact — Portal Go &amp; Mini</h3>
-        <p>Sur Portal Go (10,1") et Portal Mini (8"), le launcher détecte automatiquement l'écran 1280×800 dp et active un mode compact : polices et espacement réduits, grille resserrée. Zéro configuration.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-zap"/></svg></div>
-        <span class="feat-new">Nouveau</span>
-        <h3>Résilience réseau</h3>
-        <p>Cache Room local avec TTL de 15 min pour la météo et 30 min pour l'agenda — l'interface reste fonctionnelle sans connexion. Toutes les requêtes HTTP bénéficient d'un backoff exponentiel automatique (1 s → 2 s → 4 s, codes 5xx).</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-moon"/></svg></div>
-        <span class="feat-new">Nouveau</span>
-        <h3>Animation jour / nuit</h3>
-        <p>La transition entre les palettes Sumi (nuit) et Washi (jour) s'effectue avec un fondu de 600 ms sur toutes les couleurs du thème — aucun saut brutal à l'heure de bascule.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon"><svg class="icon icon-lg"><use href="#i-cpu"/></svg></div>
-        <span class="feat-new">Nouveau</span>
-        <h3>Présence adaptative</h3>
-        <p>La caméra analyse les visages toutes les 2 s en présence, 10 s en absence — réduisant la consommation CPU de 80 % quand le Portal est sans utilisateur, sans sacrifier la réactivité.</p>
-      </div>
+<section id="ambiant-detail">
+  <div class="wrap">
+    <h2>Un écran qui vit avec la journée</h2>
+    <p class="section-lead">Le Portal reste allumé toute la journée : autant qu'il soit beau. La photo du Fuji change à l'aube, en journée, au soir et la nuit. Dessus, seulement l'essentiel, lisible depuis le canapé.</p>
+    <div class="pills">
+      <div class="pill"><b>L'heure en 220 points</b><span>Date, météo et ville en dessous. Touchez la météo pour passer à la ville suivante.</span></div>
+      <div class="pill"><b>Une carte qui tourne</b><span>Prochaine réunion avec « Rejoindre », musique en cours avec ses commandes, prochain réveil.</span></div>
+      <div class="pill"><b>Veille douce</b><span>Après trois minutes sans contact, la luminosité baisse doucement. Un toucher et tout revient.</span></div>
     </div>
   </div>
 </section>
 
-<!-- ── Aperçus ── -->
-<section id="screens">
-  <div class="container">
-    <p class="section-tag">Aperçus</p>
-    <h2>L'interface en détail</h2>
-    <p class="lead">Mockups fidèles à l'interface réelle — esthétique Sumi (nuit) et Washi (jour), typographie Mincho, accent vermillon invariant.</p>
+<section class="alt" id="toucher">
+  <div class="wrap">
+    <h2>Tout le reste, au toucher</h2>
+    <p class="section-lead">Fini les gestes cachés. Deux boutons visibles en permanence : « Apps » en bas, « Contrôles » en haut. Chaque zone tactile fait au moins 64 points, les actions principales jusqu'à 150.</p>
 
-    <div class="screens-grid">
-
-      <!-- Écran principal nuit -->
-      <div class="screen-card">
-        <div class="screen-preview" style="background:#0D0E12;">
-          <div class="mini-device" style="background:#0A0B0E;">
-            <div class="mini-left">
-              <div style="font-family:var(--serif);font-size:0.38rem;color:rgba(193,39,45,0.8);letter-spacing:0.15em;">復活</div>
-              <div class="mini-time">21:34</div>
-              <div class="mini-date">Dim 7 sept · 17°</div>
-              <div style="font-size:0.28rem;color:rgba(193,39,45,0.7);margin-top:2px;">Partiellement nuageux</div>
-              <div style="flex:1;"></div>
-              <div class="mini-row">
-                <div class="mini-dot" style="background:#2a2060;width:9px;height:9px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);"></div>
-                <div class="mini-dot" style="background:#1a4030;width:9px;height:9px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);"></div>
-                <div class="mini-dot" style="background:#3a1520;width:9px;height:9px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);"></div>
-                <div class="mini-dot" style="background:#1a2a40;width:9px;height:9px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);"></div>
-              </div>
-              <div style="background:rgba(255,255,255,0.03);border-radius:3px;padding:3px 4px;margin-top:4px;">
-                <div style="font-size:0.26rem;color:rgba(154,148,136,0.7);">Nujabes — Feather</div>
-                <div style="height:1.5px;background:rgba(255,255,255,0.08);border-radius:1px;margin-top:2px;overflow:hidden;"><div style="height:100%;width:42%;background:var(--shu);"></div></div>
-              </div>
-            </div>
-            <div class="mini-rule"></div>
-            <div class="mini-right">
-              <div class="mini-grid">
-                <div class="mini-tile"><div style="width:40%;height:40%;border-radius:50%;background:#4C5FD5;"></div></div>
-                <div class="mini-tile"><div style="width:40%;height:40%;border-radius:50%;background:#1DB954;"></div></div>
-                <div class="mini-tile"><div style="width:40%;height:40%;border-radius:50%;background:#4285F4;"></div></div>
-                <div class="mini-tile"><div style="width:40%;height:40%;border-radius:50%;background:#D58A4C;"></div></div>
-                <div class="mini-tile"><div style="width:40%;height:40%;border-radius:50%;background:#8A4CD5;"></div></div>
-                <div class="mini-tile" style="border:1px dashed rgba(255,255,255,0.08);background:transparent;"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="screen-label">
-          <h3>🌙 Accueil — Sumi (nuit)</h3>
-          <p>Horloge ambiante, météo, contacts récents, Now Playing avec volume + BT, grille d'apps avec badges.</p>
-        </div>
-      </div>
-
-      <!-- Écran jour -->
-      <div class="screen-card">
-        <div class="screen-preview" style="background:#F2EDE3;">
-          <div class="mini-device" style="background:#EDE8DE;border-color:rgba(0,0,0,0.1);">
-            <div class="mini-left">
-              <div style="font-family:var(--serif);font-size:0.38rem;color:#C1272D;letter-spacing:0.15em;">復活</div>
-              <div class="mini-time" style="color:#14161C;font-size:1.1rem;">09:15</div>
-              <div class="mini-date" style="color:#6E6B61;">Lun 8 sept · 22°</div>
-              <div style="font-size:0.28rem;color:#C1272D;margin-top:2px;">Ensoleillé</div>
-              <div style="flex:1;"></div>
-              <div class="mini-row">
-                <div style="width:9px;height:9px;border-radius:50%;background:#B8B0A0;border:1px solid rgba(0,0,0,0.1);"></div>
-                <div style="width:9px;height:9px;border-radius:50%;background:#C0B898;border:1px solid rgba(0,0,0,0.1);"></div>
-                <div style="width:9px;height:9px;border-radius:50%;background:#A8B0C0;border:1px solid rgba(0,0,0,0.1);"></div>
-                <div style="width:9px;height:9px;border-radius:50%;background:#C0A8A0;border:1px solid rgba(0,0,0,0.1);"></div>
-              </div>
-            </div>
-            <div class="mini-rule" style="background:rgba(193,39,45,0.3);"></div>
-            <div class="mini-right">
-              <div class="mini-grid">
-                <div class="mini-tile" style="background:#E6E1D6;border-color:rgba(0,0,0,0.06);"><div style="width:40%;height:40%;border-radius:50%;background:#4C5FD5;"></div></div>
-                <div class="mini-tile" style="background:#E6E1D6;border-color:rgba(0,0,0,0.06);"><div style="width:40%;height:40%;border-radius:50%;background:#1DB954;"></div></div>
-                <div class="mini-tile" style="background:#E6E1D6;border-color:rgba(0,0,0,0.06);"><div style="width:40%;height:40%;border-radius:50%;background:#4285F4;"></div></div>
-                <div class="mini-tile" style="background:#E6E1D6;border-color:rgba(0,0,0,0.06);"><div style="width:40%;height:40%;border-radius:50%;background:#D58A4C;"></div></div>
-                <div class="mini-tile" style="background:#E6E1D6;border-color:rgba(0,0,0,0.06);"><div style="width:40%;height:40%;border-radius:50%;background:#8A4CD5;"></div></div>
-                <div class="mini-tile" style="background:transparent;border:1px dashed rgba(0,0,0,0.12);"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="screen-label">
-          <h3>☀️ Accueil — Washi (jour)</h3>
-          <p>Même information, palette parchemin chaud. Bascule automatique à l'heure configurée ou en un tap.</p>
-        </div>
-      </div>
-
-      <!-- Overlay système -->
-      <div class="screen-card">
-        <div class="screen-preview" style="background:#0D0E12;">
-          <div class="overlay-mock">
-            <div class="overlay-title">Contrôles</div>
-            <div class="overlay-slider">
-              <div class="overlay-sl-label">
-                <svg style="width:8px;height:8px;stroke:var(--muted);stroke-width:1.5;fill:none;flex-shrink:0;"><use href="#i-sliders"/></svg>
-                Volume
-              </div>
-              <div class="overlay-sl-track"><div class="overlay-sl-fill" style="width:65%;"></div></div>
-              <div class="overlay-sl-bt">
-                <div class="overlay-sl-bt-icon">
-                  <svg style="width:6px;height:6px;stroke:var(--shu);stroke-width:2;fill:none;"><use href="#i-bluetooth"/></svg>
-                </div>
-                <div class="overlay-sl-bt-name">AirPods Pro</div>
-              </div>
-            </div>
-            <div class="overlay-slider">
-              <div class="overlay-sl-label">
-                <svg style="width:8px;height:8px;stroke:var(--muted);stroke-width:1.5;fill:none;flex-shrink:0;"><use href="#i-sun"/></svg>
-                Luminosité
-              </div>
-              <div class="overlay-sl-track"><div class="overlay-sl-fill" style="width:80%;"></div></div>
-            </div>
-            <div class="overlay-btns">
-              <div class="overlay-btn active">🌙 Nuit</div>
-              <div class="overlay-btn">⌂ Accueil</div>
-            </div>
-          </div>
-        </div>
-        <div class="screen-label">
-          <h3>Overlay système</h3>
-          <p>Flottant par-dessus toute app — volume avec appareil BT actif, luminosité, bascule mode nuit.</p>
-        </div>
-      </div>
-
-      <!-- Splash screen -->
-      <div class="screen-card">
-        <div class="screen-preview" style="background:#0D0E12;">
-          <div class="splash-mock">
-            <div class="splash-kanji">復</div>
-            <div class="splash-sub">F U K K A T S U &nbsp; N O &nbsp; P</div>
-          </div>
-        </div>
-        <div class="screen-label">
-          <h3>Splash screen</h3>
-          <p>Hanko seal vermillon sur Sumi — 3 phases animées au démarrage. Aucun écran blanc interstitiel.</p>
-        </div>
-      </div>
-
-      <!-- BT Picker -->
-      <div class="screen-card">
-        <div class="screen-preview" style="background:#0D0E12;">
-          <div class="bt-dialog">
-            <div class="bt-header">
-              <div class="bt-icon"><svg style="width:6px;height:6px;stroke:var(--shu);stroke-width:2;fill:none;"><use href="#i-bluetooth"/></svg></div>
-              <div class="bt-title">Sortie audio</div>
-              <div class="bt-active-chip">AirPods Pro</div>
-            </div>
-            <div class="bt-row">
-              <div class="bt-row-icon"><svg style="width:8px;height:8px;stroke:var(--shu);stroke-width:1.5;fill:none;"><use href="#i-bluetooth"/></svg></div>
-              <div class="bt-row-info">
-                <div class="bt-row-name active">AirPods Pro</div>
-                <div class="bt-row-status">Actif · Audio en cours</div>
-              </div>
-              <div class="bt-row-dot"></div>
-            </div>
-            <div class="bt-row">
-              <div class="bt-row-icon"><svg style="width:8px;height:8px;stroke:rgba(76,175,80,0.9);stroke-width:1.5;fill:none;"><use href="#i-bluetooth"/></svg></div>
-              <div class="bt-row-info">
-                <div class="bt-row-name">JBL Charge 5</div>
-                <div class="bt-row-status">Connecté</div>
-              </div>
-            </div>
-            <div class="bt-row">
-              <div class="bt-row-icon"><svg style="width:8px;height:8px;stroke:var(--muted);stroke-width:1.5;fill:none;"><use href="#i-bluetooth"/></svg></div>
-              <div class="bt-row-info">
-                <div class="bt-row-name" style="color:var(--muted);">Sony WH-1000XM5</div>
-              </div>
-            </div>
-            <div class="bt-settings-row">
-              <svg style="width:7px;height:7px;stroke:var(--muted);stroke-width:1.5;fill:none;"><use href="#i-sliders"/></svg>
-              <span>Paramètres Bluetooth</span>
-            </div>
-          </div>
-        </div>
-        <div class="screen-label">
-          <h3>Sélecteur audio Bluetooth</h3>
-          <p>Tap sur l'icône BT à droite du volume — appareil actif, jumelés connectés, ouvre les réglages système.</p>
-        </div>
-      </div>
-
-      <!-- FukkaStore -->
-      <div class="screen-card">
-        <div class="screen-preview" style="background:#0D0E12;">
-          <div class="store-card" style="width:220px;padding:14px;">
-            <div style="font-family:var(--serif);font-size:0.55rem;color:var(--shu);letter-spacing:0.2em;margin-bottom:8px;">FUKKASTORE</div>
-            <div class="store-row" style="padding:6px 0;">
-              <div class="store-app-icon" style="background:#4285F4;border-radius:7px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;"><svg style="width:14px;height:14px;stroke:#fff;stroke-width:1.5;fill:none;"><use href="#i-map"/></svg></div>
-              <div><div style="font-size:0.7rem;color:var(--ivory);">Google Maps</div><div style="font-size:0.58rem;color:var(--muted);">Navigation</div></div>
-              <span style="font-size:0.6rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--shu);border:1px solid rgba(193,39,45,0.35);padding:3px 8px;border-radius:2px;">Installer</span>
-            </div>
-            <div class="store-row" style="padding:6px 0;">
-              <div class="store-app-icon" style="background:#1DB954;border-radius:7px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;"><svg style="width:14px;height:14px;stroke:#fff;stroke-width:1.5;fill:none;"><use href="#i-music"/></svg></div>
-              <div><div style="font-size:0.7rem;color:var(--ivory);">Spotify</div><div style="font-size:0.58rem;color:var(--muted);">Musique</div></div>
-              <span style="font-size:0.6rem;letter-spacing:0.06em;text-transform:uppercase;color:rgba(76,175,80,0.9);border:1px solid rgba(76,175,80,0.3);padding:3px 8px;border-radius:2px;">✓</span>
-            </div>
-            <div class="store-row" style="padding:6px 0;border-bottom:none;">
-              <div class="store-app-icon" style="background:#FF6900;border-radius:7px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;"><svg style="width:14px;height:14px;stroke:#fff;stroke-width:1.5;fill:none;"><use href="#i-zap"/></svg></div>
-              <div><div style="font-size:0.7rem;color:var(--ivory);">Notion</div><div style="font-size:0.58rem;color:var(--muted);">Productivité</div></div>
-              <span style="font-size:0.6rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--shu);border:1px solid rgba(193,39,45,0.35);padding:3px 8px;border-radius:2px;">Installer</span>
-            </div>
-          </div>
-        </div>
-        <div class="screen-label">
-          <h3>FukkaStore</h3>
-          <p>Google Play complet sans GMS. Login Google unique, navigation par catégories, installation en un tap.</p>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- ── Gestes ── -->
-<section id="gestes">
-  <div class="container">
-    <p class="section-tag">Gestes</p>
-    <h2>Naviguer sans jamais chercher</h2>
-    <p class="lead">Six gestes couvrent l'ensemble des interactions — recherche, réglages, multitâche, luminosité, réorganisation.</p>
-
-    <div class="gestures-grid">
-      <div class="gesture-card">
-        <div class="gesture-icon"><svg class="icon icon-lg"><use href="#i-arrow-up"/></svg></div>
-        <div class="gesture-body">
-          <p class="gesture-trigger">Logo · Glisser vers le haut</p>
-          <h3>Recherche d'applications</h3>
-          <p>Un overlay plein écran pour trouver n'importe quelle app installée instantanément.</p>
-        </div>
-      </div>
-      <div class="gesture-card">
-        <div class="gesture-icon"><svg class="icon icon-lg"><use href="#i-arrow-down"/></svg></div>
-        <div class="gesture-body">
-          <p class="gesture-trigger">Logo · Glisser vers le bas</p>
-          <h3>Ne Pas Déranger</h3>
-          <p>Active ou coupe le mode silencieux avec choix de durée — 30 min, 1 h, 2 h, ou indéfini.</p>
-        </div>
-      </div>
-      <div class="gesture-card">
-        <div class="gesture-icon"><svg class="icon icon-lg"><use href="#i-zap"/></svg></div>
-        <div class="gesture-body">
-          <p class="gesture-trigger">Écran entier · Écarter deux doigts</p>
-          <h3>Vue multitâche</h3>
-          <p>Cartes des apps récentes avec aperçu couleur par app. Glisser une carte vers le haut pour la retirer.</p>
-        </div>
-      </div>
-      <div class="gesture-card">
-        <div class="gesture-icon"><svg class="icon icon-lg"><use href="#i-sliders"/></svg></div>
-        <div class="gesture-body">
-          <p class="gesture-trigger">Bord droit · Glisser de haut en bas</p>
-          <h3>Luminosité</h3>
-          <p>Curseur vertical style Netflix — indicateur visuel auto-masqué après 2 secondes.</p>
-        </div>
-      </div>
-      <div class="gesture-card">
-        <div class="gesture-icon"><svg class="icon icon-lg"><use href="#i-press"/></svg></div>
-        <div class="gesture-body">
-          <p class="gesture-trigger">Tuile · Appui long</p>
-          <h3>Actions rapides</h3>
-          <p>Raccourcis de l'app, déplacer vers le haut ou le bas, supprimer — sans quitter l'écran.</p>
-        </div>
-      </div>
-      <div class="gesture-card">
-        <div class="gesture-icon"><svg class="icon icon-lg"><use href="#i-layers"/></svg></div>
-        <div class="gesture-body">
-          <p class="gesture-trigger">Zone vide du grid · Appui long</p>
-          <h3>Réorganisation par glisser-déposer</h3>
-          <p>Appui long entre les tuiles pour entrer en mode réorganisation, puis glissez pour déplacer. Bouton « Terminé » pour quitter.</p>
-        </div>
-      </div>
-      <div class="gesture-card">
-        <div class="gesture-icon"><svg class="icon icon-lg"><use href="#i-map"/></svg></div>
-        <div class="gesture-body">
-          <p class="gesture-trigger">Bloc météo · Glisser gauche ou droite</p>
-          <h3>Changer de ville météo</h3>
-          <p>Swipe horizontal sur la zone température pour passer à la ville suivante ou précédente. L'indicateur de points montre la position dans la liste.</p>
-        </div>
+    <div class="feature">
+      <div class="shot"><img src="screenshots/apps.jpg" alt="Panneau des apps : douze grandes icônes favorites et quatre raccourcis Agenda, Alarmes, Widgets, Toutes les apps" loading="lazy" width="1600" height="900"></div>
+      <div>
+        <h3>Vos apps, en grand</h3>
+        <p>Un toucher n'importe où sur l'écran ambiant fait apparaître vos favoris en icônes de 140 points, sur la photo floutée.</p>
+        <ul>
+          <li>Badges de notifications Messenger et WhatsApp</li>
+          <li>Appui long : déplacer ou retirer une app</li>
+          <li>Raccourcis vers l'agenda, les alarmes, les widgets et toutes les apps</li>
+        </ul>
       </div>
     </div>
-  </div>
-</section>
 
-<!-- ── Thèmes ── -->
-<section id="themes">
-  <div class="container">
-    <p class="section-tag">Thèmes</p>
-    <h2>Deux palettes, une seule âme</h2>
-    <p class="lead">L'accent vermillon <strong>朱</strong> reste invariant entre les deux modes. La typographie Noto Serif JP est identique sur l'écran et sur cette page.</p>
-
-    <div class="themes-wrap">
-      <div class="theme-panel night" data-kanji="墨">
-        <p class="theme-name">🌙 Sumi</p>
-        <p class="theme-time">Nuit · heure configurable</p>
-        <div class="palette">
-          <div class="swatch" style="background:#0D0E12" title="Fond"></div>
-          <div class="swatch" style="background:#191C23" title="Surface"></div>
-          <div class="swatch" style="background:#ECE7DD" title="Texte"></div>
-          <div class="swatch" style="background:#9A9488" title="Atténué"></div>
-          <div class="swatch" style="background:#C1272D" title="Accent"></div>
-        </div>
-        <p class="theme-desc">Fond quasi-noir <code style="color:#5A5750">#0D0E12</code>, texte ivoire <code style="color:#5A5750">#ECE7DD</code>. Encre de Chine et parchemin nocturne.</p>
-        <div class="theme-accent"></div>
-      </div>
-      <div class="theme-panel day" data-kanji="和">
-        <p class="theme-name" style="color:#14161C">☀️ Washi</p>
-        <p class="theme-time" style="color:#6E6B61">Jour · heure configurable</p>
-        <div class="palette">
-          <div class="swatch" style="background:#F2EDE3;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.1)"></div>
-          <div class="swatch" style="background:#E6E1D6"></div>
-          <div class="swatch" style="background:#14161C"></div>
-          <div class="swatch" style="background:#6E6B61"></div>
-          <div class="swatch" style="background:#C1272D"></div>
-        </div>
-        <p class="theme-desc" style="color:#6E6B61">Fond parchemin <code style="color:#8a8880">#F2EDE3</code>, texte encre <code style="color:#8a8880">#14161C</code>. Papier Washi et calligraphie au soleil.</p>
-        <div class="theme-accent"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── FukkaStore ── -->
-<section id="fukkastore">
-  <div class="container">
-    <div class="store-wrap">
-      <div class="store-visual">
-        <div class="store-badge">Sans GMS</div>
-        <div class="store-card">
-          <div class="store-row">
-            <div class="store-app-icon" style="background:#4285F4;border-radius:9px;display:flex;align-items:center;justify-content:center"><svg style="width:18px;height:18px;stroke:#fff;stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round"><use href="#i-map"/></svg></div>
-            <div><div class="store-app-name">Google Maps</div><div class="store-app-cat">Navigation</div></div>
-            <span class="store-install">Installer</span>
-          </div>
-          <div class="store-row">
-            <div class="store-app-icon" style="background:#1DB954;border-radius:9px;display:flex;align-items:center;justify-content:center"><svg style="width:18px;height:18px;stroke:#fff;stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round"><use href="#i-music"/></svg></div>
-            <div><div class="store-app-name">Spotify</div><div class="store-app-cat">Musique</div></div>
-            <span class="store-install" style="color:rgba(76,175,80,0.9);border-color:rgba(76,175,80,0.3);">✓ Installé</span>
-          </div>
-          <div class="store-row">
-            <div class="store-app-icon" style="background:#FF6900;border-radius:9px;display:flex;align-items:center;justify-content:center"><svg style="width:18px;height:18px;stroke:#fff;stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round"><use href="#i-zap"/></svg></div>
-            <div><div class="store-app-name">Notion</div><div class="store-app-cat">Productivité</div></div>
-            <span class="store-install">Installer</span>
-          </div>
-          <div class="store-row">
-            <div class="store-app-icon" style="background:#C1272D;border-radius:9px;display:flex;align-items:center;justify-content:center"><svg style="width:18px;height:18px;stroke:#fff;stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round"><use href="#i-bell"/></svg></div>
-            <div><div class="store-app-name">Audiobookshelf</div><div class="store-app-cat">Livres audio</div></div>
-            <span class="store-install">Installer</span>
-          </div>
-        </div>
-      </div>
-      <div class="store-text">
-        <p class="section-tag">FukkaStore</p>
-        <h2>Le Play Store du Portal</h2>
-        <ul class="store-bullets">
-          <li><svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg><span>Catalogue Google Play complet — authentification Google unique, token stocké localement</span></li>
-          <li><svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg><span>Navigation par catégories, chips de filtres et recherche en texte libre</span></li>
-          <li><svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg><span>Fiche app complète au tap : description, captures d'écran, note</span></li>
-          <li><svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg><span>Filtre automatique des apps incompatibles avec le Portal (API 28/29)</span></li>
-          <li><svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg><span>Filtre ABI : seuls les splits compatibles avec le processeur sont installés</span></li>
-          <li><svg class="icon" style="width:16px;height:16px"><use href="#i-check"/></svg><span>Installation silencieuse via AccessibilityService sur Portal 1ère gen</span></li>
+    <div class="feature rev">
+      <div class="shot"><img src="screenshots/controles.jpg" alt="Centre de contrôle : six grands boutons ronds Wi-Fi, Bluetooth, Ne pas déranger, Mode nuit, Écran Mac, Luminosité auto, et deux curseurs épais luminosité et volume" loading="lazy" width="1600" height="900"></div>
+      <div>
+        <h3>Un vrai centre de contrôle</h3>
+        <p>Il descend du haut de l'écran. Tout se règle sans jamais ouvrir les réglages Android du Portal.</p>
+        <ul>
+          <li>Wi-Fi, Bluetooth, Ne pas déranger, mode nuit, luminosité automatique</li>
+          <li>Curseurs de 104 points : on touche ou on glisse, n'importe où</li>
+          <li>Économiseur d'écran et extinction en un geste</li>
         </ul>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── Installation ── -->
-<section id="install">
-  <div class="container">
-    <p class="section-tag">Installation</p>
-    <h2>Prêt en trois étapes</h2>
-    <p class="lead">Un script automatise l'intégralité du provisioning — build, install, permissions et définition comme launcher.</p>
-
-    <div class="install-grid">
-      <ol class="steps">
-        <li>
-          <div>
-            <strong>Activer le débogage USB</strong>
-            <span>Sur le Portal : Réglages → À propos → tapoter 7× sur « Numéro de build ». Puis activer le Débogage USB dans les options développeur.</span>
-          </div>
-        </li>
-        <li>
-          <div>
-            <strong>Brancher le Portal</strong>
-            <span>Connectez le Portal à votre Mac via USB et acceptez la demande d'autorisation de débogage sur l'écran du Portal.</span>
-          </div>
-        </li>
-        <li>
-          <div>
-            <strong>Cloner le dépôt</strong>
-            <span>Récupérez le code source depuis GitHub et entrez dans le dossier du projet.</span>
-          </div>
-        </li>
-        <li>
-          <div>
-            <strong>Lancer le script</strong>
-            <span>Une commande construit l'APK, l'installe, accorde toutes les permissions et définit Fukkatsu No P comme launcher principal.</span>
-          </div>
-        </li>
-      </ol>
-
-      <div>
-        <div class="code-block">
-          <div class="label">
-            <svg><use href="#i-terminal"/></svg>
-            Terminal
-          </div>
-          <pre><span class="cm"># Cloner</span>
-git clone https://github.com/cyprienbrisset/fukkatsu-nop.git
-cd fukkatsu-nop
-
-<span class="cm"># Construire, installer et configurer</span>
-bash scripts/provision-portal.sh --set-launcher
-
-<span class="cm"># Ou en développement</span>
-./gradlew deployDebug</pre>
-        </div>
-        <p style="margin-top:16px;font-size:0.78rem;color:var(--muted2);">
-          Nécessite <strong style="color:var(--muted)">Android Studio</strong> (JDK intégré) et <strong style="color:var(--muted)">ADB</strong> dans <code style="color:var(--muted2)">~/Library/Android/sdk/platform-tools/</code>.
-        </p>
-      </div>
+<section id="reveil">
+  <div class="wrap">
+    <h2>Se réveiller avec le Fuji</h2>
+    <p class="section-lead">Le Portal devient un réveil lumineux : l'écran s'éclaire doucement avant la sonnerie, et deux gros boutons répondent au premier toucher, même les yeux mi-clos.</p>
+    <div class="gallery">
+      <figure><img class="shot-img" src="screenshots/reveil.jpg" alt="Écran de réveil : l'heure en très grand sur le lever de soleil au lac Motosu, boutons Snooze et Arrêter" loading="lazy" width="1600" height="900" style="border-radius:18px;border:1px solid var(--line)"><figcaption>Snooze ou Arrêter : des boutons de 150 points.</figcaption></figure>
+      <figure><img src="screenshots/alarme-edition.jpg" alt="Édition d'une alarme : heure réglée avec de gros boutons haut et bas, jours de la semaine, sonneries Koto, Japan, Anime, snooze et lever de soleil" loading="lazy" width="1600" height="900" style="border-radius:18px;border:1px solid var(--line)"><figcaption>L'heure se règle avec de gros boutons, pas avec une molette minuscule.</figcaption></figure>
     </div>
   </div>
 </section>
 
-<footer>
-  <div class="footer-inner">
-    <div class="footer-brand" aria-hidden="true">墨</div>
-    <div class="footer-info">
-      <p>MIT — Copyright © 2024–2026 <a href="https://github.com/cyprienbrisset" target="_blank" rel="noopener">Cyprien Brisset</a></p>
-      <p style="margin-top:4px">Testé sur <strong style="color:var(--muted)">Meta Portal Plus · Portal Go · Portal Mini</strong> · Android 9 / 10 · Jetpack Compose</p>
+<section class="alt" id="ecrans">
+  <div class="wrap">
+    <h2>Chaque écran repensé</h2>
+    <p class="section-lead">Le même langage partout : du verre posé sur la photo du moment, une seule police japonaise, des lignes hautes et faciles à viser.</p>
+    <div class="gallery">
+      <figure><img src="screenshots/alarmes.jpg" alt="Liste des alarmes en grandes cartes avec interrupteurs" loading="lazy" width="1600" height="900" style="border-radius:18px;border:1px solid var(--line)"><figcaption>Alarmes : une carte par réveil, un interrupteur pour l'activer.</figcaption></figure>
+      <figure><img src="screenshots/reglages.jpg" alt="Réglages : catégories à gauche, options en grandes lignes à droite" loading="lazy" width="1600" height="900" style="border-radius:18px;border:1px solid var(--line)"><figcaption>Réglages : cinq catégories, des lignes de 112 points.</figcaption></figure>
+      <figure><img src="screenshots/toutes-les-apps.jpg" alt="Toutes les apps : barre de recherche et filtres par lettres A–C, D–F…" loading="lazy" width="1600" height="900" style="border-radius:18px;border:1px solid var(--line)"><figcaption>Toutes les apps : filtres par lettres, utilisables sans clavier.</figcaption></figure>
+      <figure><img src="screenshots/ecran-mac.jpg" alt="Écran Mac : état de connexion et trois étapes à suivre sur le Mac" loading="lazy" width="1600" height="900" style="border-radius:18px;border:1px solid var(--line)"><figcaption>Écran Mac <span class="badge">Expérimental</span> : les étapes à suivre sur le Mac.</figcaption></figure>
     </div>
-    <div class="footer-links">
-      <a href="https://github.com/cyprienbrisset/fukkatsu-nop" target="_blank" rel="noopener">
-        <svg class="icon"><use href="#i-github"/></svg>
-        GitHub
-      </a>
-      <a href="https://github.com/cyprienbrisset/fukkatsu-nop/blob/main/README.md" target="_blank" rel="noopener">
-        <svg class="icon"><use href="#i-terminal"/></svg>
-        README
-      </a>
+    <div class="pills" style="margin-top:48px">
+      <div class="pill"><b>Agenda, Meet et Chat</b><span>Votre compte Google connecté par code, sans navigateur sur le Portal. « Rejoindre » une réunion en un toucher.</span></div>
+      <div class="pill"><b>FukkaStore</b><span>Installez des apps compatibles Portal sans Google Play, avec filtrage automatique des apps incompatibles.</span></div>
+      <div class="pill"><b>Widgets Android</b><span>Un tableau de bord pour vos widgets : météo, notes, domotique.</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="installer">
+  <div class="wrap">
+    <h2>Installer</h2>
+    <p class="section-lead">Un script fait tout : installation de l'APK, permissions, et Fukkatsu comme launcher principal. Les mises à jour arrivent ensuite directement sur le Portal.</p>
+    <div class="steps">
+      <div class="step"><i>1</i><b>Débogage USB</b><span>Réglages → À propos → touchez 7 fois « Numéro de build », puis activez le débogage USB.</span></div>
+      <div class="step"><i>2</i><b>Brancher</b><span>Reliez le Portal au Mac en USB et acceptez l'autorisation sur l'écran du Portal.</span></div>
+      <div class="step"><i>3</i><b>Cloner</b><span>Récupérez le dépôt GitHub sur votre Mac.</span></div>
+      <div class="step"><i>4</i><b>Lancer le script</b><span>Il installe, accorde les permissions et définit le launcher.</span></div>
+    </div>
+<pre><span class="c"># Cloner</span>
+git clone https://github.com/cyprienbrisset/fukkatsu-nop.git
+cd fukkatsu-nop
+
+<span class="c"># Construire, installer et configurer comme launcher</span>
+bash scripts/provision-portal.sh --set-launcher</pre>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap cols">
+    <div>
+      <h4>Fukkatsu No P</h4>
+      <p style="margin:0 0 12px">Launcher open source pour Meta Portal Plus, Portal, Go et Mini (Android 9 et 10).</p>
+      <ul>
+        <li><a href="https://github.com/cyprienbrisset/fukkatsu-nop">Dépôt GitHub</a></li>
+        <li><a href="https://github.com/cyprienbrisset/fukkatsu-nop/releases">Toutes les versions</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Crédits photos et police</h4>
+      <ul>
+        <li>Aube, lever de soleil au lac Motosu — <a href="https://commons.wikimedia.org/wiki/File:Mount_Fuji_and_Sunrise_from_Lake_Motosu.jpg">Alpsdake</a>, CC BY-SA 4.0</li>
+        <li>Jour, depuis le lac Motosu — <a href="https://commons.wikimedia.org/wiki/File:Mount_Fuji_from_Lake_Motosu.jpg">Alpsdake</a>, CC BY-SA 4.0</li>
+        <li>Soir, depuis Fujimisaka — <a href="https://commons.wikimedia.org/wiki/File:View_from_Fujimisaka,_Mount_Fuji_in_evening.jpg">Yoshi Canopus</a>, CC0</li>
+        <li>Nuit, Fuji Under Polaris — <a href="https://commons.wikimedia.org/wiki/File:Fuji_Under_Polaris_(107916463).jpeg">Victor Porof</a>, CC BY-SA 3.0</li>
+        <li>Police Zen Kaku Gothic New — Yoshimichi Ohira, SIL Open Font License 1.1</li>
+        <li>Meta et Portal sont des marques de Meta Platforms ; ce projet n'y est pas affilié.</li>
+      </ul>
     </div>
   </div>
 </footer>
 
+<script>
+(function () {
+  var main = document.getElementById('moment-img');
+  var buttons = document.querySelectorAll('.moments button');
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      main.src = b.dataset.src;
+      main.alt = b.dataset.alt;
+      buttons.forEach(function (o) { o.setAttribute('aria-pressed', o === b ? 'true' : 'false'); });
+    });
+  });
+})();
+</script>
 </body>
 </html>

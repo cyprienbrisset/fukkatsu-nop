@@ -1,5 +1,11 @@
 package com.cyprienbrisset.fukkatsunop.ui.google
 
+import com.cyprienbrisset.fukkatsunop.ui.LegacyScale
+import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiButton
+import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiIconButton
+import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiScreen
+import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiSegmented
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,113 +48,67 @@ import com.cyprienbrisset.fukkatsunop.ui.theme.SumiSurface
 import kotlinx.coroutines.launch
 
 @Composable
-fun GoogleScreen(modifier: Modifier = Modifier) {
+fun GoogleScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val vm: GoogleViewModel = viewModel(factory = GoogleViewModel.Factory(LocalContext.current))
     val uiState by vm.state.collectAsState()
-
-    if (uiState.authState !is AuthState.LoggedIn) {
-        GoogleAuthScreen(authState = uiState.authState, onStartAuth = { vm.startDeviceFlow() })
-        return
-    }
-
-    // Connected view
+    val loggedIn = uiState.authState is AuthState.LoggedIn
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(pageCount = { 3 })
-    val tabs = listOf("Agenda", "Meet", "Chat")
-    val selectedTab = pagerState.currentPage
     var showNewEvent by remember { mutableStateOf(false) }
 
-    Column(modifier.fillMaxSize().statusBarsPadding()) {
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .background(SumiSurface)
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-        ) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(end = 44.dp),
-                horizontalArrangement = Arrangement.SpaceAround,
-            ) {
-                tabs.forEachIndexed { index, label ->
-                    Column(
-                        Modifier
-                            .weight(1f)
-                            .clickable { scope.launch { pagerState.animateScrollToPage(index) } },
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text(
-                            text = label,
-                            fontFamily = Mincho,
-                            fontSize = 14.sp,
-                            color = if (selectedTab == index) Kinari else SumiMuted,
-                            modifier = Modifier.padding(vertical = 11.dp),
-                        )
-                        Box(
-                            Modifier
-                                .fillMaxWidth()
-                                .height(2.dp)
-                                .background(if (selectedTab == index) AccentShu else Color.Transparent),
+    FujiScreen(
+        title = "Agenda",
+        onBack = onBack,
+        modifier = modifier,
+        actions = {
+            if (loggedIn) {
+                FujiSegmented(
+                    options = listOf("Agenda", "Meet", "Chat"),
+                    selected = pagerState.currentPage,
+                    onSelect = { scope.launch { pagerState.animateScrollToPage(it) } },
+                )
+                FujiButton("Événement", { showNewEvent = true }, primary = true, icon = Icons.Default.Add)
+                FujiIconButton(Icons.AutoMirrored.Filled.ExitToApp, "Déconnexion", { vm.logout() })
+            }
+        },
+    ) {
+        LegacyScale {
+            if (!loggedIn) {
+                GoogleAuthScreen(authState = uiState.authState, onStartAuth = { vm.startDeviceFlow() })
+            } else {
+                HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+                    when (page) {
+                        0 -> AgendaTab(state = uiState.agenda, onRetry = { vm.retryAgenda() })
+                        1 -> MeetTab(state = uiState.agenda, onRetry = { vm.retryAgenda() })
+                        2 -> ChatTab(
+                            isLoggedIn      = uiState.isChatLoggedIn,
+                            chatAuthUrl     = uiState.chatAuthUrl,
+                            spacesState     = uiState.chatSpaces,
+                            messagesState   = uiState.chatMessages,
+                            selectedSpace   = uiState.selectedSpace,
+                            onSelectSpace   = { vm.selectSpace(it) },
+                            onBack          = { vm.clearSelectedSpace() },
+                            onRetrySpaces   = { vm.retryChatSpaces() },
+                            onRetryMessages = { vm.retryMessages() },
+                            onReauth        = { vm.logoutChat() },
+                            onStartChatAuth = { vm.startChatAuth() },
+                            onChatAuthCode  = { vm.onChatAuthCode(it) },
+                            onDismissChatAuth = { vm.dismissChatAuth() },
                         )
                     }
                 }
             }
-
-            Row(
-                Modifier.align(Alignment.CenterEnd),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                SealIconButton(
-                    icon = Icons.Default.Add,
-                    contentDescription = "Nouvel événement",
-                    onClick = { showNewEvent = true },
-                    size = 36.dp,
-                )
-                SealIconButton(
-                    icon = Icons.AutoMirrored.Filled.ExitToApp,
-                    contentDescription = "Déconnexion",
-                    onClick = { vm.logout() },
-                    size = 36.dp,
-                )
-            }
         }
+    }
 
-        if (showNewEvent) {
-            NewEventDialog(
-                onDismiss = { showNewEvent = false },
-                onCreate = { title, start, end ->
-                    vm.createEvent(title, start, end)
-                    showNewEvent = false
-                },
-            )
-        }
-
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.weight(1f),
-        ) { page ->
-            when (page) {
-                0 -> AgendaTab(state = uiState.agenda, onRetry = { vm.retryAgenda() })
-                1 -> MeetTab(state = uiState.agenda, onRetry = { vm.retryAgenda() })
-                2 -> ChatTab(
-                    isLoggedIn      = uiState.isChatLoggedIn,
-                    chatAuthUrl     = uiState.chatAuthUrl,
-                    spacesState     = uiState.chatSpaces,
-                    messagesState   = uiState.chatMessages,
-                    selectedSpace   = uiState.selectedSpace,
-                    onSelectSpace   = { vm.selectSpace(it) },
-                    onBack          = { vm.clearSelectedSpace() },
-                    onRetrySpaces   = { vm.retryChatSpaces() },
-                    onRetryMessages = { vm.retryMessages() },
-                    onReauth        = { vm.logoutChat() },
-                    onStartChatAuth = { vm.startChatAuth() },
-                    onChatAuthCode  = { vm.onChatAuthCode(it) },
-                    onDismissChatAuth = { vm.dismissChatAuth() },
-                )
-            }
-        }
+    if (showNewEvent) {
+        NewEventDialog(
+            onDismiss = { showNewEvent = false },
+            onCreate = { title, start, end ->
+                vm.createEvent(title, start, end)
+                showNewEvent = false
+            },
+        )
     }
 }
 

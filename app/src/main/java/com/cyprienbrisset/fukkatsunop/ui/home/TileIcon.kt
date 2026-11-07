@@ -154,7 +154,7 @@ private fun TileIconRaw(tile: TileEntity, size: Dp, modifier: Modifier = Modifie
             }
             Box(
                 modifier.size(size).clip(RoundedCornerShape(size / 4))
-                    .background(Color(monogramColor("Mac"))),
+                    .background(Color(0xFF47596F)),
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {

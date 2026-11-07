@@ -4,36 +4,31 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 
+// Glass on the Fuji photo: transparent background, translucent surfaces, cream ink.
 private val DarkScheme = darkColorScheme(
-    primary = AccentShu,
-    onPrimary = OnShu,
-    background = Sumi,
-    onBackground = Kinari,
-    surface = SumiSurface,
-    onSurface = Kinari,
-    surfaceVariant = SumiSurface,
-    onSurfaceVariant = SumiMuted,
-    outline = SumiLine,
-    outlineVariant = SumiLine,
+    primary = Color(0xFFF4F1EA),
+    onPrimary = Color(0xFF16212B),
+    secondary = Color(0xFFF4F1EA),
+    onSecondary = Color(0xFF16212B),
+    background = Color.Transparent,
+    onBackground = Color(0xFFF4F1EA),
+    surface = Color(0xF21A1F2B),
+    onSurface = Color(0xFFF4F1EA),
+    surfaceVariant = Color(0x1AFFFFFF),
+    onSurfaceVariant = Color(0xBFF4F1EA),
+    surfaceContainer = Color(0xF21A1F2B),
+    surfaceContainerHigh = Color(0xF2222836),
+    surfaceContainerHighest = Color(0xF22A3040),
+    outline = Color(0x29FFFFFF),
+    outlineVariant = Color(0x29FFFFFF),
 )
 
-private val LightScheme = lightColorScheme(
-    primary = AccentShu,
-    onPrimary = OnShu,
-    background = Washi,
-    onBackground = Ink,
-    surface = WashiCard,
-    onSurface = Ink,
-    surfaceVariant = WashiCard,
-    onSurfaceVariant = InkMuted,
-    outline = WashiLine,
-    outlineVariant = WashiLine,
-)
+private val LightScheme = DarkScheme
 
 /** 7h–20h = mode jour (Washi), sinon mode nuit (Sumi). */
 fun isDaytime(hour: Int) = hour in 7..19

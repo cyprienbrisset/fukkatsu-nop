@@ -71,7 +71,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import androidx.core.graphics.drawable.toBitmap
 import com.cyprienbrisset.fukkatsunop.ui.sumi.SectionLabel
-import com.cyprienbrisset.fukkatsunop.ui.sumi.WatermarkKanji
 import androidx.compose.material3.MaterialTheme
 import com.cyprienbrisset.fukkatsunop.ui.theme.Mincho
 import com.cyprienbrisset.fukkatsunop.ui.theme.OnShu
@@ -209,7 +208,6 @@ fun WidgetDashboard() {
     }
 
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        WatermarkKanji("風", Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 60.dp))
 
         Column(
             Modifier

@@ -9,12 +9,17 @@ object AirPlayReceiver {
     private val _state = MutableStateFlow<AirPlayState>(AirPlayState.Waiting)
     val state: StateFlow<AirPlayState> = _state
 
+    /** True while the receiver is advertised on the network (Mac can see the Portal). */
+    private val _advertising = MutableStateFlow(false)
+    val advertising: StateFlow<Boolean> = _advertising
+
     private var mdns: MdnsAdvertiser? = null
     private var server: AirPlayHttpServer? = null
     private val renderer = H264Renderer()
 
     fun start(context: Context) {
         _state.value = AirPlayState.Waiting
+        _advertising.value = true
         mdns = MdnsAdvertiser(context).also { it.start() }
         server = AirPlayHttpServer(
             onConnecting = { _state.value = AirPlayState.Connecting },
@@ -35,6 +40,7 @@ object AirPlayReceiver {
         mdns?.stop(); mdns = null
         renderer.stopCodec()
         _state.value = AirPlayState.Waiting
+        _advertising.value = false
     }
 
     fun attachSurface(surface: Surface) = renderer.attachSurface(surface)
