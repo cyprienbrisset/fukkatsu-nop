@@ -157,6 +157,13 @@ else
   warn "FORCE_STOP_PACKAGES non accordé (permission signature sur stock Android, mais l'app tentera via reflection et shell)."
 fi
 
+info "Attribution de GET_USAGE_STATS (liste des apps ouvertes)…"
+if "${A[@]}" shell appops set "$PKG" GET_USAGE_STATS allow >/dev/null 2>&1; then
+  ok "GET_USAGE_STATS accordé — toutes les apps ouvertes apparaissent dans le panneau Apps."
+else
+  warn "GET_USAGE_STATS non accordé — seules les apps lancées depuis Fukkatsu seront listées."
+fi
+
 info "Attribution de WRITE_SETTINGS (contrôle de la luminosité)…"
 if "${A[@]}" shell appops set "$PKG" WRITE_SETTINGS allow >/dev/null 2>&1; then
   ok "WRITE_SETTINGS accordé (luminosité persistante)."

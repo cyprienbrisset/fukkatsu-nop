@@ -135,6 +135,7 @@ fun HomeShell(
     val nextAlarm by vm.nextAlarm.collectAsStateWithLifecycle()
     val recentContacts by vm.recentContacts.collectAsStateWithLifecycle()
     val recentApps by vm.recentApps.collectAsStateWithLifecycle()
+    val ramFreed by vm.ramFreedMb.collectAsStateWithLifecycle()
     val airPlayState by vm.airPlayState.collectAsStateWithLifecycle()
     val saverMode by vm.saverMode.collectAsStateWithLifecycle()
     val weatherEffects by vm.weatherEffectsEnabled.collectAsStateWithLifecycle()
@@ -149,10 +150,14 @@ fun HomeShell(
 
     var panel by remember { mutableStateOf(Panel.NONE) }
     var showDndDuration by remember { mutableStateOf(false) }
-    var showRecents by remember { mutableStateOf(false) }
     var quickActionsTile by remember { mutableStateOf<TileEntity?>(null) }
     var updateVersion by remember { mutableStateOf<String?>(null) }
     val dndOn = remember(now.minute, panel) { DndController.isGranted(ctx) && DndController.isDndOn(ctx) }
+
+    // Refresh the "open apps" row each time the panel opens; forget the freed-memory note when it closes.
+    LaunchedEffect(panel) {
+        if (panel == Panel.APPS) vm.refreshOpenApps() else vm.clearRamFreed()
+    }
 
     LaunchedEffect(Unit) {
         UpdateChecker.check(ctx)
@@ -269,7 +274,7 @@ fun HomeShell(
                     var zoom = 1f
                     detectTransformGestures { _, _, z, _ ->
                         zoom *= z
-                        if (zoom > 1.35f) { showRecents = true; zoom = 1f }
+                        if (zoom > 1.35f) { panel = Panel.APPS; zoom = 1f }
                         if (zoom < 0.8f) zoom = 1f
                     }
                 },
@@ -377,6 +382,11 @@ fun HomeShell(
                     AppsShortcut("Widgets", "Tableau de bord", ShortcutIcons.Widgets, onOpenWidgets),
                     AppsShortcut("Toutes les apps", "Rechercher", ShortcutIcons.AllApps, onOpenSearch),
                 ),
+                openApps = recentApps,
+                freedMb = ramFreed,
+                onOpenApp = { pkg -> panel = Panel.NONE; LaunchIntentResolver.launch(ctx, pkg) },
+                onCloseApp = { pkg -> vm.removeRecent(pkg) },
+                onCloseAll = { vm.clearRecents() },
                 onLaunch = { panel = Panel.NONE; launch(it) },
                 onLongPress = { quickActionsTile = it },
                 onAddTile = onAddTile,
@@ -465,15 +475,6 @@ fun HomeShell(
             )
         } }
 
-        if (showRecents) LegacyScale {
-            RecentAppsOverlay(
-                apps = recentApps,
-                onDismiss = { showRecents = false },
-                onLaunchApp = { pkg -> LaunchIntentResolver.launch(ctx, pkg) },
-                onDismissApp = { pkg -> vm.removeRecent(pkg) },
-                onClearAll = { vm.clearRecents() },
-            )
-        }
     }
 
 }

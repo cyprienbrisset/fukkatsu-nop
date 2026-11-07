@@ -35,7 +35,6 @@ import com.cyprienbrisset.fukkatsunop.data.tile.TileEntity
 import com.cyprienbrisset.fukkatsunop.data.tile.TileType
 import com.cyprienbrisset.fukkatsunop.launch.InstalledApp
 import com.cyprienbrisset.fukkatsunop.ui.home.TileIcon
-import com.cyprienbrisset.fukkatsunop.ui.store.StoreBody
 import com.cyprienbrisset.fukkatsunop.ui.sumi.HankoSeal
 import com.cyprienbrisset.fukkatsunop.ui.sumi.Medallion
 import com.cyprienbrisset.fukkatsunop.ui.sumi.SectionLabel
@@ -63,24 +62,12 @@ fun TileEditScreen(onBack: () -> Unit, vm: TileEditViewModel = viewModel()) {
         }
 
         SegmentedChoice(
-            listOf(Segment("アプリ", "Application"), Segment("ウェブ", "Web"), Segment("ストア", "Store"), Segment("システム", "Système")),
+            listOf(Segment("", "Application"), Segment("", "Web"), Segment("", "Système")),
             selectedIndex = mode, onSelect = { mode = it },
         )
         Spacer(Modifier.height(22.dp))
 
         if (mode == 2) {
-            Text(
-                "⚠ Les applications utilisant exclusivement les services Google (GMS) sont susceptibles de ne pas fonctionner sur Portal.",
-                fontFamily = Mincho,
-                color = SumiMuted,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp),
-            )
-            StoreBody(Modifier.weight(1f))
-            return@Column
-        }
-
-        if (mode == 3) {
             SectionLabel("システム", "TUILES SYSTÈME")
             Spacer(Modifier.height(16.dp))
             Medallion(label = "Écran Mac", onClick = { vm.addAirPlay() }) {
@@ -117,7 +104,7 @@ fun TileEditScreen(onBack: () -> Unit, vm: TileEditViewModel = viewModel()) {
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(webUrl, { webUrl = it }, label = { Text("URL (ex. jellyfin.local)") }, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(20.dp))
-            SumiPrimaryButton("保存 · Ajouter", onClick = {
+            SumiPrimaryButton("Ajouter", onClick = {
                 if (webLabel.isNotBlank() && webUrl.isNotBlank()) { vm.addWeb(webLabel, webUrl); webLabel = ""; webUrl = "" }
             })
             Spacer(Modifier.weight(1f))

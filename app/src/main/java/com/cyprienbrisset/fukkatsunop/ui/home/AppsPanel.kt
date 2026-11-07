@@ -1,5 +1,20 @@
 package com.cyprienbrisset.fukkatsunop.ui.home
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.rounded.ClearAll
+import androidx.compose.runtime.produceState
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.graphics.drawable.toBitmap
+import com.cyprienbrisset.fukkatsunop.integration.RecentApp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -71,6 +86,11 @@ fun AppsPanel(
     badgeCounts: Map<String, Int>,
     contacts: List<RecentContact>,
     shortcuts: List<AppsShortcut>,
+    openApps: List<RecentApp>,
+    freedMb: Long?,
+    onOpenApp: (String) -> Unit,
+    onCloseApp: (String) -> Unit,
+    onCloseAll: () -> Unit,
     onLaunch: (TileEntity) -> Unit,
     onLongPress: (TileEntity) -> Unit,
     onAddTile: () -> Unit,
@@ -126,6 +146,10 @@ fun AppsPanel(
                 FujiLabel("Contacts récents")
                 RecentContactsStrip(contacts, Modifier.weight(1f))
             }
+        }
+
+        if (openApps.isNotEmpty() || freedMb != null) {
+            OpenAppsRow(openApps, freedMb, onOpenApp, onCloseApp, onCloseAll, Modifier.padding(bottom = 24.dp))
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
@@ -199,6 +223,72 @@ private fun ShortcutCard(s: AppsShortcut, modifier: Modifier = Modifier) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(s.label, color = FujiColors.Cream, fontFamily = Gothic, fontSize = 26.sp, fontWeight = FontWeight.Medium, maxLines = 1)
             Text(s.sub, color = FujiColors.Muted, fontFamily = Gothic, fontSize = 19.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+/** Apps opened and not closed yet: tap to return, cross to close. */
+@Composable
+private fun OpenAppsRow(
+    apps: List<RecentApp>,
+    freedMb: Long?,
+    onOpen: (String) -> Unit,
+    onClose: (String) -> Unit,
+    onCloseAll: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier
+            .fillMaxWidth()
+            .glass(RoundedCornerShape(32.dp), FujiColors.Glass)
+            .padding(start = 32.dp, end = 20.dp, top = 16.dp, bottom = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        Column(Modifier.width(210.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text("Apps ouvertes", color = FujiColors.Cream, fontFamily = Gothic, fontSize = 24.sp, fontWeight = FontWeight.Medium)
+            Text(
+                when {
+                    apps.isEmpty() && freedMb != null -> "$freedMb Mo libérés"
+                    apps.isEmpty() -> "Aucune"
+                    else -> "${apps.size} en mémoire"
+                },
+                color = FujiColors.Muted, fontFamily = Gothic, fontSize = 19.sp,
+            )
+        }
+        LazyRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            items(apps, key = { it.packageName }) { app -> OpenAppChip(app, onOpen, onClose) }
+        }
+        if (apps.isNotEmpty()) FujiButton("Tout fermer", onCloseAll, icon = Icons.Rounded.ClearAll, height = 80.dp)
+    }
+}
+
+@Composable
+private fun OpenAppChip(app: RecentApp, onOpen: (String) -> Unit, onClose: (String) -> Unit) {
+    val ctx = LocalContext.current
+    val icon by produceState<ImageBitmap?>(null, app.packageName) {
+        value = withContext(Dispatchers.IO) {
+            runCatching { ctx.packageManager.getApplicationIcon(app.packageName).toBitmap(128, 128).asImageBitmap() }.getOrNull()
+        }
+    }
+    Row(
+        Modifier
+            .height(88.dp)
+            .glass(RoundedCornerShape(44.dp), FujiColors.GlassStrong)
+            .clickable { onOpen(app.packageName) }
+            .padding(start = 12.dp, end = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Box(Modifier.size(64.dp).clip(RoundedCornerShape(18.dp))) {
+            icon?.let { Image(it, null, Modifier.fillMaxSize()) }
+        }
+        Text(app.label, color = FujiColors.Cream, fontFamily = Gothic, fontSize = 21.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 200.dp))
+        Box(
+            Modifier.size(64.dp).clip(CircleShape).background(FujiColors.GlassStrong).clickable(onClickLabel = "Fermer ${app.label}") { onClose(app.packageName) },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Rounded.Close, "Fermer ${app.label}", tint = FujiColors.Cream, modifier = Modifier.size(30.dp))
         }
     }
 }

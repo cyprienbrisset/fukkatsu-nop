@@ -50,8 +50,6 @@ import com.cyprienbrisset.fukkatsunop.ui.theme.applyBgToneDark
 import com.cyprienbrisset.fukkatsunop.ui.theme.applyBgToneLight
 import com.cyprienbrisset.fukkatsunop.ui.theme.applyIconShape
 import kotlinx.coroutines.launch
-import com.cyprienbrisset.fukkatsunop.overlay.OverlayPrefs
-import com.cyprienbrisset.fukkatsunop.overlay.OverlayService
 import com.cyprienbrisset.fukkatsunop.system.FirmwareWatcher
 import com.cyprienbrisset.fukkatsunop.system.UpdateChecker
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
@@ -112,7 +110,6 @@ class MainActivity : ComponentActivity() {
             notifPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
         DarkModeManager.initFromSystem(this)
-        OverlayPrefs.init(this)
         val repo = SettingsRepository(this)
         lifecycleScope.launch { repo.accentOverride.collect { applyAccentOverride(it) } }
         lifecycleScope.launch { repo.bgToneDark.collect  { applyBgToneDark(it)  } }
@@ -175,9 +172,8 @@ class MainActivity : ComponentActivity() {
     }
     override fun onResume() {
         super.onResume()
-        if (android.provider.Settings.canDrawOverlays(this) && !OverlayService.isRunning) {
-            startService(Intent(this, OverlayService::class.java))
-        }
+        // Usage history may have changed while another app was in front.
+        com.cyprienbrisset.fukkatsunop.integration.OpenAppsRepository.refresh(this)
     }
 
     @Suppress("OVERRIDE_DEPRECATION")

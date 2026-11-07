@@ -1,5 +1,7 @@
 package com.cyprienbrisset.fukkatsunop.ui.home
 
+import com.cyprienbrisset.fukkatsunop.integration.OpenAppsRepository
+
 import android.app.ActivityManager
 import android.app.Application
 import android.content.Context
@@ -59,8 +61,8 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     val airPlayState = AirPlayReceiver.state
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AirPlayState.Waiting)
 
-    private val _recentApps = MutableStateFlow<List<RecentApp>>(emptyList())
-    val recentApps = _recentApps.asStateFlow()
+    /** Apps opened and not closed yet, shown in the apps panel. */
+    val recentApps = OpenAppsRepository.apps
 
     data class RamInfo(val totalMb: Long, val availMb: Long, val lowMemory: Boolean)
     private val _ramInfo = MutableStateFlow<RamInfo?>(null)
@@ -102,23 +104,19 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun recordLaunch(packageName: String, label: String) {
-        val current = _recentApps.value.toMutableList()
-        current.removeAll { it.packageName == packageName }
-        current.add(0, RecentApp(packageName, label))
-        _recentApps.value = if (current.size > 8) current.take(8) else current
+    fun recordLaunch(packageName: String, label: String) =
+        OpenAppsRepository.record(getApplication(), packageName, label)
+
+    fun refreshOpenApps() = viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        OpenAppsRepository.refresh(getApplication())
     }
 
-    fun removeRecent(packageName: String) {
-        _recentApps.value = _recentApps.value.filter { it.packageName != packageName }
-        killApp(packageName)
-    }
+    fun removeRecent(packageName: String) = OpenAppsRepository.close(getApplication(), packageName)
 
     fun clearRecents() {
         refreshRam()
         val availBefore = _ramInfo.value?.availMb ?: 0L
-        _recentApps.value.forEach { killApp(it.packageName) }
-        _recentApps.value = emptyList()
+        OpenAppsRepository.closeAll(getApplication())
         viewModelScope.launch {
             delay(600)
             refreshRam()
@@ -149,11 +147,6 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
                 Settings.System.putInt(ctx.contentResolver, Settings.System.SCREEN_OFF_TIMEOUT, 5 * 60 * 1000)
             }
         }
-    }
-
-    private fun killApp(packageName: String) {
-        val am = getApplication<Application>().getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        runCatching { am.killBackgroundProcesses(packageName) }
     }
 }
 

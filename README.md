@@ -27,7 +27,7 @@
 
 **L'écran ambiant** occupe tout l'écran : une photo du mont Fuji qui change à l'aube, en journée, au soir et la nuit, l'heure en très grand, la date et la météo. Touchez la météo pour passer à la ville suivante. Une carte en bas à droite tourne toutes les 12 secondes, à la manière de l'Echo Show : prochaine réunion Google Meet avec un bouton « Rejoindre », musique en cours avec ses commandes, prochain réveil.
 
-**Les apps** apparaissent dès qu'on touche l'écran (ou avec le bouton « Apps ») : favoris en icônes de 140 dp sur la photo floutée, badges de notifications, contacts récents Messenger et WhatsApp, et quatre raccourcis — Agenda, Alarmes, Widgets, Toutes les apps.
+**Les apps** apparaissent dès qu'on touche l'écran (ou avec le bouton « Apps ») : favoris en icônes de 140 dp sur la photo floutée, badges de notifications, contacts récents Messenger et WhatsApp, et quatre raccourcis — Agenda, Alarmes, Widgets, Toutes les apps. La rangée **Apps ouvertes** liste les apps laissées en mémoire : un toucher pour y revenir, une croix pour la fermer, ou « Tout fermer ».
 
 **Le centre de contrôle** descend du haut de l'écran : Wi-Fi, Bluetooth, Ne pas déranger, mode nuit, Écran Mac, luminosité automatique, curseurs épais de luminosité et de volume, économiseur et extinction de l'écran.
 
@@ -48,7 +48,7 @@ Rien n'est caché : chaque action a un bouton visible d'au moins 64 dp. Les gest
 | **Toucher** l'écran ambiant | Afficher les apps |
 | **Glisser vers le bas** | Ouvrir le centre de contrôle |
 | **Glisser vers le haut** | Afficher les apps |
-| **Écarter deux doigts** | Vue multitâche des apps récentes |
+| **Écarter deux doigts** | Afficher les apps et les apps ouvertes |
 | **Appui long** sur une app favorite | Déplacer, retirer, réorganiser |
 | **Appui long** dans « Toutes les apps » | Ajouter l'app aux favoris |
 
@@ -125,17 +125,6 @@ Le Portal n'a pas de Play Store. FukkaStore comble ce manque : connectez votre c
 - Filtre ABI automatique : seuls les splits compatibles avec le processeur de l'appareil sont installés
 - **Portal 1ère génération** : installation silencieuse via AccessibilityService (l'interface système du Portal masque la fenêtre de confirmation standard)
 - **Avertissement GMS** : les apps nécessitant exclusivement les Google Mobile Services sont signalées — elles peuvent ne pas fonctionner sur le Portal
-
----
-
-## Contrôles système — overlay universel
-
-Un panneau flottant accessible depuis n'importe quelle app :
-
-- **Volume** musique avec curseur + icône Bluetooth interactive (voir appareil connecté, liste des jumelés, ouvrir les réglages)
-- **Luminosité** — curseur dédié
-- **Mode nuit** — bascule jour/nuit instantanée
-- **Retour accueil** en un tap
 
 ---
 

@@ -7,6 +7,8 @@ import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.PhoneAndroid
+import androidx.compose.material.icons.rounded.Storefront
+import com.cyprienbrisset.fukkatsunop.ui.store.StoreBody
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.WbSunny
 import androidx.compose.material3.Icon
@@ -81,8 +83,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cyprienbrisset.fukkatsunop.BuildConfig
 import com.cyprienbrisset.fukkatsunop.airplay.AirPlayPrefs
-import com.cyprienbrisset.fukkatsunop.overlay.OverlayPrefs
-import com.cyprienbrisset.fukkatsunop.overlay.OverlayService
 import com.cyprienbrisset.fukkatsunop.system.FirmwareWatcher
 import com.cyprienbrisset.fukkatsunop.system.UpdateChecker
 import com.cyprienbrisset.fukkatsunop.system.UpdateProgress
@@ -108,7 +108,7 @@ import kotlinx.coroutines.launch
 
 // ── Catégories ───────────────────────────────────────────────────────────────
 
-private enum class Cat { HOME, DISPLAY, APPS, SYSTEM, DEVICE }
+private enum class Cat { HOME, DISPLAY, APPS, STORE, SYSTEM, DEVICE }
 
 private data class CatDef(val icon: ImageVector, val label: String, val id: Cat)
 
@@ -116,6 +116,7 @@ private val CATS = listOf(
     CatDef(Icons.Rounded.Home,          "Écran d'accueil", Cat.HOME),
     CatDef(Icons.Rounded.WbSunny,       "Affichage",       Cat.DISPLAY),
     CatDef(Icons.Rounded.Apps,          "Applications",    Cat.APPS),
+    CatDef(Icons.Rounded.Storefront,    "FukkaStore",      Cat.STORE),
     CatDef(Icons.Rounded.Tune,          "Système",         Cat.SYSTEM),
     CatDef(Icons.Rounded.PhoneAndroid,  "Appareil",        Cat.DEVICE),
 )
@@ -142,7 +143,6 @@ fun SettingsScreen(
     var voiceEnabled     by remember { mutableStateOf(VoiceService.isEnabled(ctx)) }
     var modelReady       by remember { mutableStateOf(VoiceModelManager.isModelReady(ctx)) }
     val voiceDownloadProgress by VoiceModelManager.downloadProgress.collectAsState()
-    var overlayRunning   by remember { mutableStateOf(OverlayPrefs.isControlsEnabled()) }
     var verifierDisabled by remember {
         mutableStateOf(runCatching {
             Settings.Global.getInt(ctx.contentResolver, "package_verifier_enable", 1) == 0
@@ -203,6 +203,15 @@ fun SettingsScreen(
                 } else if (selected == Cat.APPS) {
                     // InstalledAppsScreen a une LazyColumn — embarquée directement.
                     InstalledAppsScreen(onBack = {})
+                } else if (selected == Cat.STORE) {
+                    Column {
+                        Text(
+                            "Les applications qui dépendent des services Google (GMS) risquent de ne pas fonctionner sur le Portal.",
+                            color = FujiColors.Muted, fontFamily = Gothic, fontSize = 15.sp,
+                            modifier = Modifier.padding(bottom = 12.dp),
+                        )
+                        StoreBody(Modifier.weight(1f))
+                    }
                 } else {
                 AnimatedContent(
                     targetState = selected,
@@ -240,23 +249,10 @@ fun SettingsScreen(
                                     )
                                 },
                             )
-                            Cat.APPS    -> {} // handled above (InstalledAppsScreen embedded)
+                            Cat.APPS, Cat.STORE -> {} // handled above (embedded screens)
                             Cat.SYSTEM  -> SystemPanelContent(
-                                overlayRunning, airPlayName, voiceEnabled, modelReady, voiceDownloadProgress,
+                                airPlayName, voiceEnabled, modelReady, voiceDownloadProgress,
                                 presenceEnabled = presenceEnabled,
-                                onOverlay = {
-                                    if (!Settings.canDrawOverlays(ctx)) {
-                                        ctx.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                                    } else {
-                                        val next = !overlayRunning
-                                        OverlayPrefs.setControlsEnabled(ctx, next)
-                                        overlayRunning = next
-                                        // Ensure service is running (for the home button)
-                                        if (!OverlayService.isRunning) {
-                                            ctx.startForegroundService(Intent(ctx, OverlayService::class.java))
-                                        }
-                                    }
-                                },
                                 onAirPlay = { editingAirPlay = airPlayName; showAirPlayDialog = true },
                                 onVoiceToggle = { enabled ->
                                     voiceEnabled = enabled; VoiceService.setEnabled(ctx, enabled)
@@ -401,25 +397,17 @@ private fun DisplayPanelContent(
 
 @Composable
 private fun SystemPanelContent(
-    overlayRunning: Boolean,
     airPlayName: String,
     voiceEnabled: Boolean,
     modelReady: Boolean,
     voiceDownloadProgress: Int?,
     presenceEnabled: Boolean,
-    onOverlay: () -> Unit,
     onAirPlay: () -> Unit,
     onVoiceToggle: (Boolean) -> Unit,
     onVoiceDownload: () -> Unit,
     onPresenceToggle: (Boolean) -> Unit,
 ) {
     val ctx = LocalContext.current
-    SettingRow(
-        text = if (overlayRunning) "Contrôles flottants actifs ✓" else "Contrôles flottants",
-        subtitle = if (overlayRunning) "Appuyer pour désactiver" else "Boutons multitâche et volume en superposition",
-        chevron = !overlayRunning,
-        onClick = onOverlay,
-    )
     SettingRow("Nom AirPlay", subtitle = airPlayName, onClick = onAirPlay)
 
     // Commandes vocales

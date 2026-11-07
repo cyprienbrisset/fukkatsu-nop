@@ -49,6 +49,7 @@ import com.cyprienbrisset.fukkatsunop.data.AppDatabase
 import com.cyprienbrisset.fukkatsunop.data.tile.TileEntity
 import com.cyprienbrisset.fukkatsunop.data.tile.TileRepository
 import com.cyprienbrisset.fukkatsunop.data.tile.TileType
+import com.cyprienbrisset.fukkatsunop.integration.OpenAppsRepository
 import com.cyprienbrisset.fukkatsunop.launch.LaunchIntentResolver
 import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiColors
 import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiIconButton
@@ -152,7 +153,9 @@ fun AllAppsScreen(onBack: () -> Unit) {
             items(shown, key = { it.packageName }) { e ->
                 AppCell(
                     e,
-                    onClick = { LaunchIntentResolver.launch(ctx, e.packageName) },
+                    onClick = {
+                        if (LaunchIntentResolver.launch(ctx, e.packageName)) OpenAppsRepository.record(ctx, e.packageName, e.label)
+                    },
                     onLongClick = {
                         scope.launch {
                             val repo = TileRepository(AppDatabase.get(ctx).tileDao())
