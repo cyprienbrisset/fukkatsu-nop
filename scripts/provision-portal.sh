@@ -98,7 +98,17 @@ ok "Vérificateur désactivé — les installations ne seront plus bloquées."
 
 # --- 3. Install ---------------------------------------------------------------
 info "Installation de l'APK sur le Portal…"
-"${A[@]}" install -r -d "$APK" >/dev/null || die "Échec de l'installation de l'APK."
+if ! out=$("${A[@]}" install -r -d "$APK" 2>&1); then
+  # Depuis la 1.1.34 l'APK est signé avec une nouvelle clé : une 1.0.x installée bloque la mise à jour.
+  if printf '%s' "$out" | grep -q 'INSTALL_FAILED_UPDATE_INCOMPATIBLE'; then
+    warn "Version précédente signée avec une autre clé : désinstallation puis réinstallation (favoris et alarmes à refaire)."
+    "${A[@]}" uninstall "$PKG" >/dev/null 2>&1 || true
+    "${A[@]}" install -r -d "$APK" >/dev/null || die "Échec de l'installation de l'APK."
+  else
+    printf '%s\n' "$out"
+    die "Échec de l'installation de l'APK."
+  fi
+fi
 ok "Fukkatsu installé."
 
 # --- 3. Permissions adb -------------------------------------------------------
