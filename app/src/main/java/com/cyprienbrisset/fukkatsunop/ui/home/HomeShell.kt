@@ -16,7 +16,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -149,6 +148,8 @@ fun HomeShell(
     val moment = rememberMoment()
 
     var panel by remember { mutableStateOf(Panel.NONE) }
+    var hudKind by remember { mutableStateOf<LevelKind?>(null) }
+    var hudValue by remember { mutableStateOf(0f) }
     var showDndDuration by remember { mutableStateOf(false) }
     var quickActionsTile by remember { mutableStateOf<TileEntity?>(null) }
     var updateVersion by remember { mutableStateOf<String?>(null) }
@@ -252,29 +253,47 @@ fun HomeShell(
         )
         WeatherOverlay(weather = if (weatherEffects) weather else null, isDark = true, modifier = Modifier.fillMaxSize())
 
-        // ── Ambient layer: tap → apps, swipe down → controls, swipe up → apps, pinch → recents
+        // ── Ambient layer: tap → apps, edge swipes → controls / apps, side slides → brightness / volume
         Box(
             Modifier
                 .fillMaxSize()
                 .pointerInput(Unit) { detectTapGestures { panel = Panel.APPS } }
                 .pointerInput(Unit) {
+                    // From the top edge → controls, from the bottom edge → apps.
+                    // Elsewhere, like Netflix: left half = brightness, right half = volume.
                     var dy = 0f
+                    var start = 0f
+                    var mode: LevelKind? = null
+                    var edge = 0
                     detectVerticalDragGestures(
-                        onDragStart = { dy = 0f },
+                        onDragStart = { o ->
+                            dy = 0f
+                            val band = 160.dp.toPx()
+                            edge = when { o.y < band -> 1; o.y > size.height - band -> 2; else -> 0 }
+                            mode = if (edge != 0) null else if (o.x < size.width / 2) LevelKind.BRIGHTNESS else LevelKind.VOLUME
+                            start = when (mode) {
+                                LevelKind.BRIGHTNESS -> DeviceLevels.brightness(ctx)
+                                LevelKind.VOLUME -> DeviceLevels.volume(ctx)
+                                null -> 0f
+                            }
+                            hudKind = mode
+                            hudValue = start
+                        },
                         onDragEnd = {
                             when {
-                                dy > 120f -> panel = Panel.CONTROLS
-                                dy < -120f -> panel = Panel.APPS
+                                edge == 1 && dy > 120f -> panel = Panel.CONTROLS
+                                edge == 2 && dy < -120f -> panel = Panel.APPS
                             }
+                            hudKind = null
                         },
-                    ) { _, d -> dy += d }
-                }
-                .pointerInput(Unit) {
-                    var zoom = 1f
-                    detectTransformGestures { _, _, z, _ ->
-                        zoom *= z
-                        if (zoom > 1.35f) { panel = Panel.APPS; zoom = 1f }
-                        if (zoom < 0.8f) zoom = 1f
+                        onDragCancel = { hudKind = null },
+                    ) { change, d ->
+                        dy += d
+                        val kind = mode ?: return@detectVerticalDragGestures
+                        change.consume()
+                        val v = (start - dy / (size.height * 0.6f)).coerceIn(0f, 1f)
+                        hudValue = v
+                        if (kind == LevelKind.BRIGHTNESS) DeviceLevels.setBrightness(ctx, v) else DeviceLevels.setVolume(ctx, v)
                     }
                 },
         ) {
@@ -357,6 +376,16 @@ fun HomeShell(
                 fontFamily = Gothic,
                 fontSize = 13.sp,
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 14.dp),
+            )
+        }
+
+        // ── Brightness / volume gauge while sliding
+        hudKind?.let { k ->
+            LevelHud(
+                k, hudValue,
+                Modifier
+                    .align(if (k == LevelKind.BRIGHTNESS) Alignment.TopStart else Alignment.TopEnd)
+                    .padding(horizontal = 88.dp, vertical = 170.dp),
             )
         }
 
@@ -547,7 +576,7 @@ private fun AmbientCards(
             Column(
                 Modifier
                     .width(720.dp)
-                    .height(236.dp)
+                    .height(if (c is AmbientCard.Music) 320.dp else 236.dp)
                     .clip(RoundedCornerShape(36.dp))
                     .background(FujiColors.GlassDark)
                     .clickable {
@@ -584,6 +613,7 @@ private fun AmbientCards(
                             RoundAction(if (c.np.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, if (c.np.isPlaying) "Pause" else "Lecture", 96.dp, true, onToggle)
                             RoundAction(Icons.Rounded.SkipNext, "Suivant", 80.dp, false, onNext)
                         }
+                        CardVolume(Modifier.fillMaxWidth())
                     }
                     is AmbientCard.Wake -> {
                         CardKicker("PROCHAIN RÉVEIL")

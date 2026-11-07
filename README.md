@@ -52,9 +52,10 @@ Rien n'est caché : chaque action a un bouton visible d'au moins 64 dp. Les gest
 | Geste | Effet |
 |---|---|
 | **Toucher** l'écran ambiant | Afficher les apps |
-| **Glisser vers le bas** | Ouvrir le centre de contrôle |
-| **Glisser vers le haut** | Afficher les apps |
-| **Écarter deux doigts** | Afficher les apps et les apps ouvertes |
+| **Glisser depuis le haut** | Ouvrir le centre de contrôle |
+| **Glisser depuis le bas** | Afficher les apps |
+| **Glisser verticalement à gauche** | Régler la luminosité (comme sur Netflix) |
+| **Glisser verticalement à droite** | Régler le volume |
 | **Appui long** sur une app favorite | Déplacer, retirer, réorganiser |
 | **Appui long** dans « Toutes les apps » | Ajouter l'app aux favoris |
 
