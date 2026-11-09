@@ -19,8 +19,8 @@ android {
         minSdk = 28
         targetSdk = 37
         val major = 2
-        val minor = 4
-        val build = 40
+        val minor = 5
+        val build = 41
         versionCode = build
         versionName = "$major.$minor"
 

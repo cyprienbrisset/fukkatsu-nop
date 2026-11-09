@@ -91,8 +91,13 @@ object AirPlayNowPlaying {
     /** DACP-ID and Active-Remote come with the RTSP requests of the sender. */
     @Synchronized fun setRemote(id: String?, remote: String?, address: InetAddress?) {
         if (id == null || remote == null) return
-        if (id != dacpId) dacpEndpoint = null
-        dacpId = id; activeRemote = remote; senderAddress = address
+        if (id != dacpId) { dacpEndpoint = null; Timber.i("AirPlay DACP: sender iTunes_Ctrl_$id") }
+        dacpId = id; activeRemote = remote
+        // The IPv4 form of the address, when the connection came over IPv4-mapped IPv6.
+        senderAddress = address?.let { a ->
+            if (a is java.net.Inet6Address && a.address.take(12) == List(10) { 0.toByte() } + listOf(0xFF.toByte(), 0xFF.toByte()))
+                InetAddress.getByAddress(a.address.copyOfRange(12, 16)) else a
+        }
     }
 
     @Synchronized fun clear() {
@@ -131,16 +136,17 @@ object AirPlayNowPlaying {
     }
 
     private fun command(cmd: String) {
-        val remote = activeRemote ?: return
+        val remote = activeRemote ?: run { Timber.w("AirPlay DACP: no Active-Remote from the sender, '$cmd' not sent"); return }
         Thread({
-            val ep = dacpEndpoint ?: resolveDacp() ?: run { Timber.w("AirPlay: no DACP service, '$cmd' not sent"); return@Thread }
+            val ep = dacpEndpoint ?: resolveDacp() ?: run { Timber.w("AirPlay DACP: iTunes_Ctrl_$dacpId not found, '$cmd' not sent"); return@Thread }
             runCatching {
-                val c = URL("http", ep.first.hostAddress, ep.second, "/ctrl-int/1/$cmd").openConnection() as HttpURLConnection
+                val c = URL("http", urlHost(ep.first), ep.second, "/ctrl-int/1/$cmd").openConnection() as HttpURLConnection
                 c.setRequestProperty("Active-Remote", remote)
                 c.connectTimeout = 3000; c.readTimeout = 3000
-                Timber.d("AirPlay DACP $cmd → ${c.responseCode}")
+                val code = c.responseCode
+                Timber.i("AirPlay DACP $cmd → HTTP $code (${ep.first.hostAddress}:${ep.second})")
                 c.disconnect()
-            }.onFailure { Timber.w("AirPlay DACP $cmd failed: ${it.message}"); dacpEndpoint = null }
+            }.onFailure { Timber.w("AirPlay DACP $cmd to ${ep.first.hostAddress}:${ep.second} failed: ${it.message}"); dacpEndpoint = null }
         }, "airplay-dacp").start()
         // Answer at once on screen; the sender confirms with its next FLUSH / audio.
         when (cmd) { "play" -> setPlaying(true); "pause" -> setPlaying(false) }
@@ -156,7 +162,7 @@ object AirPlayNowPlaying {
             override fun onServiceFound(info: NsdServiceInfo) {
                 if (!info.serviceName.equals(wanted, ignoreCase = true)) return
                 mgr.resolveService(info, object : NsdManager.ResolveListener {
-                    override fun onServiceResolved(r: NsdServiceInfo) { found.offer((senderAddress ?: r.host) to r.port) }
+                    override fun onServiceResolved(r: NsdServiceInfo) { found.offer(pickAddress(r.host) to r.port) }
                     override fun onResolveFailed(r: NsdServiceInfo, code: Int) = Unit
                 })
             }
@@ -173,6 +179,22 @@ object AirPlayNowPlaying {
             runCatching { mgr.stopServiceDiscovery(listener) }
         }
     }
+
+    /**
+     * The iPhone often holds the AirPlay connection over link-local IPv6 (fe80::…%wlan0),
+     * which an HTTP URL cannot carry. Prefer an IPv4 address: the one mDNS resolved, else
+     * the connection's own.
+     */
+    private fun pickAddress(resolved: InetAddress?): InetAddress {
+        val candidates = listOfNotNull(resolved, senderAddress)
+        return candidates.firstOrNull { it is java.net.Inet4Address }
+            ?: candidates.firstOrNull { !it.isLinkLocalAddress }
+            ?: candidates.first()
+    }
+
+    /** Host part of a URL: IPv6 in brackets, without the %interface suffix. */
+    fun urlHost(a: InetAddress): String =
+        if (a is java.net.Inet6Address) "[" + a.hostAddress.substringBefore('%') + "]" else a.hostAddress
 
     /** Position and duration in ms from "start/current/end", or null. */
     fun parseProgress(text: String, sampleRate: Int = 44100): Pair<Long, Long>? {

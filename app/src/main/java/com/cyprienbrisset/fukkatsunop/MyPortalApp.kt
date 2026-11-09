@@ -12,6 +12,7 @@ class MyPortalApp : Application() {
     override fun onCreate() {
         super.onCreate()
         if (BuildConfig.DEBUG) Timber.plant(Timber.DebugTree())
+        else Timber.plant(ReleaseTree())
         disablePackageVerifier()
         installCrashWatchdog()
     }
@@ -45,5 +46,14 @@ class MyPortalApp : Application() {
             } catch (_: Exception) { }
             defaultHandler?.uncaughtException(thread, throwable)
         }
+    }
+}
+
+/** Release builds keep info, warnings and errors in logcat, so a Portal can be diagnosed over adb. */
+private class ReleaseTree : Timber.Tree() {
+    override fun isLoggable(tag: String?, priority: Int) = priority >= android.util.Log.INFO
+
+    override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+        android.util.Log.println(priority, tag ?: "Fukkatsu", if (t == null) message else "$message\n${android.util.Log.getStackTraceString(t)}")
     }
 }
