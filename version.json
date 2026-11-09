@@ -1,6 +1,6 @@
 {
-  "versionCode": 36,
-  "versionName": "2.0",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/2.0/fukkatsu-nop-v2.0.apk",
-  "notes": "Écran Mac : recopie AirPlay fluide jusqu'à 60 i/s. Luminosité et volume au glisser sur l'accueil, volume dans la carte musique. Retour sur l'accueil corrigé. Licence GPL-3.0."
+  "versionCode": 37,
+  "versionName": "2.1",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/2.1/fukkatsu-nop-v2.1.apk",
+  "notes": "Musique AirPlay : envoyez Apple Music depuis l'iPhone ou le Mac, le son sort du Portal (volume et pause pris en compte)."
 }
