@@ -52,6 +52,11 @@ class AppUpdateService : Service() {
                 // Sur Portal Android 9, la session PackageInstaller aboutit à un écran blanc.
                 // On passe par ACTION_INSTALL_PACKAGE via FileProvider (même chemin que FukkaStore).
                 val apk = files.first()
+                // Portal 1st gen (Android 9) draws the installer screen blank: without the
+                // service pressing "Installer" for the user, the update stops on a white page.
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                    com.cyprienbrisset.fukkatsunop.store.ApkInstaller(this@AppUpdateService).ensureAccessibilityServiceEnabled()
+                }
                 val contentUri = FileProvider.getUriForFile(
                     this@AppUpdateService,
                     "${BuildConfig.APPLICATION_ID}.fileprovider",

@@ -22,25 +22,36 @@ class InstallAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
         if (event.packageName != "com.android.packageinstaller") return
+        pressButtons()
+    }
 
+    /**
+     * When Fukkatsu updates itself, this service dies with the old version and comes back
+     * on the (blank) "installed" screen, whose events are already gone: look at it now.
+     */
+    override fun onServiceConnected() {
+        pressButtons()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun pressButtons() {
         val root = rootInActiveWindow ?: return
         try {
-            clickInstallButton(root)
+            if (root.packageName != "com.android.packageinstaller") return
+            // ok_button: "Installer" / "Suivant"; done_button: "OK" on the "installed" screen.
+            clickButton(root, "com.android.packageinstaller:id/ok_button") ||
+                clickButton(root, "com.android.packageinstaller:id/done_button")
         } finally {
             root.recycle()
         }
     }
 
     @Suppress("DEPRECATION")
-    private fun clickInstallButton(root: AccessibilityNodeInfo) {
-        val nodes = root.findAccessibilityNodeInfosByViewId(
-            "com.android.packageinstaller:id/ok_button"
-        )
-        val button = nodes?.firstOrNull() ?: return
+    private fun clickButton(root: AccessibilityNodeInfo, id: String): Boolean {
+        val nodes = root.findAccessibilityNodeInfosByViewId(id) ?: return false
+        val button = nodes.firstOrNull() ?: return false
         try {
-            if (button.isEnabled && button.isClickable) {
-                button.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-            }
+            return button.isEnabled && button.isClickable && button.performAction(AccessibilityNodeInfo.ACTION_CLICK)
         } finally {
             nodes.forEach { it.recycle() }
         }

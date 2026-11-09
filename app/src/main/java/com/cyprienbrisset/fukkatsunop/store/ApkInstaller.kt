@@ -31,7 +31,8 @@ class ApkInstaller(private val context: Context) {
         installViaSession(packageName, apks)
     }
 
-    private fun ensureAccessibilityServiceEnabled() {
+    /** Turns on InstallAccessibilityService, which presses the buttons of the blank installer screen. */
+    fun ensureAccessibilityServiceEnabled() {
         val serviceId = "${context.packageName}/.store.InstallAccessibilityService"
         val current = runCatching {
             Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)

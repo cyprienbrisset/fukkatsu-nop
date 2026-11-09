@@ -16,7 +16,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitVerticalTouchSlopOrCancellation
+import androidx.compose.foundation.gestures.verticalDrag
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,6 +47,7 @@ import androidx.compose.material.icons.rounded.Videocam
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -165,6 +168,18 @@ fun HomeShell(
         updateVersion = UpdateChecker.availableVersionName(ctx)
     }
 
+    // The system status bar is a 68 px window across the top that takes every touch starting
+    // there, so a pull from the very edge never reached the home. Hide it here (sticky
+    // immersive: a swipe still shows it for a moment); other screens get it back.
+    val view = androidx.compose.ui.platform.LocalView.current
+    DisposableEffect(view) {
+        val window = (view.context as? android.app.Activity)?.window
+        val bars = window?.let { androidx.core.view.WindowCompat.getInsetsController(it, view) }
+        bars?.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        bars?.hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
+        onDispose { bars?.show(androidx.core.view.WindowInsetsCompat.Type.statusBars()) }
+    }
+
     // Back closes the apps panel or the control centre.
     androidx.activity.compose.BackHandler(enabled = panel != Panel.NONE) { panel = Panel.NONE }
 
@@ -261,39 +276,42 @@ fun HomeShell(
                 .pointerInput(Unit) {
                     // From the top edge → controls, from the bottom edge → apps.
                     // Elsewhere, like Netflix: left half = brightness, right half = volume.
-                    var dy = 0f
-                    var start = 0f
-                    var mode: LevelKind? = null
-                    var edge = 0
-                    detectVerticalDragGestures(
-                        onDragStart = { o ->
-                            dy = 0f
-                            val band = 160.dp.toPx()
-                            edge = when { o.y < band -> 1; o.y > size.height - band -> 2; else -> 0 }
-                            mode = if (edge != 0) null else if (o.x < size.width / 2) LevelKind.BRIGHTNESS else LevelKind.VOLUME
-                            start = when (mode) {
-                                LevelKind.BRIGHTNESS -> DeviceLevels.brightness(ctx)
-                                LevelKind.VOLUME -> DeviceLevels.volume(ctx)
-                                null -> 0f
+                    // Everything is measured from where the finger went down: the drag-start
+                    // position comes after the touch slop, and when the first touch wakes the
+                    // dimmed screen it arrives a long frame later, far below the top band.
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false)
+                        val origin = down.position
+                        val band = 160.dp.toPx()
+                        val edge = when { origin.y < band -> 1; origin.y > size.height - band -> 2; else -> 0 }
+                        val drag = awaitVerticalTouchSlopOrCancellation(down.id) { change, _ -> change.consume() }
+                            ?: return@awaitEachGesture
+                        val mode = if (edge != 0) null else if (origin.x < size.width / 2) LevelKind.BRIGHTNESS else LevelKind.VOLUME
+                        val start = when (mode) {
+                            LevelKind.BRIGHTNESS -> DeviceLevels.brightness(ctx)
+                            LevelKind.VOLUME -> DeviceLevels.volume(ctx)
+                            null -> 0f
+                        }
+                        hudKind = mode
+                        hudValue = start
+                        var dy = drag.position.y - origin.y
+                        try {
+                            val ended = verticalDrag(drag.id) { change ->
+                                change.consume()
+                                dy = change.position.y - origin.y
+                                if (mode != null) {
+                                    val v = (start - dy / (size.height * 0.6f)).coerceIn(0f, 1f)
+                                    hudValue = v
+                                    if (mode == LevelKind.BRIGHTNESS) DeviceLevels.setBrightness(ctx, v) else DeviceLevels.setVolume(ctx, v)
+                                }
                             }
-                            hudKind = mode
-                            hudValue = start
-                        },
-                        onDragEnd = {
-                            when {
+                            if (ended) when {
                                 edge == 1 && dy > 120f -> panel = Panel.CONTROLS
                                 edge == 2 && dy < -120f -> panel = Panel.APPS
                             }
+                        } finally {
                             hudKind = null
-                        },
-                        onDragCancel = { hudKind = null },
-                    ) { change, d ->
-                        dy += d
-                        val kind = mode ?: return@detectVerticalDragGestures
-                        change.consume()
-                        val v = (start - dy / (size.height * 0.6f)).coerceIn(0f, 1f)
-                        hudValue = v
-                        if (kind == LevelKind.BRIGHTNESS) DeviceLevels.setBrightness(ctx, v) else DeviceLevels.setVolume(ctx, v)
+                        }
                     }
                 },
         ) {
