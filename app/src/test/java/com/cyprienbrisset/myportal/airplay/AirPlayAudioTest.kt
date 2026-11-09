@@ -112,4 +112,28 @@ class AirPlayAudioTest {
         assertEquals(2_000L to 4_000L, AirPlayNowPlaying.parseProgress("progress: $start/44100/132300"))
         assertEquals(null, AirPlayNowPlaying.parseProgress("volume: -20.0"))
     }
+
+    @Test fun dacpCommandIsAPlainGetWithActiveRemote() {
+        java.net.ServerSocket(0, 1, java.net.InetAddress.getLoopbackAddress()).use { server ->
+            var request = ""
+            val t = Thread {
+                server.accept().use { c ->
+                    val r = c.getInputStream().bufferedReader()
+                    request = generateSequence { r.readLine()?.takeIf { it.isNotEmpty() } }.joinToString("\n")
+                    c.getOutputStream().write("HTTP/1.1 204 No Content\r\nContent-Length: 0\r\n\r\n".toByteArray())
+                }
+            }.apply { start() }
+            val code = AirPlayNowPlaying.dacpGet(server.inetAddress, server.localPort, "/ctrl-int/1/playpause", "1986535575")
+            t.join(2000)
+            assertEquals(204, code)
+            assertTrue(request, request.startsWith("GET /ctrl-int/1/playpause HTTP/1.1"))
+            assertTrue(request, request.contains("Active-Remote: 1986535575"))
+        }
+    }
+
+    @Test fun urlHostBracketsIpv6AndDropsTheInterface() {
+        assertEquals("192.168.1.16", AirPlayNowPlaying.urlHost(java.net.InetAddress.getByName("192.168.1.16")))
+        val ll = java.net.Inet6Address.getByAddress(null, java.net.InetAddress.getByName("fe80::1c94:65d:2d9c:2a80").address, 3)
+        assertEquals("[fe80:0:0:0:1c94:65d:2d9c:2a80]", AirPlayNowPlaying.urlHost(ll))
+    }
 }

@@ -9,9 +9,7 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.os.SystemClock
 import timber.log.Timber
-import java.net.HttpURLConnection
 import java.net.InetAddress
-import java.net.URL
 
 /**
  * What an iPhone or a Mac plays over AirPlay, published as a MediaSession so the home
@@ -140,12 +138,8 @@ object AirPlayNowPlaying {
         Thread({
             val ep = dacpEndpoint ?: resolveDacp() ?: run { Timber.w("AirPlay DACP: iTunes_Ctrl_$dacpId not found, '$cmd' not sent"); return@Thread }
             runCatching {
-                val c = URL("http", urlHost(ep.first), ep.second, "/ctrl-int/1/$cmd").openConnection() as HttpURLConnection
-                c.setRequestProperty("Active-Remote", remote)
-                c.connectTimeout = 3000; c.readTimeout = 3000
-                val code = c.responseCode
+                val code = dacpGet(ep.first, ep.second, "/ctrl-int/1/$cmd", remote)
                 Timber.i("AirPlay DACP $cmd → HTTP $code (${ep.first.hostAddress}:${ep.second})")
-                c.disconnect()
             }.onFailure { Timber.w("AirPlay DACP $cmd to ${ep.first.hostAddress}:${ep.second} failed: ${it.message}"); dacpEndpoint = null }
         }, "airplay-dacp").start()
         // Answer at once on screen; the sender confirms with its next FLUSH / audio.
@@ -190,6 +184,24 @@ object AirPlayNowPlaying {
         return candidates.firstOrNull { it is java.net.Inet4Address }
             ?: candidates.firstOrNull { !it.isLinkLocalAddress }
             ?: candidates.first()
+    }
+
+    /**
+     * DACP is plain HTTP on the local network. Android forbids cleartext HTTP to the app's
+     * HTTP clients (target SDK 28+), so this one request goes over a socket instead of
+     * opening cleartext to the whole app. Returns the status code.
+     */
+    internal fun dacpGet(host: InetAddress, port: Int, path: String, activeRemote: String): Int {
+        java.net.Socket().use { s ->
+            s.connect(java.net.InetSocketAddress(host, port), 3000)
+            s.soTimeout = 3000
+            s.getOutputStream().apply {
+                write("GET $path HTTP/1.1\r\nHost: ${urlHost(host)}:$port\r\nActive-Remote: $activeRemote\r\nConnection: close\r\n\r\n".toByteArray())
+                flush()
+            }
+            val status = s.getInputStream().bufferedReader().readLine().orEmpty()
+            return status.split(' ').getOrNull(1)?.toIntOrNull() ?: -1
+        }
     }
 
     /** Host part of a URL: IPv6 in brackets, without the %interface suffix. */
