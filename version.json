@@ -1,6 +1,6 @@
 {
-  "versionCode": 38,
-  "versionName": "2.2",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/2.2/fukkatsu-nop-v2.2.apk",
-  "notes": "Le centre de contrôle s'ouvre de nouveau en glissant depuis le haut de l'accueil. Mise à jour automatique corrigée sur Portal+ 1re génération."
+  "versionCode": 39,
+  "versionName": "2.3",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/2.3/fukkatsu-nop-v2.3.apk",
+  "notes": "Musique AirPlay : titre, artiste et pochette dans la carte « En lecture », dont les boutons commandent l'iPhone. La pill « Mise à jour » ouvre le bon réglage."
 }
