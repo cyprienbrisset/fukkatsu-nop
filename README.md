@@ -25,7 +25,7 @@
 
 ## Ce que vous voyez au quotidien
 
-**L'écran ambiant** occupe tout l'écran : une photo du mont Fuji qui change à l'aube, en journée, au soir et la nuit, l'heure en très grand, la date et la météo. Touchez la météo pour passer à la ville suivante. Une carte en bas à droite tourne toutes les 12 secondes, à la manière de l'Echo Show : prochaine réunion Google Meet avec un bouton « Rejoindre », musique en cours avec ses commandes, prochain réveil.
+**L'écran ambiant** occupe tout l'écran : une photo du mont Fuji qui change à l'aube, en journée, au soir et la nuit, l'heure en très grand, la date et la météo. Touchez la météo pour passer à la ville suivante. Une carte en bas à droite tourne toutes les 12 secondes, à la manière de l'Echo Show : prochaine réunion Google Meet avec un bouton « Rejoindre », musique en cours avec sa pochette et ses commandes (Spotify, AirPlay et toute appli qui publie une session média), prochain réveil.
 
 **Les apps** apparaissent dès qu'on touche l'écran (ou avec le bouton « Apps ») : favoris en icônes de 140 dp sur la photo floutée, badges de notifications, contacts récents Messenger et WhatsApp, et quatre raccourcis — Agenda, Alarmes, Widgets, Toutes les apps. La rangée **Apps ouvertes** liste les apps laissées en mémoire : un toucher pour y revenir, une croix pour la fermer, ou « Tout fermer ».
 
@@ -43,7 +43,7 @@ Après trois minutes sans contact, la luminosité baisse doucement ; un toucher 
 
 Le Portal sert de récepteur AirPlay pour un Mac : Centre de contrôle → Recopie de l'écran → choisir le Portal. Recopie de l'écran en H.264 jusqu'à 60 images par seconde (testée avec macOS 27 ; même protocole qu'UxPlay, compatible de macOS 12 Monterey à macOS 27). Le mode « écran séparé » est expérimental.
 
-Depuis la 2.1, le Portal est aussi une enceinte AirPlay : dans Apple Music (iPhone ou Mac), choisissez le Portal comme sortie, le son sort du Portal, avec le volume et la pause de l'iPhone. Fukkatsu décode l'ALAC (Apple Lossless) avec son propre décodeur, porté de la référence Apple, et l'AAC avec celui d'Android. Depuis la 2.3, la carte « En lecture » de l'accueil affiche le titre, l'artiste et la pochette envoyés par l'iPhone, et ses boutons lecture/pause, précédent et suivant commandent l'iPhone (DACP). La négociation suit celle d'[UxPlay](https://github.com/FDH2/UxPlay), dont le déchiffrement FairPlay (`playfair`, GPL-3.0) est compilé en bibliothèque native.
+Depuis la 2.1, le Portal est aussi une enceinte AirPlay : dans Apple Music (iPhone ou Mac), choisissez le Portal comme sortie, le son sort du Portal, avec le volume et la pause de l'iPhone. Fukkatsu décode l'ALAC (Apple Lossless) avec son propre décodeur, porté de la référence Apple, et l'AAC avec celui d'Android. Depuis la 2.3, la carte « En lecture » de l'accueil affiche le titre, l'artiste et (depuis la 2.4) la pochette envoyés par l'iPhone, et ses boutons lecture/pause, précédent et suivant commandent l'iPhone (DACP). La négociation suit celle d'[UxPlay](https://github.com/FDH2/UxPlay), dont le déchiffrement FairPlay (`playfair`, GPL-3.0) est compilé en bibliothèque native.
 
 ---
 

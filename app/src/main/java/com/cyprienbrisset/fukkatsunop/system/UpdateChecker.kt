@@ -21,6 +21,7 @@ object UpdateChecker {
     // Pointer vers le version.json hébergé sur GitHub Releases ou Coolify.
     // Format attendu : { "versionCode": 2, "versionName": "1.1.0", "apkUrl": "https://...", "notes": "..." }
     const val MANIFEST_URL = "https://raw.githubusercontent.com/cyprienbrisset/fukkatsu-nop/main/version.json"
+    private const val API_URL = "https://api.github.com/repos/cyprienbrisset/fukkatsu-nop/contents/version.json?ref=main"
 
     private const val PREFS          = "update_checker"
     private const val KEY_REMOTE_CODE = "remote_version_code"
@@ -53,9 +54,17 @@ object UpdateChecker {
     suspend fun check(ctx: Context) = withContext(Dispatchers.IO) {
         runCatching {
             ensureChannel(ctx)
-            val body = OkHttpClient()
-                .newCall(Request.Builder().url(MANIFEST_URL).build())
-                .execute().use { it.body?.string() } ?: return@withContext
+            // raw.githubusercontent.com serves each copy for 5 minutes, whatever the query: a
+            // release pushed just now stays invisible. The contents API caches 1 minute at most
+            // (60 requests per hour per address: plenty), raw stays the fallback.
+            val http = OkHttpClient()
+            fun fetch(req: Request) = runCatching {
+                http.newCall(req).execute().use { r -> if (r.isSuccessful) r.body?.string() else null }
+            }.getOrNull()
+            val body = fetch(Request.Builder().url(API_URL).header("Accept", "application/vnd.github.raw").build())
+                ?.takeIf { it.trimStart().startsWith("{") }
+                ?: fetch(Request.Builder().url(MANIFEST_URL).build())
+                ?: return@withContext
 
             val j = JSONObject(body)
             val remoteCode = j.getInt("versionCode")

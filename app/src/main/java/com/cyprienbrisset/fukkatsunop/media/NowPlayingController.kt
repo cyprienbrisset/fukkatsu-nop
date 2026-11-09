@@ -87,8 +87,7 @@ class NowPlayingController(private val context: Context) {
         val title = md?.getString(MediaMetadata.METADATA_KEY_TITLE) ?: ""
         val artist = md?.getString(MediaMetadata.METADATA_KEY_ARTIST)
             ?: md?.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST) ?: ""
-        val art = md?.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
-            ?: md?.getBitmap(MediaMetadata.METADATA_KEY_ART)
+        val art = md?.let { coverOf(it) }
         val ps = c.playbackState
         val playing = isPlaying(ps?.state ?: PlaybackState.STATE_NONE)
         val duration = md?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: -1L
@@ -102,6 +101,28 @@ class NowPlayingController(private val context: Context) {
         val canSeek = ps != null && (ps.actions and PlaybackState.ACTION_SEEK_TO) != 0L
         _state.value = if (title.isBlank() && artist.isBlank()) null
             else NowPlaying(title, artist, playing, art, position, duration, canSeek, c.packageName)
+    }
+
+    // Apps hand the cover over in different ways: a bitmap under one of three keys, or a
+    // URI (Spotify on some versions). Only local content:// URIs are read; one per track.
+    private var coverUri: String? = null
+    private var coverFromUri: android.graphics.Bitmap? = null
+
+    private fun coverOf(md: MediaMetadata): android.graphics.Bitmap? {
+        md.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)?.let { return it }
+        md.getBitmap(MediaMetadata.METADATA_KEY_ART)?.let { return it }
+        md.getBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON)?.let { return it }
+        val uri = md.getString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI)
+            ?: md.getString(MediaMetadata.METADATA_KEY_ART_URI)
+            ?: md.getString(MediaMetadata.METADATA_KEY_DISPLAY_ICON_URI)
+            ?: return null
+        if (uri != coverUri) {
+            coverUri = uri
+            coverFromUri = if (!uri.startsWith("content://") && !uri.startsWith("android.resource://")) null else runCatching {
+                context.contentResolver.openInputStream(android.net.Uri.parse(uri))?.use { android.graphics.BitmapFactory.decodeStream(it) }
+            }.getOrNull()
+        }
+        return coverFromUri
     }
 
     fun seekTo(positionMs: Long) { controller?.transportControls?.seekTo(positionMs) }

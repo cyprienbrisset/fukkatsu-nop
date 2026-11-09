@@ -1,7 +1,6 @@
 package com.cyprienbrisset.fukkatsunop.ui.settings
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.Home
@@ -17,7 +16,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.cyprienbrisset.fukkatsunop.ui.LegacyScale
 import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiColors
-import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiIconButton
 import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiSwitch
 import com.cyprienbrisset.fukkatsunop.ui.fuji.glass
 import com.cyprienbrisset.fukkatsunop.ui.theme.Gothic
@@ -173,7 +171,6 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(24.dp),
                 ) {
-                    FujiIconButton(Icons.AutoMirrored.Rounded.ArrowBack, "Retour", onBack)
                     Text("Réglages", color = FujiColors.Cream, fontFamily = Gothic, fontSize = 46.sp, fontWeight = FontWeight.Medium)
                 }
                 CATS.forEach { cat -> CatItem(cat, selected == cat.id) { selected = cat.id } }

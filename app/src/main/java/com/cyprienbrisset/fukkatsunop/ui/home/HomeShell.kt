@@ -63,6 +63,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -624,6 +625,14 @@ private fun AmbientCards(
                     is AmbientCard.Music -> {
                         CardKicker("EN LECTURE")
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                            c.np.art?.let { art ->
+                                val cover = remember(art) { art.asImageBitmap() }
+                                androidx.compose.foundation.Image(
+                                    cover, "Pochette",
+                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                    modifier = Modifier.size(112.dp).clip(RoundedCornerShape(18.dp)),
+                                )
+                            }
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 CardTitle(c.np.title)
                                 CardSub(c.np.artist)
