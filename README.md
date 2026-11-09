@@ -41,7 +41,9 @@ Après trois minutes sans contact, la luminosité baisse doucement ; un toucher 
 
 ## Écran Mac (AirPlay)
 
-Le Portal sert de récepteur AirPlay pour un Mac : Centre de contrôle → Recopie de l'écran → choisir le Portal. Recopie de l'écran en H.264 jusqu'à 60 images par seconde (testée avec macOS 27 ; même protocole qu'UxPlay, compatible de macOS 12 Monterey à macOS 27). Le mode « écran séparé » est expérimental. La négociation suit celle d'[UxPlay](https://github.com/FDH2/UxPlay), dont le déchiffrement FairPlay (`playfair`, GPL-3.0) est compilé en bibliothèque native.
+Le Portal sert de récepteur AirPlay pour un Mac : Centre de contrôle → Recopie de l'écran → choisir le Portal. Recopie de l'écran en H.264 jusqu'à 60 images par seconde (testée avec macOS 27 ; même protocole qu'UxPlay, compatible de macOS 12 Monterey à macOS 27). Le mode « écran séparé » est expérimental.
+
+Depuis la 2.1, le Portal est aussi une enceinte AirPlay : dans Apple Music (iPhone ou Mac), choisissez le Portal comme sortie, le son sort du Portal, avec le volume et la pause de l'iPhone. Fukkatsu décode l'ALAC (Apple Lossless) avec son propre décodeur, porté de la référence Apple, et l'AAC avec celui d'Android. La négociation suit celle d'[UxPlay](https://github.com/FDH2/UxPlay), dont le déchiffrement FairPlay (`playfair`, GPL-3.0) est compilé en bibliothèque native.
 
 ---
 

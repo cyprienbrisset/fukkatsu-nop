@@ -73,7 +73,7 @@ class AirPlayHttpServer(
             var cseq = "0"
             val mirror = MirrorSetupState()
 
-            while (running && !socket.isClosed) {
+            try { while (running && !socket.isClosed) {
                 val requestLine = inp.readHttpLine() ?: run {
                     Timber.d("Client DISCONNECTED: ${socket.remoteSocketAddress}")
                     break
@@ -183,7 +183,6 @@ class AirPlayHttpServer(
                             Timber.d("pair-verify M3: clientSig=${clientSig.take(8).toHex()}... ok=$ok")
                             // M4: client ignores content
                             out.writeHttp("HTTP/1.1 200 OK", "application/octet-stream", ByteArray(0))
-                            onConnecting()
                         }
                     }
 
@@ -197,7 +196,7 @@ class AirPlayHttpServer(
                         Timber.d("SETUP body[${bodyBytes.size}]=${bodyBytes.take(8).toHex()}")
                         if (bodyBytes.size > 8 && bodyBytes.take(8) == BPLIST_MAGIC) {
                             mirror.ecdhSecret = pairVerifySharedSecret
-                            handleAirPlay2Setup(out, cseq, bodyBytes, macAddress, timingLportRef, mirror, onCodecConfig, onVideoFrame) { isExtended ->
+                            handleAirPlay2Setup(out, cseq, bodyBytes, macAddress, timingLportRef, mirror, onCodecConfig, onVideoFrame, onConnecting) { isExtended ->
                                 onSession(isExtended)
                             }
                         } else {
@@ -220,7 +219,21 @@ class AirPlayHttpServer(
                     }
 
                     method == "SET_PARAMETER" -> {
-                        Timber.d("SET_PARAMETER body[${bodyBytes.size}]")
+                        val type = headers["Content-Type"].orEmpty()
+                        Timber.d("SET_PARAMETER $type body[${bodyBytes.size}]")
+                        if (type.startsWith("text/parameters")) {
+                            val text = bodyBytes.toString(Charsets.UTF_8)
+                            Regex("volume:\\s*(-?[0-9.]+)").find(text)?.groupValues?.get(1)?.toFloatOrNull()?.let { db ->
+                                Timber.d("Audio: volume $db dB")
+                                mirror.volumeDb = db
+                                mirror.audio.forEach { it.setVolume(db) }
+                            }
+                        }
+                        out.writeRtsp(cseq)
+                    }
+
+                    method == "FLUSH" -> {
+                        mirror.audio.forEach { it.flush() }
                         out.writeRtsp(cseq)
                     }
 
@@ -237,9 +250,20 @@ class AirPlayHttpServer(
                     method == "TEARDOWN" -> {
                         val tdAscii = bodyBytes.toString(Charsets.ISO_8859_1).replace(Regex("[\\x00-\\x08\\x0E-\\x1F\\x7F]"), ".")
                         Timber.d("TEARDOWN body[${bodyBytes.size}] hex=${bodyBytes.toHex()} txt=$tdAscii")
+                        @Suppress("UNCHECKED_CAST")
+                        val types = runCatching {
+                            (BinaryPlist.decode(bodyBytes)["streams"] as? List<Map<String, Any?>>)?.mapNotNull { (it["type"] as? Long)?.toInt() }
+                        }.getOrNull().orEmpty()
                         out.writeRtsp(cseq)
-                        onDisconnect()
-                        break
+                        if (types.isNotEmpty() && types.all { it == 96 }) {
+                            // Only the audio stream ends (music paused or stopped): the session goes on.
+                            mirror.stopAudio()
+                        } else {
+                            mirror.stopAudio()
+                            // Music from an iPhone must not end a Mac screen session running alongside.
+                            if (mirror.screenSession) onDisconnect()
+                            break
+                        }
                     }
 
                     method == "ANNOUNCE" -> {
@@ -271,11 +295,16 @@ class AirPlayHttpServer(
                     }
 
                     else -> {
-                        Timber.w("Unhandled: $method $path body[${bodyBytes.size}]=${bodyBytes.toHex()}")
-                        out.write("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n".toByteArray())
-                        out.flush()
+                        Timber.w("Unhandled: $method $path body[${bodyBytes.size}]=${bodyBytes.take(64).toHex()}")
+                        if (requestLine.endsWith("RTSP/1.0")) out.writeRtsp(cseq)
+                        else {
+                            out.write("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n".toByteArray())
+                            out.flush()
+                        }
                     }
                 }
+            } } finally {
+                mirror.stopAudio()
             }
         }
     }
@@ -292,8 +321,18 @@ class AirPlayHttpServer(
 class MirrorSetupState {
     @Volatile var fpKeyMsg: ByteArray? = null
     @Volatile var ecdhSecret: ByteArray? = null
+    @Volatile var fairPlayKey: ByteArray? = null
     @Volatile var sessionKey: ByteArray? = null
+    @Volatile var audioIv: ByteArray? = null
     @Volatile var isExtended: Boolean = false
+    @Volatile var screenSession: Boolean = false
+    @Volatile var volumeDb: Float? = null
+    val audio = java.util.concurrent.CopyOnWriteArrayList<AirPlayAudioSession>()
+
+    fun stopAudio() {
+        audio.forEach { it.stop() }
+        audio.clear()
+    }
 }
 
 private fun handleAirPlay2Setup(
@@ -303,18 +342,21 @@ private fun handleAirPlay2Setup(
     st: MirrorSetupState,
     onCodecConfig: (CodecConfig) -> Unit,
     onVideoFrame: (ByteArray, Boolean) -> Unit,
+    onConnecting: () -> Unit,
     onStreamsReady: (isExtended: Boolean) -> Unit = {},
 ) {
     runCatching {
         val plist = BinaryPlist.decode(bodyBytes)
-        Timber.d("SETUP plist keys: ${plist.keys}")
+        Timber.d("SETUP plist: ${describePlist(plist)}")
         val response = mutableMapOf<String, Any>()
 
         val ekey = plist["ekey"] as? ByteArray
         if (ekey != null) {
             val keyMsg = st.fpKeyMsg
             val fairPlayKey = keyMsg?.let { FairPlay.decrypt(it, ekey) }
+            st.fairPlayKey = fairPlayKey?.copyOf(16)
             st.sessionKey = fairPlayKey?.let { MirrorKeys.sessionKey(it, st.ecdhSecret) }
+            st.audioIv = (plist["eiv"] as? ByteArray)?.takeIf { it.size == 16 }
             Timber.d(
                 "SETUP 1: ekey[${ekey.size}] keyMsg=${keyMsg?.size} fairplay=${fairPlayKey != null} " +
                     "ecdh=${st.ecdhSecret != null} sessionKey=${st.sessionKey != null}",
@@ -323,6 +365,8 @@ private fun handleAirPlay2Setup(
             val isMirror = plist["isScreenMirroringSession"] as? Boolean ?: true
             st.isExtended = !isMirror
             Timber.d("SETUP 1: isMirror=$isMirror isExtended=${st.isExtended}")
+            // Only a screen session shows the "Mac connecting" screen; music from an iPhone does not.
+            if (plist.containsKey("isScreenMirroringSession")) { st.screenSession = true; onConnecting() }
 
             val macTimingPort = (plist["timingPort"] as? Long)?.toInt() ?: 0
             val timingLport = openRaopTimingClient(macAddress, macTimingPort)
@@ -346,14 +390,18 @@ private fun handleAirPlay2Setup(
                         Timber.d("SETUP 2: video streamConnectionID=${connId?.let { java.lang.Long.toUnsignedString(it) }} cipher=${cipher != null}")
                         mapOf("type" to 110L, "dataPort" to openVideoTcpServer(cipher, onCodecConfig, onVideoFrame).toLong())
                     }
-                    96, 103 -> {
-                        val d = openAudioUdpServer(); val c = openAudioUdpServer()
-                        mapOf("type" to type.toLong(), "dataPort" to d.toLong(), "controlPort" to c.toLong())
+                    96 -> {
+                        val keys = listOfNotNull(st.sessionKey, st.fairPlayKey).distinctBy { it.toList() }
+                        val audio = AirPlayAudioSession(AudioStreamSpec.from(stream), keys, st.audioIv)
+                        st.volumeDb?.let { audio.setVolume(it) }
+                        st.audio += audio
+                        audio.start()
+                        mapOf("type" to 96L, "dataPort" to audio.dataPort.toLong(), "controlPort" to audio.controlPort.toLong())
                     }
                     else -> mapOf("type" to type.toLong())
                 }
             }
-            if (hasVideo) onStreamsReady(st.isExtended)
+            if (hasVideo) { st.screenSession = true; onStreamsReady(st.isExtended) }
         }
 
         val responseBytes = BinaryPlist.encode(response)
@@ -422,26 +470,6 @@ private fun ntpPutTs(buf: ByteArray, off: Int, ms: Long) {
     for (i in 0..7) buf[off + i] = ((ntp ushr (56 - i * 8)) and 0xFF).toByte()
 }
 
-private fun openAudioUdpServer(): Int {
-    return runCatching {
-        // Bind sur :: pour accepter aussi bien IPv4-mapped que IPv6 natif
-        val sock = java.net.DatagramSocket(null)
-        sock.bind(java.net.InetSocketAddress("::", 0))
-        val port = sock.localPort
-        Timber.d("Audio UDP server bound on port $port")
-        Thread({
-            runCatching {
-                val buf = java.net.DatagramPacket(ByteArray(2048), 2048)
-                while (true) {
-                    sock.receive(buf)
-                    Timber.d("Audio UDP pkt from ${buf.address}:${buf.port} len=${buf.length}")
-                }
-            }.onFailure { Timber.d("Audio UDP closed: ${it.message}") }
-        }, "airplay-audio-udp").start()
-        port
-    }.getOrElse { e -> Timber.e(e, "openAudioUdpServer failed: ${e.message}"); 6001 }
-}
-
 private fun openVideoTcpServer(
     cipher: javax.crypto.Cipher?,
     onCodecConfig: (CodecConfig) -> Unit,
@@ -476,6 +504,14 @@ private fun openVideoTcpServer(
 }
 
 // ---- Helpers ----
+
+/** Plist for the log: keys and short values, binary blobs (keys, IVs) reduced to their size. */
+private fun describePlist(v: Any?): String = when (v) {
+    is Map<*, *> -> v.entries.joinToString(", ", "{", "}") { (k, x) -> "$k=${describePlist(x)}" }
+    is List<*> -> v.joinToString(", ", "[", "]") { describePlist(it) }
+    is ByteArray -> "<${v.size} bytes>"
+    else -> v.toString()
+}
 
 private fun InputStream.readHttpLine(): String? {
     val sb = StringBuilder()
