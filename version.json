@@ -1,6 +1,6 @@
 {
-  "versionCode": 41,
-  "versionName": "2.5",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/2.5/fukkatsu-nop-v2.5.apk",
+  "versionCode": 42,
+  "versionName": "2.6",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/2.6/fukkatsu-nop-v2.6.apk",
   "notes": "Pendant l'AirPlay, les boutons lecture/pause, précédent et suivant de la carte « En lecture » commandent l'iPhone."
 }
