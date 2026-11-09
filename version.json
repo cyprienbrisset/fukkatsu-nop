@@ -1,6 +1,6 @@
 {
-  "versionCode": 40,
-  "versionName": "2.4",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/2.4/fukkatsu-nop-v2.4.apk",
-  "notes": "La pochette de l'album s'affiche dans la carte « En lecture » (Spotify, AirPlay…). Les nouvelles versions apparaissent tout de suite. Réglages sans bouton Retour en double."
+  "versionCode": 41,
+  "versionName": "2.5",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/2.5/fukkatsu-nop-v2.5.apk",
+  "notes": "Pendant l'AirPlay, les boutons lecture/pause, précédent et suivant de la carte « En lecture » commandent l'iPhone."
 }
