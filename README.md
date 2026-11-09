@@ -54,7 +54,7 @@ Rien n'est caché : chaque action a un bouton visible d'au moins 64 dp. Les gest
 | Geste | Effet |
 |---|---|
 | **Toucher** l'écran ambiant | Afficher les apps |
-| **Glisser depuis le haut** | Ouvrir le centre de contrôle |
+| **Glisser depuis le haut** | Ouvrir le centre de contrôle, dès le bord de l'écran (la barre système est masquée sur l'accueil et réapparaît au glisser) |
 | **Glisser depuis le bas** | Afficher les apps |
 | **Glisser verticalement à gauche** | Régler la luminosité (comme sur Netflix) |
 | **Glisser verticalement à droite** | Régler le volume |
@@ -132,7 +132,7 @@ Le Portal n'a pas de Play Store. FukkaStore comble ce manque : connectez votre c
 - Une seule pression pour télécharger et installer
 - Filtre automatique des apps incompatibles avec le Portal
 - Filtre ABI automatique : seuls les splits compatibles avec le processeur de l'appareil sont installés
-- **Portal 1ère génération** : installation silencieuse via AccessibilityService (l'interface système du Portal masque la fenêtre de confirmation standard)
+- **Portal 1ère génération** : installation silencieuse via AccessibilityService (l'interface système du Portal masque la fenêtre de confirmation standard). Depuis la 2.2, les mises à jour de Fukkatsu lui-même passent aussi par ce service : il appuie sur « Installer » puis « OK » sur l'écran d'installation, dessiné tout blanc sur ce modèle
 - **Avertissement GMS** : les apps nécessitant exclusivement les Google Mobile Services sont signalées — elles peuvent ne pas fonctionner sur le Portal
 
 ---
