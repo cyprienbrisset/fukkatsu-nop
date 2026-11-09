@@ -22,6 +22,7 @@ object AirPlayReceiver {
         _advertising.value = true
         mdns = MdnsAdvertiser(context).also { it.start() }
         AirPlayPairing.init(context)
+        AirPlayNowPlaying.init(context.applicationContext)
         server = AirPlayHttpServer(
             serverName = AirPlayPrefs.getName(context),
             onConnecting = { _state.value = AirPlayState.Connecting },

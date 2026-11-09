@@ -87,6 +87,8 @@ class AirPlayAudioSession(
     private val spec: AudioStreamSpec,
     private val keys: List<ByteArray>,
     private val iv: ByteArray?,
+    /** Called when sound starts coming out, at the start and after each pause. */
+    private val onPlaying: () -> Unit = {},
 ) {
     private val data = DatagramSocket(null).apply { bind(InetSocketAddress("::", 0)) }
     private val control = DatagramSocket(null).apply { bind(InetSocketAddress("::", 0)) }
@@ -99,6 +101,7 @@ class AirPlayAudioSession(
     private var key: ByteArray? = if (spec.compression == 2) null else keys.firstOrNull()
 
     @Volatile private var gain = 1f
+    @Volatile private var announced = false
     private var track: AudioTrack? = null
 
     fun start() {
@@ -117,6 +120,7 @@ class AirPlayAudioSession(
 
     /** Pause / seek: drop what is buffered. */
     fun flush() {
+        announced = false
         synchronized(reorder) { reorder.reset() }
         queue.clear()
         runCatching { track?.pause(); track?.flush(); track?.play() }
@@ -189,6 +193,10 @@ class AirPlayAudioSession(
             .also { it.setVolume(gain); it.play(); track = it }
     }
 
+    private fun announcePlaying() {
+        if (!announced) { announced = true; onPlaying() }
+    }
+
     private fun nextPacket(): ByteArray? {
         while (running) {
             val p = queue.poll(200, TimeUnit.MILLISECONDS) ?: continue
@@ -216,6 +224,7 @@ class AirPlayAudioSession(
                 continue
             }
             at.write(pcm, 0, n * cfg.numChannels)
+            announcePlaying()
             if (++frames == 1 || frames % 2000 == 0) Timber.d("Audio: $frames ALAC frames played")
         }
     }
@@ -264,6 +273,7 @@ class AirPlayAudioSession(
                     if (chunk.size < info.size) chunk = ByteArray(info.size)
                     ob.position(info.offset); ob.get(chunk, 0, info.size)
                     at.write(chunk, 0, info.size)
+                    announcePlaying()
                     codec.releaseOutputBuffer(outIdx, false)
                     if (++frames == 1 || frames % 2000 == 0) Timber.d("Audio: $frames ${spec.name} frames played")
                 }

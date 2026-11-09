@@ -1,9 +1,11 @@
 package com.cyprienbrisset.myportal.airplay
 
+import com.cyprienbrisset.fukkatsunop.airplay.AirPlayNowPlaying
 import com.cyprienbrisset.fukkatsunop.airplay.AlacConfig
 import com.cyprienbrisset.fukkatsunop.airplay.AlacDecoder
 import com.cyprienbrisset.fukkatsunop.airplay.AudioCrypto
 import com.cyprienbrisset.fukkatsunop.airplay.AudioStreamSpec
+import com.cyprienbrisset.fukkatsunop.airplay.Dmap
 import com.cyprienbrisset.fukkatsunop.airplay.RtpReorder
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -82,5 +84,32 @@ class AirPlayAudioTest {
         assertEquals(AudioStreamSpec(2, 352), AudioStreamSpec.from(mapOf("type" to 96L, "ct" to 2L, "spf" to 352L)))
         assertEquals(AudioStreamSpec(8, 480), AudioStreamSpec.from(mapOf("type" to 96L, "ct" to 8L)))
         assertEquals("AAC-ELD", AudioStreamSpec(8, 480).name)
+    }
+
+    private fun tag(name: String, body: ByteArray): ByteArray =
+        name.toByteArray() + ByteBuffer.allocate(4).putInt(body.size).array() + body
+
+    @Test fun dmapGivesTitleArtistAlbumFromNestedItem() {
+        val item = tag("mlit",
+            tag("mikd", byteArrayOf(2)) +
+                tag("minm", "Ue o Muite Arukō".toByteArray()) +
+                tag("asar", "Kyu Sakamoto".toByteArray()) +
+                tag("asal", "Sukiyaki".toByteArray()) +
+                tag("astm", ByteBuffer.allocate(4).putInt(185_000).array()),
+        )
+        val tags = Dmap.strings(item)
+        assertEquals("Ue o Muite Arukō", tags["minm"])
+        assertEquals("Kyu Sakamoto", tags["asar"])
+        assertEquals("Sukiyaki", tags["asal"])
+        // A truncated record stops the walk instead of throwing.
+        assertEquals(emptyMap<String, String>(), Dmap.strings(item.copyOf(13)))
+    }
+
+    @Test fun progressGivesPositionAndDurationEvenAcrossTimestampWrap() {
+        assertEquals(10_000L to 180_000L, AirPlayNowPlaying.parseProgress("progress: 1000/442000/7939000\r\n"))
+        // start near 2^32, current and end after the wrap
+        val start = 0xFFFFFFFFL - 44_099
+        assertEquals(2_000L to 4_000L, AirPlayNowPlaying.parseProgress("progress: $start/44100/132300"))
+        assertEquals(null, AirPlayNowPlaying.parseProgress("volume: -20.0"))
     }
 }

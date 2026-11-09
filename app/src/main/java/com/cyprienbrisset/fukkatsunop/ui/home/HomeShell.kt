@@ -124,6 +124,7 @@ fun HomeShell(
     onOpenWidgets: () -> Unit = {},
     onOpenSearch: () -> Unit = {},
     onOpenMac: () -> Unit = {},
+    onOpenUpdates: () -> Unit = onOpenSettings,
     vm: HomeViewModel = viewModel(),
 ) {
     val ctx = LocalContext.current
@@ -338,7 +339,7 @@ fun HomeShell(
             Row(Modifier.align(Alignment.TopEnd).padding(top = 84.dp, end = 88.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 nextAlarm?.let { a -> GlassChip(Icons.Rounded.Alarm, alarmLabel(a, now), onClick = onOpenAlarms) }
                 if (dndOn) GlassChip(Icons.Rounded.DarkMode, "Ne pas déranger", onClick = { panel = Panel.CONTROLS })
-                updateVersion?.let { v -> GlassChip(Icons.Rounded.Download, "Mise à jour $v", onClick = onOpenSettings) }
+                updateVersion?.let { v -> GlassChip(Icons.Rounded.Download, "Mise à jour $v", onClick = onOpenUpdates) }
             }
 
             // Pull tab, top centre

@@ -131,6 +131,8 @@ fun SettingsScreen(
     onStore: () -> Unit = {},
     onInstalledApps: () -> Unit = {},
     onDarkSchedule: () -> Unit = {},
+    /** Open on "Appareil", where the update button is (from the home "Mise à jour" pill). */
+    openUpdates: Boolean = false,
 ) {
     val ctx    = LocalContext.current
     val scope  = rememberCoroutineScope()
@@ -155,7 +157,7 @@ fun SettingsScreen(
     var showAirPlayDialog by remember { mutableStateOf(false) }
     var editingAirPlay    by remember { mutableStateOf("") }
 
-    var selected     by remember { mutableStateOf(Cat.HOME) }
+    var selected     by remember { mutableStateOf(if (openUpdates) Cat.DEVICE else Cat.HOME) }
     var showCredits  by remember { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize()) {

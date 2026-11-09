@@ -106,6 +106,7 @@ fun AppNav() {
             composable(Routes.HOME) {
                 com.cyprienbrisset.fukkatsunop.ui.home.HomeShell(
                     onOpenSettings = { nav.navigate(Routes.SETTINGS) },
+                    onOpenUpdates = { nav.navigate(Routes.SETTINGS + "/update") },
                     onAddTile = { nav.navigate(Routes.TILE_EDIT) },
                     onOpenAlarms = { nav.navigate(Routes.ALARMS) },
                     onOpenAgenda = { nav.navigate(Routes.AGENDA) },
@@ -122,6 +123,42 @@ fun AppNav() {
                     onStore = { nav.navigate(Routes.STORE) },
                     onInstalledApps = { nav.navigate(Routes.INSTALLED_APPS) },
                     onDarkSchedule = { nav.navigate(Routes.DARK_SCHEDULE) },
+                )
+            }
+            composable(Routes.AGENDA) {
+                com.cyprienbrisset.fukkatsunop.ui.google.GoogleScreen(onBack = back)
+            }
+            composable(Routes.WIDGETS) {
+                FujiScreen("Widgets", onBack = back) {
+                    LegacyScale { com.cyprienbrisset.fukkatsunop.ui.widgets.WidgetDashboard() }
+                }
+            }
+            composable(Routes.SEARCH) {
+                com.cyprienbrisset.fukkatsunop.ui.home.AllAppsScreen(onBack = back)
+            }
+            composable(Routes.MAC) {
+                com.cyprienbrisset.fukkatsunop.ui.airplay.MacWaitingScreen(onClose = back)
+            }
+            composable(Routes.STORE) {
+                FujiScreen("FukkaStore", onBack = back) {
+                    LegacyScale { com.cyprienbrisset.fukkatsunop.ui.store.StoreBody() }
+                }
+            }
+            composable(Routes.INSTALLED_APPS) {
+                LegacyScale { com.cyprienbrisset.fukkatsunop.ui.settings.InstalledAppsScreen(onBack = back) }
+            }
+            composable(Routes.TILE_EDIT) {
+                LegacyScale { com.cyprienbrisset.fukkatsunop.ui.settings.TileEditScreen(onBack = back) }
+            }
+            composable(Routes.SETTINGS + "/update") {
+                com.cyprienbrisset.fukkatsunop.ui.settings.SettingsScreen(
+                    onBack = back,
+                    onTiles = { nav.navigate(Routes.TILE_EDIT) },
+                    onWeather = { nav.navigate(Routes.SETTINGS + "/weather") },
+                    onStore = { nav.navigate(Routes.STORE) },
+                    onInstalledApps = { nav.navigate(Routes.INSTALLED_APPS) },
+                    onDarkSchedule = { nav.navigate(Routes.DARK_SCHEDULE) },
+                    openUpdates = true,
                 )
             }
             composable(Routes.AGENDA) {

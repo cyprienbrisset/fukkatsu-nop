@@ -87,6 +87,7 @@ class AirPlayHttpServer(
                     if (idx > 0) headers[line.substring(0, idx).trim()] = line.substring(idx + 1).trim()
                 }
                 cseq = headers["CSeq"] ?: cseq
+                AirPlayNowPlaying.setRemote(headers["DACP-ID"], headers["Active-Remote"], macAddress)
                 val contentLength = headers["Content-Length"]?.toIntOrNull() ?: 0
                 val bodyBytes = if (contentLength > 0) inp.readExact(contentLength) else ByteArray(0)
 
@@ -221,8 +222,13 @@ class AirPlayHttpServer(
                     method == "SET_PARAMETER" -> {
                         val type = headers["Content-Type"].orEmpty()
                         Timber.d("SET_PARAMETER $type body[${bodyBytes.size}]")
+                        when {
+                            type.startsWith("application/x-dmap-tagged") -> AirPlayNowPlaying.setMetadata(bodyBytes)
+                            type.startsWith("image/") -> AirPlayNowPlaying.setArtwork(bodyBytes)
+                        }
                         if (type.startsWith("text/parameters")) {
                             val text = bodyBytes.toString(Charsets.UTF_8)
+                            AirPlayNowPlaying.setProgress(text)
                             Regex("volume:\\s*(-?[0-9.]+)").find(text)?.groupValues?.get(1)?.toFloatOrNull()?.let { db ->
                                 Timber.d("Audio: volume $db dB")
                                 mirror.volumeDb = db
@@ -234,6 +240,7 @@ class AirPlayHttpServer(
 
                     method == "FLUSH" -> {
                         mirror.audio.forEach { it.flush() }
+                        if (mirror.audio.isNotEmpty()) AirPlayNowPlaying.setPlaying(false)
                         out.writeRtsp(cseq)
                     }
 
@@ -258,6 +265,7 @@ class AirPlayHttpServer(
                         if (types.isNotEmpty() && types.all { it == 96 }) {
                             // Only the audio stream ends (music paused or stopped): the session goes on.
                             mirror.stopAudio()
+                            AirPlayNowPlaying.setPlaying(false)
                         } else {
                             mirror.stopAudio()
                             // Music from an iPhone must not end a Mac screen session running alongside.
@@ -304,6 +312,7 @@ class AirPlayHttpServer(
                     }
                 }
             } } finally {
+                if (mirror.hadAudio) AirPlayNowPlaying.clear()
                 mirror.stopAudio()
             }
         }
@@ -327,6 +336,7 @@ class MirrorSetupState {
     @Volatile var isExtended: Boolean = false
     @Volatile var screenSession: Boolean = false
     @Volatile var volumeDb: Float? = null
+    @Volatile var hadAudio: Boolean = false
     val audio = java.util.concurrent.CopyOnWriteArrayList<AirPlayAudioSession>()
 
     fun stopAudio() {
@@ -392,7 +402,10 @@ private fun handleAirPlay2Setup(
                     }
                     96 -> {
                         val keys = listOfNotNull(st.sessionKey, st.fairPlayKey).distinctBy { it.toList() }
-                        val audio = AirPlayAudioSession(AudioStreamSpec.from(stream), keys, st.audioIv)
+                        val audio = AirPlayAudioSession(AudioStreamSpec.from(stream), keys, st.audioIv) {
+                            AirPlayNowPlaying.setPlaying(true)
+                        }
+                        st.hadAudio = true
                         st.volumeDb?.let { audio.setVolume(it) }
                         st.audio += audio
                         audio.start()
