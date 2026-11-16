@@ -1,6 +1,6 @@
 {
-  "versionCode": 47,
-  "versionName": "2.11",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/2.11/fukkatsu-nop-v2.11.apk",
-  "notes": "Google Chat complet : photos, GIF, fichiers, réactions, emoji et mise en forme."
+  "versionCode": 48,
+  "versionName": "2.12",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/2.12/fukkatsu-nop-v2.12.apk",
+  "notes": "Agenda : un peu d'espace entre l'en-tête et les jours en vue semaine."
 }
