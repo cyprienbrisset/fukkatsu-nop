@@ -7,13 +7,22 @@ import androidx.lifecycle.viewModelScope
 import com.cyprienbrisset.fukkatsunop.integration.google.CalendarEvent
 import com.cyprienbrisset.fukkatsunop.integration.google.ChatAuthManager
 import com.cyprienbrisset.fukkatsunop.integration.google.ChatMessage
+import com.cyprienbrisset.fukkatsunop.integration.google.ChatPreview
 import com.cyprienbrisset.fukkatsunop.integration.google.ChatSpace
+import com.cyprienbrisset.fukkatsunop.integration.google.ChatSpaceType
 import com.cyprienbrisset.fukkatsunop.integration.google.ChatTokenStore
 import com.cyprienbrisset.fukkatsunop.integration.google.DeviceFlowData
 import com.cyprienbrisset.fukkatsunop.integration.google.GoogleAuthManager
 import com.cyprienbrisset.fukkatsunop.integration.google.GoogleCalendarRepo
 import com.cyprienbrisset.fukkatsunop.integration.google.GoogleChatRepo
 import com.cyprienbrisset.fukkatsunop.integration.google.GoogleTokenStore
+import com.cyprienbrisset.fukkatsunop.integration.google.dmTitle
+import com.cyprienbrisset.fukkatsunop.integration.google.guessMe
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,6 +39,10 @@ data class GoogleUiState(
     val chatSpaces: TabState<List<ChatSpace>>     = TabState.Loading,
     val chatMessages: TabState<List<ChatMessage>> = TabState.Loading,
     val selectedSpace: ChatSpace?                 = null,
+    /** Per space name: readable title and last message, for the conversation list. */
+    val chatPreviews: Map<String, ChatPreview>    = emptyMap(),
+    /** "users/…" of the signed-in person, inferred from direct messages (null if unknown). */
+    val chatMe: String?                           = null,
 )
 
 sealed interface AuthState {
@@ -124,6 +137,44 @@ class GoogleViewModel(
     }
     fun clearSelectedSpace() { _state.update { it.copy(selectedSpace = null) } }
 
+    /** Titles and last messages of the conversation list, loaded when the Chat tab shows. */
+    fun loadChatPreviews() {
+        val spaces = (_state.value.chatSpaces as? TabState.Success)?.data ?: return
+        viewModelScope.launch {
+            val gate = Semaphore(6)
+            val recent = runCatching {
+                coroutineScope {
+                    spaces.take(40).map { sp ->
+                        async { sp.name to gate.withPermit { runCatching { chatRepo.fetchMessages(sp.name, 10) }.getOrDefault(emptyList()) } }
+                    }.awaitAll().toMap()
+                }
+            }.getOrNull() ?: return@launch
+            val me = guessMe(spaces.filter { it.type == ChatSpaceType.DM }.mapNotNull { recent[it.name] })
+            val previews = spaces.associate { sp ->
+                val msgs = recent[sp.name].orEmpty()
+                sp.name to ChatPreview(if (sp.type == ChatSpaceType.DM) dmTitle(msgs, me) else null, msgs.firstOrNull())
+            }
+            _state.update { it.copy(chatPreviews = previews, chatMe = me) }
+        }
+    }
+
+    /** Fetches the open conversation again without the loading state, for live updates. */
+    fun refreshOpenChat() {
+        val space = _state.value.selectedSpace ?: return
+        viewModelScope.launch {
+            runCatching { chatRepo.fetchMessages(space.name) }.onSuccess { msgs ->
+                if (_state.value.selectedSpace?.name != space.name) return@onSuccess
+                _state.update { st ->
+                    val old = st.chatPreviews[space.name]
+                    st.copy(
+                        chatMessages = TabState.Success(msgs),
+                        chatPreviews = st.chatPreviews + (space.name to ChatPreview(old?.title, msgs.firstOrNull())),
+                    )
+                }
+            }
+        }
+    }
+
     fun createEvent(title: String, start: java.time.Instant, end: java.time.Instant) {
         viewModelScope.launch {
             runCatching { calendarRepo.createEvent(title, start, end) }
@@ -146,7 +197,10 @@ class GoogleViewModel(
     private suspend fun loadChatSpaces() {
         _state.update { it.copy(chatSpaces = TabState.Loading) }
         runCatching { chatRepo.fetchSpaces() }
-            .onSuccess { spaces -> _state.update { it.copy(chatSpaces = TabState.Success(spaces)) } }
+            .onSuccess { spaces ->
+                val sorted = spaces.sortedByDescending { it.lastActive ?: java.time.Instant.EPOCH }
+                _state.update { it.copy(chatSpaces = TabState.Success(sorted)) }
+            }
             .onFailure { e ->      _state.update { it.copy(chatSpaces = TabState.Error(e.message ?: "Erreur réseau")) } }
     }
 

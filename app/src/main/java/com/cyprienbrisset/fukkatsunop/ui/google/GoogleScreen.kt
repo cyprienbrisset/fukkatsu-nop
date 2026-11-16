@@ -57,7 +57,7 @@ fun GoogleScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     var showNewEvent by remember { mutableStateOf(false) }
 
     FujiScreen(
-        title = "Agenda",
+        title = "Google",
         onBack = onBack,
         modifier = modifier,
         actions = {
@@ -67,35 +67,37 @@ fun GoogleScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                     selected = pagerState.currentPage,
                     onSelect = { scope.launch { pagerState.animateScrollToPage(it) } },
                 )
-                FujiButton("Événement", { showNewEvent = true }, primary = true, icon = Icons.Default.Add)
+                if (pagerState.currentPage == 0) FujiButton("Événement", { showNewEvent = true }, primary = true, icon = Icons.Default.Add)
                 FujiIconButton(Icons.AutoMirrored.Filled.ExitToApp, "Déconnexion", { vm.logout() })
             }
         },
     ) {
-        LegacyScale {
-            if (!loggedIn) {
-                GoogleAuthScreen(authState = uiState.authState, onStartAuth = { vm.startDeviceFlow() })
-            } else {
-                HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
-                    when (page) {
-                        0 -> AgendaTab(state = uiState.agenda, onRetry = { vm.retryAgenda() })
-                        1 -> MeetTab(state = uiState.agenda, onRetry = { vm.retryAgenda() })
-                        2 -> ChatTab(
-                            isLoggedIn      = uiState.isChatLoggedIn,
-                            chatAuthUrl     = uiState.chatAuthUrl,
-                            spacesState     = uiState.chatSpaces,
-                            messagesState   = uiState.chatMessages,
-                            selectedSpace   = uiState.selectedSpace,
-                            onSelectSpace   = { vm.selectSpace(it) },
-                            onBack          = { vm.clearSelectedSpace() },
-                            onRetrySpaces   = { vm.retryChatSpaces() },
-                            onRetryMessages = { vm.retryMessages() },
-                            onReauth        = { vm.logoutChat() },
-                            onStartChatAuth = { vm.startChatAuth() },
-                            onChatAuthCode  = { vm.onChatAuthCode(it) },
-                            onDismissChatAuth = { vm.dismissChatAuth() },
-                        )
-                    }
+        if (!loggedIn) {
+            LegacyScale { GoogleAuthScreen(authState = uiState.authState, onStartAuth = { vm.startDeviceFlow() }) }
+        } else {
+            HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+                when (page) {
+                    0 -> LegacyScale { AgendaTab(state = uiState.agenda, onRetry = { vm.retryAgenda() }) }
+                    1 -> LegacyScale { MeetTab(state = uiState.agenda, onRetry = { vm.retryAgenda() }) }
+                    // Chat is drawn at the Fuji size directly, for reading from across the room.
+                    2 -> ChatTab(
+                        isLoggedIn      = uiState.isChatLoggedIn,
+                        chatAuthUrl     = uiState.chatAuthUrl,
+                        spacesState     = uiState.chatSpaces,
+                        messagesState   = uiState.chatMessages,
+                        selectedSpace   = uiState.selectedSpace,
+                        previews        = uiState.chatPreviews,
+                        me              = uiState.chatMe,
+                        onSelectSpace   = { vm.selectSpace(it) },
+                        onLoadPreviews  = { vm.loadChatPreviews() },
+                        onRefresh       = { vm.refreshOpenChat() },
+                        onRetrySpaces   = { vm.retryChatSpaces() },
+                        onRetryMessages = { vm.retryMessages() },
+                        onReauth        = { vm.logoutChat() },
+                        onStartChatAuth = { vm.startChatAuth() },
+                        onChatAuthCode  = { vm.onChatAuthCode(it) },
+                        onDismissChatAuth = { vm.dismissChatAuth() },
+                    )
                 }
             }
         }

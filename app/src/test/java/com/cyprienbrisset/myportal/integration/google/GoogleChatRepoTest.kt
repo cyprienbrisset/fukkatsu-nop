@@ -128,4 +128,35 @@ class GoogleChatRepoTest {
         val json = """{"messages":[{"name":"spaces/X/messages/y","text":"Hi","sender":{"displayName":"A"},"createTime":"not-a-date"}]}"""
         assertEquals(0, parseMessages(json).size)
     }
+
+    // ── Names of direct messages ───────────────────────────────────────────────
+
+    private fun msg(id: String, name: String) = ChatMessage("m", name, "t", Instant.EPOCH, senderId = id)
+
+    @Test fun parseMessages_keepsAttachmentOnlyMessage() {
+        val json = """{"messages":[{"name":"spaces/X/messages/y","sender":{"name":"users/1","displayName":"A"},"attachment":[{}],"createTime":"2026-09-08T09:00:00Z"}]}"""
+        val m = parseMessages(json).single()
+        assertEquals("Pièce jointe", m.text)
+        assertEquals("users/1", m.senderId)
+    }
+
+    @Test fun parseSpaces_lastActiveTime() {
+        val json = """{"spaces":[{"name":"spaces/A","type":"DIRECT_MESSAGE","lastActiveTime":"2026-11-16T08:00:00Z"}]}"""
+        assertEquals(Instant.parse("2026-11-16T08:00:00Z"), parseSpaces(json).single().lastActive)
+    }
+
+    @Test fun guessMe_isTheSenderPresentInEveryDm() {
+        val dms = listOf(
+            listOf(msg("users/me", "Moi"), msg("users/a", "Alice")),
+            listOf(msg("users/b", "Bob"), msg("users/me", "Moi")),
+        )
+        val me = guessMe(dms)
+        assertEquals("users/me", me)
+        assertEquals("Alice", dmTitle(dms[0], me))
+        assertEquals("Bob", dmTitle(dms[1], me))
+    }
+
+    @Test fun guessMe_unknownWithASingleDm() {
+        assertNull(guessMe(listOf(listOf(msg("users/me", "Moi"), msg("users/a", "Alice")))))
+    }
 }

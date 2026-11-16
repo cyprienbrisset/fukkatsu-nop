@@ -65,14 +65,15 @@ Depuis la 2.7, le premier lancement présente ces gestes en six astuces animées
 
 ---
 
-## Intégration Google — Agenda & Meet
+## Intégration Google — Agenda, Meet & Chat
 
-Un troisième écran (glisser vers la droite depuis l'accueil) connecte le Portal à votre compte Google via le **Device Authorization Flow** — un code s'affiche sur le Portal, vous l'approuvez depuis n'importe quel autre appareil, zéro navigateur requis sur le Portal :
+L'écran « Google » (raccourci du panneau Apps) connecte le Portal à votre compte Google via le **Device Authorization Flow** — un code s'affiche sur le Portal, vous l'approuvez depuis n'importe quel autre appareil, zéro navigateur requis sur le Portal :
 
 - **Agenda** : événements des 60 prochains jours, groupés par jour, indicateur vermillon pour les réunions imminentes (< 1 h). Créez un événement directement depuis le Portal via le bouton « + ».
 - **Meet** : réunions Google Meet des 48 prochaines heures avec compte à rebours en direct et bouton « Rejoindre ».
+- **Chat** (depuis la 2.8) : en lecture seule, comme une messagerie pensée pour l'écran large : conversations à gauche, les plus récentes en haut avec le dernier message et son heure ; la conversation ouverte à droite en bulles (les vôtres à droite), séparées par jour, avec le nom de chaque personne dans les groupes. Elle se met à jour toute seule toutes les 20 secondes. Google ne donne pas le nom des messages directs : Fukkatsu le déduit des derniers messages. Connexion par OAuth (le client Android doit avoir le « schéma d'URI personnalisé » activé dans Google Cloud).
 
-Scope limité à `calendar` (lecture/écriture). Aucune dépendance Gmail. Tokens stockés localement via DataStore.
+Scopes limités à `calendar` (lecture/écriture) et, pour Chat, `chat.spaces.readonly` et `chat.messages.readonly`. Aucune dépendance Gmail. Tokens stockés localement via DataStore.
 
 ---
 

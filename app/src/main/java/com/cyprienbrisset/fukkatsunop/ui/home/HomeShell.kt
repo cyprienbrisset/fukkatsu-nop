@@ -429,7 +429,7 @@ fun HomeShell(
                 badgeCounts = badgeCounts,
                 contacts = recentContacts,
                 shortcuts = listOf(
-                    AppsShortcut("Agenda", nextEvent?.let { "${it.start.atZone(ZoneId.systemDefault()).format(TimeFmt)} ${it.title}" } ?: "Agenda, Meet, Chat", ShortcutIcons.Agenda, onOpenAgenda),
+                    AppsShortcut("Google", nextEvent?.let { "${it.start.atZone(ZoneId.systemDefault()).format(TimeFmt)} ${it.title}" } ?: "Agenda, Meet, Chat", ShortcutIcons.Agenda, onOpenAgenda),
                     AppsShortcut("Alarmes", nextAlarm?.let { alarmLabel(it, now) } ?: "Aucune alarme", ShortcutIcons.Alarms, onOpenAlarms),
                     AppsShortcut("Widgets", "Tableau de bord", ShortcutIcons.Widgets, onOpenWidgets),
                     AppsShortcut("Toutes les apps", "Rechercher", ShortcutIcons.AllApps, onOpenSearch),
