@@ -65,6 +65,8 @@ class GoogleViewModel(
     private val calendarRepo: GoogleCalendarRepo,
     private val chatRepo: GoogleChatRepo,
     private val chatAuthManager: ChatAuthManager,
+    /** Loads Chat photos with the Chat token, and animated GIFs. */
+    val chatImages: coil.ImageLoader,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(GoogleUiState())
@@ -222,7 +224,19 @@ class GoogleViewModel(
             val db        = com.cyprienbrisset.fukkatsunop.data.AppDatabase.get(context)
             val calendar  = GoogleCalendarRepo(auth, cache = db.calendarCacheDao())
             val chat      = GoogleChatRepo(chatAuth)
-            return GoogleViewModel(auth, calendar, chat, chatAuth) as T
+            val images = coil.ImageLoader.Builder(context.applicationContext)
+                .okHttpClient {
+                    // Uploaded Chat files come from chat.googleapis.com/v1/media and need the token.
+                    okhttp3.OkHttpClient.Builder().addInterceptor { chain ->
+                        val req = chain.request()
+                        if (req.url.host != "chat.googleapis.com") return@addInterceptor chain.proceed(req)
+                        val token = kotlinx.coroutines.runBlocking { chatAuth.validToken() }
+                        chain.proceed(req.newBuilder().header("Authorization", "Bearer $token").build())
+                    }.build()
+                }
+                .components { add(coil.decode.ImageDecoderDecoder.Factory()) }
+                .build()
+            return GoogleViewModel(auth, calendar, chat, chatAuth, images) as T
         }
     }
 }

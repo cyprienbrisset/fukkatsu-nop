@@ -3,6 +3,10 @@ package com.cyprienbrisset.fukkatsunop.integration.google
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -28,7 +32,59 @@ data class ChatMessage(
     val createTime: Instant,
     /** "users/123": tells who wrote it even when Google leaves the display name out. */
     val senderId: String = "",
-)
+    /** Chat markup (*bold*, _italic_, <url|label>, <users/1>, :emoji:…), when Google sends it. */
+    val formattedText: String? = null,
+    val attachments: List<ChatAttachment> = emptyList(),
+    /** GIFs picked from the Chat GIF search, by URL. */
+    val gifs: List<String> = emptyList(),
+    val reactions: List<ChatReaction> = emptyList(),
+    /** ":name:" → image URL of the space's custom emoji used in the text. */
+    val customEmojis: Map<String, String> = emptyMap(),
+    /** "users/1" → display name, from the mentions. */
+    val mentions: Map<String, String> = emptyMap(),
+    val links: List<ChatLink> = emptyList(),
+    /** Bot cards: header title and subtitle. */
+    val cards: List<String> = emptyList(),
+    /** Name of the message this one replies to. */
+    val quotes: String? = null,
+    val deleted: Boolean = false,
+    val edited: Boolean = false,
+) {
+    /** One line for the conversation list. */
+    val summary: String get() = when {
+        deleted -> "Message supprimé"
+        text.isNotBlank() -> text
+        gifs.isNotEmpty() -> "GIF"
+        attachments.any { it.isImage } -> "📷 Photo"
+        attachments.any { it.isVideo } -> "🎬 Vidéo"
+        attachments.isNotEmpty() -> "📎 " + attachments.first().contentName
+        cards.isNotEmpty() -> cards.first()
+        else -> ""
+    }
+}
+
+data class ChatAttachment(
+    val contentName: String,
+    val contentType: String,
+    /** For media.download; null for Google Drive files, which the Chat API cannot download. */
+    val resourceName: String?,
+    val fromDrive: Boolean,
+) {
+    val isImage get() = contentType.startsWith("image/")
+    val isVideo get() = contentType.startsWith("video/")
+    /** Bytes of an uploaded file, readable with the Chat token (chat.messages.readonly). */
+    val downloadUrl: String? get() = resourceName?.let {
+        "$CHAT_BASE/media/" + it.split('/').joinToString("/") { seg ->
+            java.net.URLEncoder.encode(seg, "UTF-8").replace("+", "%20")
+        } + "?alt=media"
+    }
+}
+
+/** An emoji and how many people reacted with it; custom emoji come as an image. */
+data class ChatReaction(val emoji: String, val imageUrl: String?, val count: Int)
+
+enum class ChatLinkType { DRIVE, MEET, CALENDAR, CHAT, MAIL, OTHER }
+data class ChatLink(val type: ChatLinkType, val uri: String, val detail: String? = null)
 
 private const val CHAT_BASE = "https://chat.googleapis.com/v1"
 
@@ -94,19 +150,87 @@ internal fun parseSpaces(raw: String): List<ChatSpace> {
 internal fun parseMessages(raw: String): List<ChatMessage> {
     val items = Json.parseToJsonElement(raw).jsonObject["messages"]?.jsonArray
         ?: return emptyList()
-    return items.mapNotNull { el ->
-        val obj = el.jsonObject
-        val name = obj["name"]?.jsonPrimitive?.content ?: return@mapNotNull null
-        // A photo or file sent alone has no text: show it as such rather than dropping it.
-        val text = obj["text"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
-            ?: if (obj["attachment"] != null) "Pièce jointe" else return@mapNotNull null
-        val sender = obj["sender"]?.jsonObject
-        val senderName = sender?.get("displayName")?.jsonPrimitive?.content?.takeIf { it.isNotBlank() } ?: "?"
-        val senderId = sender?.get("name")?.jsonPrimitive?.content ?: ""
-        val timeStr = obj["createTime"]?.jsonPrimitive?.content ?: return@mapNotNull null
-        val createTime = runCatching { Instant.parse(timeStr) }.getOrNull() ?: return@mapNotNull null
-        ChatMessage(name = name, senderName = senderName, text = text, createTime = createTime, senderId = senderId)
+    return items.mapNotNull { el -> runCatching { parseMessage(el.jsonObject) }.getOrNull() }
+}
+
+private fun JsonObject.str(key: String): String? = (this[key] as? JsonPrimitive)?.contentOrNull
+private fun JsonObject.obj(key: String): JsonObject? = this[key] as? JsonObject
+private fun JsonObject.arr(key: String): List<JsonObject> = (this[key] as? JsonArray)?.mapNotNull { it as? JsonObject }.orEmpty()
+
+private fun parseMessage(obj: JsonObject): ChatMessage? {
+    val name = obj.str("name") ?: return null
+    val createTime = obj.str("createTime")?.let { runCatching { Instant.parse(it) }.getOrNull() } ?: return null
+    val sender = obj.obj("sender")
+    val senderName = sender?.str("displayName")?.takeIf { it.isNotBlank() } ?: "?"
+    val senderId = sender?.str("name") ?: ""
+
+    val attachments = obj.arr("attachment").map { a ->
+        ChatAttachment(
+            contentName = a.str("contentName") ?: "Fichier",
+            contentType = a.str("contentType") ?: "",
+            resourceName = a.obj("attachmentDataRef")?.str("resourceName"),
+            fromDrive = a.str("source") == "DRIVE_FILE" || a.obj("driveDataRef") != null,
+        )
     }
+    val gifs = obj.arr("attachedGifs").mapNotNull { it.str("uri") }
+    val reactions = obj.arr("emojiReactionSummaries").mapNotNull { r ->
+        val emoji = r.obj("emoji") ?: return@mapNotNull null
+        val custom = emoji.obj("customEmoji")
+        val label = emoji.str("unicode") ?: custom?.str("emojiName") ?: return@mapNotNull null
+        ChatReaction(label, custom?.str("temporaryImageUri"), r.str("reactionCount")?.toIntOrNull() ?: 1)
+    }
+    val customEmojis = mutableMapOf<String, String>()
+    val mentions = mutableMapOf<String, String>()
+    val links = mutableListOf<ChatLink>()
+    for (a in obj.arr("annotations")) {
+        when (a.str("type")) {
+            "CUSTOM_EMOJI" -> a.obj("customEmojiMetadata")?.obj("customEmoji")?.let { e ->
+                val n = e.str("emojiName"); val img = e.str("temporaryImageUri")
+                if (n != null && img != null) customEmojis[n] = img
+            }
+            "USER_MENTION" -> a.obj("userMention")?.obj("user")?.let { u ->
+                val id = u.str("name"); val dn = u.str("displayName")
+                if (id != null && !dn.isNullOrBlank()) mentions[id] = dn
+            }
+            "RICH_LINK" -> a.obj("richLinkMetadata")?.let { m ->
+                val uri = m.str("uri") ?: return@let
+                links += when (m.str("richLinkType")) {
+                    "DRIVE_FILE" -> ChatLink(ChatLinkType.DRIVE, uri, m.obj("driveLinkData")?.str("mimeType"))
+                    "MEET_SPACE" -> ChatLink(ChatLinkType.MEET, uri, m.obj("meetSpaceLinkData")?.str("meetingCode"))
+                    "CALENDAR_EVENT" -> ChatLink(ChatLinkType.CALENDAR, uri)
+                    "CHAT_SPACE" -> ChatLink(ChatLinkType.CHAT, uri)
+                    "GMAIL_MESSAGE" -> ChatLink(ChatLinkType.MAIL, uri)
+                    else -> ChatLink(ChatLinkType.OTHER, uri)
+                }
+            }
+        }
+    }
+    val cards = obj.arr("cardsV2").mapNotNull { c ->
+        val header = c.obj("card")?.obj("header") ?: return@mapNotNull null
+        listOfNotNull(header.str("title"), header.str("subtitle")).joinToString(" · ").takeIf { it.isNotBlank() }
+    }
+    val deleted = obj.str("deleteTime") != null || obj.obj("deletionMetadata") != null
+    val text = obj.str("text") ?: ""
+    if (!deleted && text.isBlank() && attachments.isEmpty() && gifs.isEmpty() && cards.isEmpty()) return null
+    val updated = obj.str("lastUpdateTime")?.let { runCatching { Instant.parse(it) }.getOrNull() }
+    return ChatMessage(
+        name = name,
+        senderName = senderName,
+        text = if (deleted) "" else text,
+        createTime = createTime,
+        senderId = senderId,
+        formattedText = obj.str("formattedText")?.takeIf { it.isNotBlank() && !deleted },
+        attachments = attachments,
+        gifs = gifs,
+        reactions = reactions,
+        customEmojis = customEmojis,
+        mentions = mentions,
+        links = links,
+        cards = cards,
+        quotes = obj.obj("quotedMessageMetadata")?.str("name"),
+        deleted = deleted,
+        edited = !deleted && updated != null && updated.epochSecond - createTime.epochSecond > 5,
+    )
 }
 
 /** What the conversation list shows for a space: a readable title and its last message. */

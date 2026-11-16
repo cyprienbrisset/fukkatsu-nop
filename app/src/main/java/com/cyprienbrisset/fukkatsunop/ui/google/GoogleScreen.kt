@@ -86,6 +86,7 @@ fun GoogleScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                     1 -> LegacyScale { MeetTab(state = uiState.agenda, onRetry = { vm.retryAgenda() }) }
                     // Chat is drawn at the Fuji size directly, for reading from across the room.
                     2 -> ChatTab(
+                        images          = vm.chatImages,
                         isLoggedIn      = uiState.isChatLoggedIn,
                         spacesState     = uiState.chatSpaces,
                         messagesState   = uiState.chatMessages,

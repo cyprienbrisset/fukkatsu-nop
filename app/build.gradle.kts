@@ -19,8 +19,8 @@ android {
         minSdk = 28
         targetSdk = 37
         val major = 2
-        val minor = 10
-        val build = 46
+        val minor = 11
+        val build = 47
         versionCode = build
         versionName = "$major.$minor"
 
@@ -103,6 +103,7 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.coil.compose)
+    implementation(libs.coil.gif)
     implementation(libs.camerax.camera2)
     implementation(libs.camerax.lifecycle)
     implementation(libs.mlkit.face.detection)

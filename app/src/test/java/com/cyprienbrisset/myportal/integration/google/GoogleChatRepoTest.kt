@@ -136,8 +136,42 @@ class GoogleChatRepoTest {
     @Test fun parseMessages_keepsAttachmentOnlyMessage() {
         val json = """{"messages":[{"name":"spaces/X/messages/y","sender":{"name":"users/1","displayName":"A"},"attachment":[{}],"createTime":"2026-09-08T09:00:00Z"}]}"""
         val m = parseMessages(json).single()
-        assertEquals("Pièce jointe", m.text)
+        assertEquals("", m.text)
+        assertEquals("📎 Fichier", m.summary)
         assertEquals("users/1", m.senderId)
+    }
+
+    @Test fun parseMessages_richContent() {
+        val json = """{"messages":[{
+          "name":"spaces/X/messages/r","createTime":"2026-11-16T08:00:00Z","lastUpdateTime":"2026-11-16T08:05:00Z",
+          "sender":{"name":"users/1","displayName":"Alice"},
+          "text":"Salut @Bob","formattedText":"Salut <users/2> *top*",
+          "attachment":[{"contentName":"photo.jpg","contentType":"image/jpeg","source":"UPLOADED_CONTENT",
+                         "attachmentDataRef":{"resourceName":"abc/def+g="}}],
+          "attachedGifs":[{"uri":"https://media.tenor.com/x.gif"}],
+          "emojiReactionSummaries":[{"emoji":{"unicode":"👍"},"reactionCount":3},
+                                    {"emoji":{"customEmoji":{"emojiName":":parrot:","temporaryImageUri":"https://e/p.png"}},"reactionCount":1}],
+          "annotations":[{"type":"USER_MENTION","userMention":{"user":{"name":"users/2","displayName":"Bob"}}},
+                         {"type":"RICH_LINK","richLinkMetadata":{"uri":"https://meet.google.com/abc","richLinkType":"MEET_SPACE","meetSpaceLinkData":{"meetingCode":"abc"}}}],
+          "quotedMessageMetadata":{"name":"spaces/X/messages/q"}
+        }]}"""
+        val m = parseMessages(json).single()
+        assertEquals("https://chat.googleapis.com/v1/media/abc/def%2Bg%3D?alt=media", m.attachments.single().downloadUrl)
+        assertEquals(true, m.attachments.single().isImage)
+        assertEquals(listOf("https://media.tenor.com/x.gif"), m.gifs)
+        assertEquals(ChatReaction("👍", null, 3), m.reactions[0])
+        assertEquals("https://e/p.png", m.reactions[1].imageUrl)
+        assertEquals("Bob", m.mentions["users/2"])
+        assertEquals(ChatLinkType.MEET, m.links.single().type)
+        assertEquals("spaces/X/messages/q", m.quotes)
+        assertEquals(true, m.edited)
+    }
+
+    @Test fun parseMessages_keepsDeletedMessage() {
+        val json = """{"messages":[{"name":"spaces/X/messages/d","createTime":"2026-11-16T08:00:00Z","deleteTime":"2026-11-16T08:01:00Z","deletionMetadata":{"deletionType":"CREATOR"}}]}"""
+        val m = parseMessages(json).single()
+        assertEquals(true, m.deleted)
+        assertEquals("Message supprimé", m.summary)
     }
 
     @Test fun parseSpaces_lastActiveTime() {

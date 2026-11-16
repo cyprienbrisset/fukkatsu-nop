@@ -4,6 +4,41 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.material.icons.rounded.AudioFile
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.Event
+import androidx.compose.material.icons.rounded.Image
+import androidx.compose.material.icons.rounded.Link
+import androidx.compose.material.icons.rounded.Mail
+import androidx.compose.material.icons.rounded.Movie
+import androidx.compose.material.icons.rounded.PictureAsPdf
+import androidx.compose.material.icons.rounded.Videocam
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.em
+import coil.ImageLoader
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.cyprienbrisset.fukkatsunop.integration.google.ChatAttachment
+import com.cyprienbrisset.fukkatsunop.integration.google.ChatLink
+import com.cyprienbrisset.fukkatsunop.integration.google.ChatLinkType
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -101,6 +136,7 @@ fun ChatTab(
     onRetryMessages: () -> Unit,
     onReauth: () -> Unit,
     onStartChatAuth: () -> Unit,
+    images: ImageLoader,
 ) {
     if (!isLoggedIn) {
         // Google refuses the Chat scopes to the code-on-google.com/device sign-in of the
@@ -126,6 +162,8 @@ fun ChatTab(
                 onLoadPreviews()
                 if (selectedSpace == null) onSelectSpace(spaces.first())
             }
+            var viewer by remember { mutableStateOf<String?>(null) }
+            Box(Modifier.fillMaxSize()) {
             Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                 ConversationList(spaces, previews, me, selectedSpace, onSelectSpace, Modifier.width(620.dp).fillMaxHeight())
                 if (selectedSpace != null) {
@@ -137,9 +175,13 @@ fun ChatTab(
                         onRefresh = onRefresh,
                         onRetry = onRetryMessages,
                         onReauth = onReauth,
+                        images = images,
+                        onOpenImage = { viewer = it },
                         modifier = Modifier.weight(1f).fillMaxHeight(),
                     )
                 }
+            }
+            viewer?.let { ImageViewer(it, images) { viewer = null } }
             }
         }
     }
@@ -225,7 +267,7 @@ private fun ConversationList(
                             else -> ""
                         }
                         Text(
-                            who + last.text.replace('\n', ' '), color = FujiColors.Muted, fontFamily = Gothic, fontSize = 21.sp,
+                            who + last.summary.replace('\n', ' '), color = FujiColors.Muted, fontFamily = Gothic, fontSize = 21.sp,
                             maxLines = 1, overflow = TextOverflow.Ellipsis,
                         )
                     }
@@ -260,6 +302,8 @@ private fun Conversation(
     onRefresh: () -> Unit,
     onRetry: () -> Unit,
     onReauth: () -> Unit,
+    images: ImageLoader,
+    onOpenImage: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // New messages arrive without touching anything: the Portal sits on a shelf.
@@ -293,7 +337,7 @@ private fun Conversation(
                 is TabState.Error -> ErrorNotice(state.message, onRetry, onReauth)
                 is TabState.Success -> {
                     if (state.data.isEmpty()) Notice("Aucun message", "Cette conversation est vide.")
-                    else Messages(state.data, me, groupNames = space.type != ChatSpaceType.DM)
+                    else Messages(state.data, me, groupNames = space.type != ChatSpaceType.DM, images = images, onOpenImage = onOpenImage)
                 }
             }
         }
@@ -302,7 +346,14 @@ private fun Conversation(
 
 /** [messages] newest first; drawn bottom-up so the latest sits at the bottom. */
 @Composable
-private fun Messages(messages: List<ChatMessage>, me: String?, groupNames: Boolean) {
+private fun Messages(
+    messages: List<ChatMessage>,
+    me: String?,
+    groupNames: Boolean,
+    images: ImageLoader,
+    onOpenImage: (String) -> Unit,
+) {
+    val byName = remember(messages) { messages.associateBy { it.name } }
     LazyColumn(
         Modifier.fillMaxSize(),
         reverseLayout = true,
@@ -321,7 +372,16 @@ private fun Messages(messages: List<ChatMessage>, me: String?, groupNames: Boole
                 newer.createTime.atZone(ZONE).toLocalDate() != day
             Column {
                 if (newDay) DaySeparator(dayLabel(day))
-                Bubble(msg, mine = me != null && msg.senderId == me, showName = startsRun && groupNames, showTime = endsRun, topGap = startsRun && !newDay)
+                Bubble(
+                    msg,
+                    mine = me != null && msg.senderId == me,
+                    quoted = msg.quotes?.let { byName[it] },
+                    showName = startsRun && groupNames,
+                    showTime = endsRun,
+                    topGap = startsRun && !newDay,
+                    images = images,
+                    onOpenImage = onOpenImage,
+                )
             }
         }
     }
@@ -337,8 +397,31 @@ private fun DaySeparator(label: String) {
     }
 }
 
+/** Up to a few emoji and nothing else: shown large, without a bubble, as in messaging apps. */
+private fun isEmojiOnly(t: String): Boolean {
+    val s = t.trim()
+    return s.isNotEmpty() && s.codePointCount(0, s.length) <= 8 &&
+        s.none { it.isLetterOrDigit() || it in "?!.,;:'\"()" } && s.any { Character.isSurrogate(it) || Character.getType(it) == Character.OTHER_SYMBOL.toInt() }
+}
+
 @Composable
-private fun Bubble(msg: ChatMessage, mine: Boolean, showName: Boolean, showTime: Boolean, topGap: Boolean) {
+private fun Bubble(
+    msg: ChatMessage,
+    mine: Boolean,
+    quoted: ChatMessage?,
+    showName: Boolean,
+    showTime: Boolean,
+    topGap: Boolean,
+    images: ImageLoader,
+    onOpenImage: (String) -> Unit,
+) {
+    val fg = if (mine) FujiColors.Ink else FujiColors.Cream
+    val fgMuted = fg.copy(alpha = 0.7f)
+    val pictures = msg.gifs + msg.attachments.filter { it.isImage }.mapNotNull { it.downloadUrl }
+    val files = msg.attachments.filter { !it.isImage || it.downloadUrl == null }
+    val emojiOnly = !msg.deleted && pictures.isEmpty() && files.isEmpty() && quoted == null && isEmojiOnly(msg.text)
+    val hasBody = msg.deleted || msg.text.isNotBlank() || files.isNotEmpty() || msg.cards.isNotEmpty() || msg.links.isNotEmpty() || quoted != null
+
     Column(
         Modifier.fillMaxWidth().padding(top = if (topGap) 18.dp else 6.dp),
         horizontalAlignment = if (mine) Alignment.End else Alignment.Start,
@@ -349,24 +432,188 @@ private fun Bubble(msg: ChatMessage, mine: Boolean, showName: Boolean, showTime:
                 fontSize = 20.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(start = 20.dp, bottom = 6.dp),
             )
         }
-        Text(
-            msg.text,
-            color = if (mine) FujiColors.Ink else FujiColors.Cream,
-            fontFamily = Gothic,
-            fontSize = 25.sp,
-            lineHeight = 35.sp,
-            modifier = Modifier
-                .widthIn(max = 820.dp)
-                .clip(RoundedCornerShape(28.dp))
-                .background(if (mine) FujiColors.Cream else FujiColors.GlassStrong)
-                .padding(horizontal = 24.dp, vertical = 14.dp),
-        )
+        // Photos and GIFs stand on their own, like in Google Chat.
+        pictures.forEach { url ->
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current).data(url).crossfade(true).build(),
+                imageLoader = images,
+                contentDescription = "Image",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .padding(bottom = 6.dp)
+                    .widthIn(max = 560.dp)
+                    .heightIn(min = 120.dp, max = 420.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(FujiColors.Glass)
+                    .clickable { onOpenImage(url) },
+            )
+        }
+        if (emojiOnly) {
+            Text(msg.text.trim(), fontSize = 64.sp, lineHeight = 76.sp)
+        } else if (hasBody) {
+            Column(
+                Modifier
+                    .widthIn(max = 820.dp)
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(if (mine) FujiColors.Cream else FujiColors.GlassStrong)
+                    .padding(horizontal = 24.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                if (quoted != null) {
+                    Row(Modifier.clip(RoundedCornerShape(12.dp)).background(fg.copy(alpha = 0.08f)).padding(end = 16.dp)) {
+                        Box(Modifier.width(5.dp).height(56.dp).background(colorOf(quoted.senderId.ifEmpty { quoted.senderName })))
+                        Column(Modifier.padding(start = 14.dp, top = 6.dp, bottom = 6.dp)) {
+                            Text(if (quoted.senderName == "?") "Réponse" else quoted.senderName, color = fgMuted, fontFamily = Gothic, fontSize = 17.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+                            Text(quoted.summary.replace('\n', ' '), color = fgMuted, fontFamily = Gothic, fontSize = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                }
+                when {
+                    msg.deleted -> Text("Message supprimé", color = fgMuted, fontFamily = Gothic, fontSize = 23.sp, fontStyle = FontStyle.Italic)
+                    msg.text.isNotBlank() -> RichText(msg, fg, images)
+                }
+                files.forEach { FileChip(it, fg) }
+                msg.links.filter { it.type != ChatLinkType.OTHER }.forEach { LinkChip(it, fg) }
+                msg.cards.forEach { card ->
+                    Text(card, color = fg, fontFamily = Gothic, fontSize = 22.sp, fontWeight = FontWeight.Medium,
+                        modifier = Modifier.clip(RoundedCornerShape(14.dp)).background(fg.copy(alpha = 0.08f)).padding(horizontal = 16.dp, vertical = 10.dp))
+                }
+            }
+        }
+        if (msg.reactions.isNotEmpty()) {
+            Row(Modifier.padding(top = 6.dp, start = 12.dp, end = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                msg.reactions.forEach { r ->
+                    Row(
+                        Modifier.height(44.dp).clip(RoundedCornerShape(22.dp)).background(FujiColors.GlassStrong).padding(horizontal = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        if (r.imageUrl != null) AsyncImage(r.imageUrl, r.emoji, imageLoader = images, modifier = Modifier.size(26.dp))
+                        else Text(r.emoji, fontSize = 22.sp)
+                        Text("${r.count}", color = FujiColors.Cream, fontFamily = Gothic, fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                    }
+                }
+            }
+        }
         if (showTime) {
             Text(
-                msg.createTime.atZone(ZONE).format(TimeFmt), color = FujiColors.Faint, fontFamily = Gothic, fontSize = 17.sp,
+                msg.createTime.atZone(ZONE).format(TimeFmt) + if (msg.edited) " · modifié" else "",
+                color = FujiColors.Faint, fontFamily = Gothic, fontSize = 17.sp,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
             )
         }
+    }
+}
+
+@Composable
+private fun FileChip(file: ChatAttachment, fg: Color) {
+    val (icon, kind) = when {
+        file.isVideo -> Icons.Rounded.Movie to "Vidéo"
+        file.contentType.startsWith("audio/") -> Icons.Rounded.AudioFile to "Audio"
+        file.contentType == "application/pdf" -> Icons.Rounded.PictureAsPdf to "PDF"
+        file.isImage -> Icons.Rounded.Image to "Image"
+        else -> Icons.Rounded.Description to "Fichier"
+    }
+    Row(
+        Modifier.clip(RoundedCornerShape(18.dp)).background(fg.copy(alpha = 0.08f)).padding(horizontal = 18.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Icon(icon, null, tint = fg, modifier = Modifier.size(40.dp))
+        Column {
+            Text(file.contentName, color = fg, fontFamily = Gothic, fontSize = 22.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(if (file.fromDrive) "$kind · Google Drive" else kind, color = fg.copy(alpha = 0.7f), fontFamily = Gothic, fontSize = 18.sp)
+        }
+    }
+}
+
+@Composable
+private fun LinkChip(link: ChatLink, fg: Color) {
+    val (icon, label) = when (link.type) {
+        ChatLinkType.DRIVE -> Icons.Rounded.Description to "Document Google Drive"
+        ChatLinkType.MEET -> Icons.Rounded.Videocam to ("Réunion Meet" + (link.detail?.let { " · $it" } ?: ""))
+        ChatLinkType.CALENDAR -> Icons.Rounded.Event to "Événement d'agenda"
+        ChatLinkType.CHAT -> Icons.Rounded.Forum to "Conversation Chat"
+        ChatLinkType.MAIL -> Icons.Rounded.Mail to "E-mail Gmail"
+        ChatLinkType.OTHER -> Icons.Rounded.Link to link.uri
+    }
+    Row(
+        Modifier.clip(RoundedCornerShape(18.dp)).background(fg.copy(alpha = 0.08f)).padding(horizontal = 18.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Icon(icon, null, tint = fg, modifier = Modifier.size(30.dp))
+        Text(label, color = fg, fontFamily = Gothic, fontSize = 20.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+/**
+ * Chat markup → styled text: *bold*, _italic_, ~strike~, `code`, ```blocks```, <url|label>,
+ * <users/1> mentions, :custom: emoji as images, "* " bullets and "> " quotes.
+ */
+private val ChatToken = Regex(
+    "```([\\s\\S]+?)```|`([^`\\n]+)`|<([^>|\\s]+)\\|([^>]+)>|<(users/[^>]+)>|<(https?://[^>\\s]+)>|" +
+        "(?<![\\w*])\\*([^*\\n]+)\\*(?![\\w*])|(?<![\\w_])_([^_\\n]+)_(?![\\w_])|(?<![\\w~])~([^~\\n]+)~(?![\\w~])|(:[\\w+-]+:)",
+)
+
+internal fun chatMarkup(
+    source: String,
+    mentions: Map<String, String>,
+    customEmojis: Set<String>,
+    accent: Color,
+): AnnotatedString {
+    val src = source.replace(Regex("(?m)^[*-] "), "•  ").replace(Regex("(?m)^> ?"), "▎ ")
+    return buildAnnotatedString {
+        var at = 0
+        for (m in ChatToken.findAll(src)) {
+            append(src.substring(at, m.range.first))
+            val g = m.groupValues
+            when {
+                g[1].isNotEmpty() -> withStyle(SpanStyle(fontFamily = FontFamily.Monospace, background = accent.copy(alpha = 0.12f))) { append(g[1].trim('\n')) }
+                g[2].isNotEmpty() -> withStyle(SpanStyle(fontFamily = FontFamily.Monospace, background = accent.copy(alpha = 0.12f))) { append(g[2]) }
+                g[3].isNotEmpty() -> withStyle(SpanStyle(color = accent, textDecoration = TextDecoration.Underline)) { append(g[4]) }
+                g[5].isNotEmpty() -> withStyle(SpanStyle(color = accent, fontWeight = FontWeight.Bold)) {
+                    append("@" + (mentions[g[5]] ?: if (g[5] == "users/all") "tous" else "quelqu'un"))
+                }
+                g[6].isNotEmpty() -> withStyle(SpanStyle(color = accent, textDecoration = TextDecoration.Underline)) { append(g[6]) }
+                g[7].isNotEmpty() -> withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(g[7]) }
+                g[8].isNotEmpty() -> withStyle(SpanStyle(fontStyle = FontStyle.Italic)) { append(g[8]) }
+                g[9].isNotEmpty() -> withStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) { append(g[9]) }
+                g[10] in customEmojis -> appendInlineContent(g[10], g[10])
+                else -> append(m.value)
+            }
+            at = m.range.last + 1
+        }
+        append(src.substring(at))
+    }
+}
+
+@Composable
+private fun RichText(msg: ChatMessage, fg: Color, images: ImageLoader) {
+    val accent = if (fg == FujiColors.Ink) Color(0xFF2F5D8A) else Color(0xFF9CC8F0)
+    val text = remember(msg.name, msg.formattedText, msg.text) {
+        chatMarkup(msg.formattedText ?: msg.text, msg.mentions, msg.customEmojis.keys, accent)
+    }
+    val inline = remember(msg.customEmojis) {
+        msg.customEmojis.mapValues { (name, url) ->
+            InlineTextContent(Placeholder(1.3.em, 1.3.em, PlaceholderVerticalAlign.TextCenter)) {
+                AsyncImage(url, name, imageLoader = images, modifier = Modifier.fillMaxSize())
+            }
+        }
+    }
+    Text(text, color = fg, fontFamily = Gothic, fontSize = 25.sp, lineHeight = 35.sp, inlineContent = inline)
+}
+
+/** A photo full screen; a touch anywhere closes it. */
+@Composable
+private fun ImageViewer(url: String, images: ImageLoader, onClose: () -> Unit) {
+    Box(
+        Modifier.fillMaxSize().clip(RoundedCornerShape(36.dp)).background(Color(0xF2080A12))
+            .clickable(remember { MutableInteractionSource() }, indication = null, onClick = onClose),
+        contentAlignment = Alignment.Center,
+    ) {
+        AsyncImage(url, "Image", imageLoader = images, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(32.dp))
+        FujiIconButton(Icons.Rounded.Close, "Fermer", onClose, filled = true, modifier = Modifier.align(Alignment.TopEnd).padding(24.dp))
     }
 }
 
