@@ -1,6 +1,6 @@
 {
-  "versionCode": 45,
-  "versionName": "2.9",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/2.9/fukkatsu-nop-v2.9.apk",
-  "notes": "Une seule connexion Google pour l'Agenda, Meet et Chat, reprise par FukkaStore. Les messages directs de Chat portent le nom de la personne."
+  "versionCode": 46,
+  "versionName": "2.10",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/2.10/fukkatsu-nop-v2.10.apk",
+  "notes": "L'Agenda et Meet se connectent de nouveau par un code sur google.com/device."
 }
