@@ -26,8 +26,10 @@ private val REDIRECT_URI: String get() {
     return "com.googleusercontent.apps.$id:/"
 }
 
+// One sign-in for the whole Google screen: Agenda and Meet (calendar) and Chat.
 private const val CHAT_SCOPES =
-    "https://www.googleapis.com/auth/chat.spaces.readonly" +
+    CALENDAR_SCOPE +
+    " https://www.googleapis.com/auth/chat.spaces.readonly" +
     " https://www.googleapis.com/auth/chat.messages.readonly"
 
 private const val TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -37,6 +39,7 @@ class ChatAuthManager(
     private val http: OkHttpClient = OkHttpClient(),
 ) {
     val isLoggedIn: Flow<Boolean> = tokenStore.isLoggedIn
+    val hasCalendar: Flow<Boolean> = tokenStore.hasCalendar
 
     private var pendingVerifier: String? = null
 
@@ -53,6 +56,7 @@ class ChatAuthManager(
             "&code_challenge=$challenge" +
             "&code_challenge_method=S256" +
             "&access_type=offline" +
+            "&include_granted_scopes=true" +
             "&prompt=consent"
     }
 
@@ -74,7 +78,8 @@ class ChatAuthManager(
         val access    = obj["access_token"]?.jsonPrimitive?.content ?: return@withContext false
         val refresh   = obj["refresh_token"]?.jsonPrimitive?.content ?: return@withContext false
         val expiresIn = obj["expires_in"]?.jsonPrimitive?.longOrNull ?: 3600L
-        tokenStore.save(access, refresh, System.currentTimeMillis() + expiresIn * 1_000L)
+        val scope     = obj["scope"]?.jsonPrimitive?.content ?: ""
+        tokenStore.save(access, refresh, System.currentTimeMillis() + expiresIn * 1_000L, scope)
         pendingVerifier = null
         true
     }

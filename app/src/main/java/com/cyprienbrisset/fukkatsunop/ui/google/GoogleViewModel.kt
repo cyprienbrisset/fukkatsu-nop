@@ -149,10 +149,11 @@ class GoogleViewModel(
                     }.awaitAll().toMap()
                 }
             }.getOrNull() ?: return@launch
-            val me = guessMe(spaces.filter { it.type == ChatSpaceType.DM }.mapNotNull { recent[it.name] })
+            // Unnamed spaces are direct messages or small group chats: I write in all of them.
+            val me = guessMe(spaces.filter { it.type == ChatSpaceType.DM || (it.type != ChatSpaceType.ROOM && it.displayName.isBlank()) }.mapNotNull { recent[it.name] })
             val previews = spaces.associate { sp ->
                 val msgs = recent[sp.name].orEmpty()
-                sp.name to ChatPreview(if (sp.type == ChatSpaceType.DM) dmTitle(msgs, me) else null, msgs.firstOrNull())
+                sp.name to ChatPreview(if (sp.displayName.isBlank()) dmTitle(msgs, me) else null, msgs.firstOrNull())
             }
             _state.update { it.copy(chatPreviews = previews, chatMe = me) }
         }
@@ -215,11 +216,11 @@ class GoogleViewModel(
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             val store     = GoogleTokenStore(context)
-            val auth      = GoogleAuthManager(context, store)
-            val db        = com.cyprienbrisset.fukkatsunop.data.AppDatabase.get(context)
-            val calendar  = GoogleCalendarRepo(auth, cache = db.calendarCacheDao())
             val chatStore = ChatTokenStore(context)
             val chatAuth  = ChatAuthManager(chatStore)
+            val auth      = GoogleAuthManager(context, store, shared = chatAuth)
+            val db        = com.cyprienbrisset.fukkatsunop.data.AppDatabase.get(context)
+            val calendar  = GoogleCalendarRepo(auth, cache = db.calendarCacheDao())
             val chat      = GoogleChatRepo(chatAuth)
             return GoogleViewModel(auth, calendar, chat, chatAuth) as T
         }

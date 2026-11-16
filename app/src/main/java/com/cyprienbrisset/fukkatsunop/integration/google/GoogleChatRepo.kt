@@ -79,11 +79,12 @@ internal fun parseSpaces(raw: String): List<ChatSpace> {
         val obj = el.jsonObject
         val name = obj["name"]?.jsonPrimitive?.content ?: return@mapNotNull null
         val displayName = obj["displayName"]?.jsonPrimitive?.content ?: ""
-        val type = when (obj["type"]?.jsonPrimitive?.content) {
-            "DIRECT_MESSAGE" -> ChatSpaceType.DM
-            "ROOM"           -> ChatSpaceType.ROOM
-            "GROUP_CHAT"     -> ChatSpaceType.GROUP_CHAT
-            else             -> ChatSpaceType.UNKNOWN
+        // spaceType is the current field; type (DM / ROOM) is deprecated and often missing.
+        val type = when (obj["spaceType"]?.jsonPrimitive?.content ?: obj["type"]?.jsonPrimitive?.content) {
+            "DIRECT_MESSAGE", "DM" -> ChatSpaceType.DM
+            "SPACE", "ROOM"        -> ChatSpaceType.ROOM
+            "GROUP_CHAT"           -> ChatSpaceType.GROUP_CHAT
+            else                   -> ChatSpaceType.UNKNOWN
         }
         val lastActive = obj["lastActiveTime"]?.jsonPrimitive?.content?.let { runCatching { Instant.parse(it) }.getOrNull() }
         ChatSpace(name = name, displayName = displayName, type = type, lastActive = lastActive)
@@ -124,9 +125,11 @@ fun guessMe(dmMessages: Collection<List<ChatMessage>>): String? {
     return best.key.takeIf { best.value >= 2 && counts.values.count { it == best.value } == 1 }
 }
 
-/** The other person of a direct message; without knowing "me", both names. */
-fun dmTitle(messages: List<ChatMessage>, me: String?): String? {
-    val named = messages.filter { it.senderName != "?" }
-    if (me != null) return named.firstOrNull { it.senderId != me }?.senderName
-    return named.map { it.senderName }.distinct().takeIf { it.isNotEmpty() }?.joinToString(" · ")
-}
+/**
+ * Title of a space Google left unnamed (direct message or group chat): the other people,
+ * from their latest messages. Without knowing "me", every name, me included.
+ */
+fun dmTitle(messages: List<ChatMessage>, me: String?): String? =
+    messages.filter { it.senderName != "?" && (me == null || it.senderId != me) }
+        .map { it.senderName }.distinct().take(3)
+        .takeIf { it.isNotEmpty() }?.joinToString(", ")

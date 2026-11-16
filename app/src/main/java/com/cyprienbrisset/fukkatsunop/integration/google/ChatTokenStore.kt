@@ -11,14 +11,22 @@ import kotlinx.coroutines.flow.map
 
 private val Context.chatAuthDataStore by preferencesDataStore(name = "chat_auth")
 
+internal const val CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar"
+
 class ChatTokenStore(private val context: Context) {
 
     private val KEY_ACCESS  = stringPreferencesKey("chat_access_token")
     private val KEY_REFRESH = stringPreferencesKey("chat_refresh_token")
     private val KEY_EXPIRES = longPreferencesKey("chat_expires_at")
+    private val KEY_SCOPE   = stringPreferencesKey("chat_scope")
 
     val isLoggedIn: Flow<Boolean> = context.chatAuthDataStore.data.map {
         it[KEY_REFRESH] != null
+    }
+
+    /** Signed in with the calendar scope too: the Agenda uses this same account. */
+    val hasCalendar: Flow<Boolean> = context.chatAuthDataStore.data.map {
+        it[KEY_REFRESH] != null && it[KEY_SCOPE]?.contains(CALENDAR_SCOPE) == true
     }
 
     data class Tokens(val accessToken: String, val refreshToken: String, val expiresAt: Long)
@@ -31,8 +39,9 @@ class ChatTokenStore(private val context: Context) {
         return Tokens(access, refresh, expires)
     }
 
-    suspend fun save(accessToken: String, refreshToken: String, expiresAt: Long) {
+    suspend fun save(accessToken: String, refreshToken: String, expiresAt: Long, scope: String = "") {
         context.chatAuthDataStore.edit {
+            it[KEY_SCOPE]   = scope
             it[KEY_ACCESS]  = accessToken
             it[KEY_REFRESH] = refreshToken
             it[KEY_EXPIRES] = expiresAt

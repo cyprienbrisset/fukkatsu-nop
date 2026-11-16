@@ -72,7 +72,10 @@ private fun FukkaLoginScreen() {
             factory = { ctx ->
                 val cookieManager = CookieManager.getInstance()
                 WebView(ctx).apply {
-                    cookieManager.removeAllCookies(null)
+                    // Keep the Google session of the Google screen (same WebView cookies): the
+                    // account is already known, no need to type it again. Only a leftover
+                    // oauth_token from an earlier attempt must go, or it would be exchanged stale.
+                    cookieManager.setCookie("https://accounts.google.com", "$AUTH_TOKEN=; Max-Age=0; Path=/")
                     cookieManager.setAcceptThirdPartyCookies(this, true)
 
                     webViewClient = object : WebViewClient() {

@@ -4,6 +4,9 @@ import android.content.Context
 import com.cyprienbrisset.fukkatsunop.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -30,8 +33,12 @@ class GoogleAuthManager(
     context: Context,
     private val tokenStore: GoogleTokenStore = GoogleTokenStore(context),
     private val http: OkHttpClient = OkHttpClient(),
+    /** The single Google sign-in (Chat + calendar): used when no device-flow token exists. */
+    private val shared: ChatAuthManager? = null,
 ) {
-    val isLoggedIn = tokenStore.isLoggedIn
+    val isLoggedIn: Flow<Boolean> =
+        if (shared == null) tokenStore.isLoggedIn
+        else combine(tokenStore.isLoggedIn, shared.hasCalendar) { own, viaShared -> own || viaShared }
 
     suspend fun startDeviceFlow(): DeviceFlowData = withContext(Dispatchers.IO) {
         val body = FormBody.Builder()
@@ -86,7 +93,8 @@ class GoogleAuthManager(
 
     /** Returns a valid access token, refreshing silently if expiring within 60 s. */
     suspend fun validToken(): String? = withContext(Dispatchers.IO) {
-        val tokens = tokenStore.getTokens() ?: return@withContext null
+        val tokens = tokenStore.getTokens()
+            ?: return@withContext if (shared != null && shared.hasCalendar.first()) shared.validToken() else null
         if (tokens.expiresAt > System.currentTimeMillis() + 60_000L) return@withContext tokens.accessToken
         refreshToken(tokens.refreshToken)
     }
@@ -111,7 +119,10 @@ class GoogleAuthManager(
         return access
     }
 
-    suspend fun logout() = tokenStore.clear()
+    suspend fun logout() {
+        tokenStore.clear()
+        shared?.logout()
+    }
 }
 
 // ── Pure parsing helpers — testable without Context ──────────────────────────

@@ -89,7 +89,6 @@ private fun colorOf(key: String) = PersonColors[Math.floorMod(key.hashCode(), Pe
 @Composable
 fun ChatTab(
     isLoggedIn: Boolean,
-    chatAuthUrl: String?,
     spacesState: TabState<List<ChatSpace>>,
     messagesState: TabState<List<ChatMessage>>,
     selectedSpace: ChatSpace?,
@@ -102,18 +101,14 @@ fun ChatTab(
     onRetryMessages: () -> Unit,
     onReauth: () -> Unit,
     onStartChatAuth: () -> Unit,
-    onChatAuthCode: (String) -> Unit,
-    onDismissChatAuth: () -> Unit,
 ) {
-    if (chatAuthUrl != null) {
-        OAuthWebView(url = chatAuthUrl, onCode = onChatAuthCode, onDismiss = onDismissChatAuth)
-        return
-    }
     if (!isLoggedIn) {
+        // Signed in to the Agenda by the old code-on-another-device flow: one more sign-in,
+        // which then covers the Agenda as well.
         Notice(
-            title = "Connectez Google Chat",
-            text = "Vos conversations s'affichent ici, en lecture seule.",
-            action = "Connecter Chat",
+            title = "Autorisez Google Chat",
+            text = "Vos conversations s'affichent ici, en lecture seule. Cette connexion sert aussi à l'Agenda et à Meet.",
+            action = "Autoriser Chat",
             onAction = onStartChatAuth,
         )
         return
@@ -153,8 +148,8 @@ fun ChatTab(
 private fun titleOf(space: ChatSpace, previews: Map<String, ChatPreview>): String = when {
     space.displayName.isNotBlank() -> space.displayName
     previews[space.name]?.title != null -> previews[space.name]!!.title!!
-    space.type == ChatSpaceType.DM -> "Message direct"
-    else -> "Groupe sans nom"
+    space.type == ChatSpaceType.ROOM || space.type == ChatSpaceType.GROUP_CHAT -> "Groupe sans nom"
+    else -> "Message direct"
 }
 
 private fun initialsOf(title: String): String =
@@ -406,7 +401,7 @@ private fun ErrorNotice(message: String, onRetry: () -> Unit, onReauth: () -> Un
 // ── OAuth WebView ─────────────────────────────────────────────────────────────
 
 @Composable
-private fun OAuthWebView(
+internal fun OAuthWebView(
     url: String,
     onCode: (String) -> Unit,
     onDismiss: () -> Unit,

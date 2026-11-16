@@ -153,10 +153,18 @@ class GoogleChatRepoTest {
         val me = guessMe(dms)
         assertEquals("users/me", me)
         assertEquals("Alice", dmTitle(dms[0], me))
+        assertEquals("Moi, Alice", dmTitle(dms[0], null))
         assertEquals("Bob", dmTitle(dms[1], me))
     }
 
     @Test fun guessMe_unknownWithASingleDm() {
         assertNull(guessMe(listOf(listOf(msg("users/me", "Moi"), msg("users/a", "Alice")))))
+    }
+
+    @Test fun parseSpaces_spaceTypeWinsOverDeprecatedType() {
+        val json = """{"spaces":[{"name":"spaces/A","spaceType":"DIRECT_MESSAGE"},{"name":"spaces/B","spaceType":"SPACE","displayName":"Équipe"}]}"""
+        val spaces = parseSpaces(json)
+        assertEquals(ChatSpaceType.DM, spaces[0].type)
+        assertEquals(ChatSpaceType.ROOM, spaces[1].type)
     }
 }

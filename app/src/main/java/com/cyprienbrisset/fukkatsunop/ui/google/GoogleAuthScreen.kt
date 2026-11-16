@@ -71,7 +71,7 @@ fun GoogleAuthScreen(
                         color = Kinari,
                     )
                     Text(
-                        text = "Agenda · Mail · Meet",
+                        text = "Agenda · Meet · Chat",
                         fontFamily = Mincho,
                         fontSize = 15.sp,
                         color = SumiMuted,

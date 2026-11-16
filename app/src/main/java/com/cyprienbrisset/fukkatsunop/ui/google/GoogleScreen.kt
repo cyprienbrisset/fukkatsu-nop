@@ -72,8 +72,12 @@ fun GoogleScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             }
         },
     ) {
-        if (!loggedIn) {
-            LegacyScale { GoogleAuthScreen(authState = uiState.authState, onStartAuth = { vm.startDeviceFlow() }) }
+        val authUrl = uiState.chatAuthUrl
+        if (authUrl != null) {
+            // One Google sign-in, in the Portal itself, for the Agenda, Meet and Chat.
+            OAuthWebView(url = authUrl, onCode = { vm.onChatAuthCode(it) }, onDismiss = { vm.dismissChatAuth() })
+        } else if (!loggedIn) {
+            LegacyScale { GoogleAuthScreen(authState = uiState.authState, onStartAuth = { vm.startChatAuth() }) }
         } else {
             HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
                 when (page) {
@@ -82,7 +86,6 @@ fun GoogleScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                     // Chat is drawn at the Fuji size directly, for reading from across the room.
                     2 -> ChatTab(
                         isLoggedIn      = uiState.isChatLoggedIn,
-                        chatAuthUrl     = uiState.chatAuthUrl,
                         spacesState     = uiState.chatSpaces,
                         messagesState   = uiState.chatMessages,
                         selectedSpace   = uiState.selectedSpace,
@@ -95,8 +98,6 @@ fun GoogleScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                         onRetryMessages = { vm.retryMessages() },
                         onReauth        = { vm.logoutChat() },
                         onStartChatAuth = { vm.startChatAuth() },
-                        onChatAuthCode  = { vm.onChatAuthCode(it) },
-                        onDismissChatAuth = { vm.dismissChatAuth() },
                     )
                 }
             }
