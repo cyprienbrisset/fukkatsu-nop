@@ -1,6 +1,6 @@
 {
-  "versionCode": 43,
-  "versionName": "2.7",
-  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/2.7/fukkatsu-nop-v2.7.apk",
-  "notes": "Au premier lancement, des astuces animées expliquent les gestes ; chaque écran présente les siens à sa première ouverture."
+  "versionCode": 44,
+  "versionName": "2.8",
+  "apkUrl": "https://github.com/cyprienbrisset/fukkatsu-nop/releases/download/2.8/fukkatsu-nop-v2.8.apk",
+  "notes": "Google Chat redessiné : conversations à gauche, bulles lisibles de loin à droite. Le raccourci « Agenda » devient « Google »."
 }
