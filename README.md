@@ -67,7 +67,7 @@ Depuis la 2.7, le premier lancement présente ces gestes en six astuces animées
 
 ## Intégration Google — Agenda, Meet & Chat
 
-L'écran « Google » (raccourci du panneau Apps) se connecte une seule fois, directement sur le Portal (OAuth avec PKCE), pour l'Agenda, Meet et Chat. Depuis la 2.9, FukkaStore garde la même session Google : le compte est déjà connu quand on s'y connecte.
+L'écran « Google » (raccourci du panneau Apps) connecte l'Agenda et Meet par un code : il s'affiche sur le Portal et se valide sur google.com/device depuis n'importe quel autre appareil. Google n'accepte pas les droits Chat dans cette connexion par code (« Invalid device flow scope ») : Chat demande donc une autorisation sur le Portal (OAuth avec PKCE), une seule fois, qui couvre aussi l'Agenda. FukkaStore se connecte comme le Play Store, avec un jeton que seule la page de connexion Google délivre ; depuis la 2.9 il reprend la session Google ouverte sur le Portal.
 
 - **Agenda** : événements des 60 prochains jours, groupés par jour, indicateur vermillon pour les réunions imminentes (< 1 h). Créez un événement directement depuis le Portal via le bouton « + ».
 - **Meet** : réunions Google Meet des 48 prochaines heures avec compte à rebours en direct et bouton « Rejoindre ».

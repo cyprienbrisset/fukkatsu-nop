@@ -103,11 +103,11 @@ fun ChatTab(
     onStartChatAuth: () -> Unit,
 ) {
     if (!isLoggedIn) {
-        // Signed in to the Agenda by the old code-on-another-device flow: one more sign-in,
-        // which then covers the Agenda as well.
+        // Google refuses the Chat scopes to the code-on-google.com/device sign-in of the
+        // Agenda: Chat needs this one-time authorization on the Portal itself.
         Notice(
             title = "Autorisez Google Chat",
-            text = "Vos conversations s'affichent ici, en lecture seule. Cette connexion sert aussi à l'Agenda et à Meet.",
+            text = "Vos conversations s'affichent ici, en lecture seule. Google n'autorise pas Chat avec le code google.com/device : il faut une autorisation sur le Portal, une seule fois.",
             action = "Autoriser Chat",
             onAction = onStartChatAuth,
         )

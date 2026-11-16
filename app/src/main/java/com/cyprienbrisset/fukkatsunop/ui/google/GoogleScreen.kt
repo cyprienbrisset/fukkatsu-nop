@@ -74,10 +74,11 @@ fun GoogleScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     ) {
         val authUrl = uiState.chatAuthUrl
         if (authUrl != null) {
-            // One Google sign-in, in the Portal itself, for the Agenda, Meet and Chat.
+            // Chat sign-in, in the Portal itself: Google refuses the Chat scopes to the
+            // code-on-another-device flow ("Invalid device flow scope").
             OAuthWebView(url = authUrl, onCode = { vm.onChatAuthCode(it) }, onDismiss = { vm.dismissChatAuth() })
         } else if (!loggedIn) {
-            LegacyScale { GoogleAuthScreen(authState = uiState.authState, onStartAuth = { vm.startChatAuth() }) }
+            LegacyScale { GoogleAuthScreen(authState = uiState.authState, onStartAuth = { vm.startDeviceFlow() }) }
         } else {
             HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
                 when (page) {
