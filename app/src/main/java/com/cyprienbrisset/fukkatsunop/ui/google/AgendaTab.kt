@@ -236,7 +236,7 @@ private fun WeekView(events: List<CalendarEvent>, selectedDate: LocalDate) {
     }
     val timeFmt = remember { DateTimeFormatter.ofPattern("HH:mm") }
 
-    Row(Modifier.fillMaxSize().padding(horizontal = 8.dp)) {
+    Row(Modifier.fillMaxSize().padding(start = 8.dp, end = 8.dp, top = 12.dp)) {
         weekDays.forEach { date ->
             val dayEvents = eventsByDate[date] ?: emptyList()
             val isToday = date == today
