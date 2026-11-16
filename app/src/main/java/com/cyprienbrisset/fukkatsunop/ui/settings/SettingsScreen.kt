@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.cyprienbrisset.fukkatsunop.ui.LegacyScale
+import com.cyprienbrisset.fukkatsunop.ui.fuji.Coach
 import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiColors
 import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiSwitch
 import com.cyprienbrisset.fukkatsunop.ui.fuji.glass
@@ -392,6 +393,10 @@ private fun DisplayPanelContent(
     )
     SettingRow("Lancer l'économiseur maintenant", subtitle = "Aperçu de l'animation encre de Chine") { onLaunchSaver() }
     SettingRow("Tester le lever de soleil", subtitle = "Simulation 60 secondes") { onSunrise() }
+    SettingRow("Revoir les astuces", subtitle = "Les explications des gestes réapparaissent sur chaque écran") {
+        Coach.resetAll(ctx2)
+        android.widget.Toast.makeText(ctx2, "Les astuces s'afficheront à nouveau", android.widget.Toast.LENGTH_SHORT).show()
+    }
 }
 
 @Composable

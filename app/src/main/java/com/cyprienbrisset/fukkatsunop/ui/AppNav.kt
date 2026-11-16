@@ -28,6 +28,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -44,7 +45,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.cyprienbrisset.fukkatsunop.MainActivity
 import com.cyprienbrisset.fukkatsunop.system.UpdateProgress
+import com.cyprienbrisset.fukkatsunop.ui.fuji.CoachOverlay
+import com.cyprienbrisset.fukkatsunop.ui.fuji.CoachStep
 import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiBackdrop
+import com.cyprienbrisset.fukkatsunop.ui.fuji.Gesture
 import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiColors
 import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiScreen
 import com.cyprienbrisset.fukkatsunop.ui.fuji.FitToPortal
@@ -129,12 +133,18 @@ fun AppNav() {
                 com.cyprienbrisset.fukkatsunop.ui.google.GoogleScreen(onBack = back)
             }
             composable(Routes.WIDGETS) {
-                FujiScreen("Widgets", onBack = back) {
-                    LegacyScale { com.cyprienbrisset.fukkatsunop.ui.widgets.WidgetDashboard() }
+                Box(Modifier.fillMaxSize()) {
+                    FujiScreen("Widgets", onBack = back) {
+                        LegacyScale { com.cyprienbrisset.fukkatsunop.ui.widgets.WidgetDashboard() }
+                    }
+                    CoachOverlay("widgets", WidgetsCoach)
                 }
             }
             composable(Routes.SEARCH) {
-                com.cyprienbrisset.fukkatsunop.ui.home.AllAppsScreen(onBack = back)
+                Box(Modifier.fillMaxSize()) {
+                    com.cyprienbrisset.fukkatsunop.ui.home.AllAppsScreen(onBack = back)
+                    CoachOverlay("all_apps", AllAppsCoach)
+                }
             }
             composable(Routes.MAC) {
                 com.cyprienbrisset.fukkatsunop.ui.airplay.MacWaitingScreen(onClose = back)
@@ -165,12 +175,18 @@ fun AppNav() {
                 com.cyprienbrisset.fukkatsunop.ui.google.GoogleScreen(onBack = back)
             }
             composable(Routes.WIDGETS) {
-                FujiScreen("Widgets", onBack = back) {
-                    LegacyScale { com.cyprienbrisset.fukkatsunop.ui.widgets.WidgetDashboard() }
+                Box(Modifier.fillMaxSize()) {
+                    FujiScreen("Widgets", onBack = back) {
+                        LegacyScale { com.cyprienbrisset.fukkatsunop.ui.widgets.WidgetDashboard() }
+                    }
+                    CoachOverlay("widgets", WidgetsCoach)
                 }
             }
             composable(Routes.SEARCH) {
-                com.cyprienbrisset.fukkatsunop.ui.home.AllAppsScreen(onBack = back)
+                Box(Modifier.fillMaxSize()) {
+                    com.cyprienbrisset.fukkatsunop.ui.home.AllAppsScreen(onBack = back)
+                    CoachOverlay("all_apps", AllAppsCoach)
+                }
             }
             composable(Routes.MAC) {
                 com.cyprienbrisset.fukkatsunop.ui.airplay.MacWaitingScreen(onClose = back)
@@ -217,6 +233,30 @@ fun AppNav() {
     }
     }
 }
+
+private val WidgetsCoach = listOf(
+    CoachStep(
+        "Appui long sur un widget",
+        "Maintenez un widget pour passer en mode édition. Le bouton + ajoute un widget Android.",
+        Gesture.LONG_PRESS,
+        at = Offset(0.35f, 0.4f),
+    ),
+    CoachStep(
+        "Ranger et redimensionner",
+        "En mode édition, faites glisser la poignée d'un widget pour le déplacer, tirez ses bords pour changer sa hauteur ou sa largeur, la croix le supprime. Le bouton ✓ termine.",
+        Gesture.DRAG,
+        at = Offset(0.5f, 0.5f),
+    ),
+)
+
+private val AllAppsCoach = listOf(
+    CoachStep(
+        "Ajouter aux favoris",
+        "Touchez une app pour l'ouvrir. Maintenez-la pour l'ajouter à vos favoris, qui s'affichent quand vous touchez l'écran d'accueil.",
+        Gesture.LONG_PRESS,
+        at = Offset(0.3f, 0.5f),
+    ),
+)
 
 @Composable
 private fun UpdateOverlay(pct: Int) {

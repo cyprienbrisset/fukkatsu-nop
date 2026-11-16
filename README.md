@@ -51,6 +51,8 @@ Depuis la 2.1, le Portal est aussi une enceinte AirPlay : dans Apple Music (iPho
 
 Rien n'est caché : chaque action a un bouton visible d'au moins 64 dp. Les gestes restent disponibles en raccourci.
 
+Depuis la 2.7, le premier lancement présente ces gestes en six astuces animées (un doigt montre le geste sur un Portal miniature), puis chaque écran qui a ses propres gestes — panneau Apps, centre de contrôle, Widgets, Toutes les apps — les explique la première fois qu'il s'ouvre. Réglages › Affichage › « Revoir les astuces » les fait réapparaître.
+
 | Geste | Effet |
 |---|---|
 | **Toucher** l'écran ambiant | Afficher les apps |

@@ -58,6 +58,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -88,7 +89,10 @@ import com.cyprienbrisset.fukkatsunop.system.UpdateChecker
 import com.cyprienbrisset.fukkatsunop.system.voice.VoiceService
 import com.cyprienbrisset.fukkatsunop.ui.airplay.AirPlayActivity
 import com.cyprienbrisset.fukkatsunop.ui.LegacyScale
+import com.cyprienbrisset.fukkatsunop.ui.fuji.CoachOverlay
+import com.cyprienbrisset.fukkatsunop.ui.fuji.CoachStep
 import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiColors
+import com.cyprienbrisset.fukkatsunop.ui.fuji.Gesture
 import com.cyprienbrisset.fukkatsunop.ui.fuji.FujiPhoto
 import com.cyprienbrisset.fukkatsunop.ui.fuji.rememberMoment
 import com.cyprienbrisset.fukkatsunop.ui.google.GoogleViewModel
@@ -523,9 +527,71 @@ fun HomeShell(
             )
         } }
 
+        // ── First-time explanations: the home gestures, then the apps panel and the controls.
+        CoachOverlay("home", HomeCoach, active = panel == Panel.NONE)
+        CoachOverlay("apps", AppsCoach, active = panel == Panel.APPS)
+        CoachOverlay("controls", ControlsCoach, active = panel == Panel.CONTROLS)
     }
 
 }
+
+private val HomeCoach = listOf(
+    CoachStep(
+        "Bienvenue sur Fukkatsu",
+        "Touchez n'importe où sur la photo pour afficher vos apps, vos favoris et les apps ouvertes. Le bouton « Apps » en bas à gauche fait la même chose.",
+        Gesture.TAP,
+    ),
+    CoachStep(
+        "Tirez depuis le haut",
+        "Glissez un doigt vers le bas depuis le bord supérieur pour le centre de contrôle : Wi-Fi, Ne pas déranger, mode nuit, luminosité, volume et veille. L'onglet « Contrôles » s'ouvre aussi d'une touche.",
+        Gesture.PULL_DOWN,
+    ),
+    CoachStep(
+        "Remontez depuis le bas",
+        "Glisser vers le haut depuis le bord inférieur ouvre aussi vos apps.",
+        Gesture.PULL_UP,
+    ),
+    CoachStep(
+        "À gauche, la luminosité",
+        "Glissez verticalement sur la moitié gauche de l'écran : vers le haut plus lumineux, vers le bas plus sombre. Une jauge s'affiche pendant le geste.",
+        Gesture.SLIDE_LEFT,
+    ),
+    CoachStep(
+        "À droite, le volume",
+        "Le même geste sur la moitié droite règle le volume, sans ouvrir de menu.",
+        Gesture.SLIDE_RIGHT,
+    ),
+    CoachStep(
+        "Cartes et pastilles",
+        "La carte en bas à droite (musique, agenda, réveil) s'ouvre d'une touche ; la météo change de ville si vous en avez plusieurs. Après 3 minutes sans contact l'écran baisse, un toucher le rallume. Ces astuces se revoient dans Réglages › Affichage.",
+        Gesture.TAP,
+        at = Offset(0.78f, 0.8f),
+    ),
+)
+
+private val AppsCoach = listOf(
+    CoachStep(
+        "Appui long sur un favori",
+        "Maintenez un favori pour le déplacer ou le retirer. « Modifier » ouvre la liste pour ajouter des apps, des sites ou des tuiles système.",
+        Gesture.LONG_PRESS,
+        at = Offset(0.3f, 0.45f),
+    ),
+    CoachStep(
+        "Les apps ouvertes",
+        "En bas, touchez une app ouverte pour y revenir ; sa croix la ferme et « Tout fermer » libère la mémoire. La croix en haut à droite ou le bouton retour ramène à l'accueil.",
+        Gesture.TAP,
+        at = Offset(0.25f, 0.85f),
+    ),
+)
+
+private val ControlsCoach = listOf(
+    CoachStep(
+        "Le centre de contrôle",
+        "Les curseurs de luminosité et de volume se touchent ou se glissent à n'importe quel endroit de la barre. « Ne pas déranger » demande pour combien de temps. Touchez en dehors du panneau pour le fermer.",
+        Gesture.SLIDER,
+        at = Offset(0.5f, 0.5f),
+    ),
+)
 
 private fun alarmLabel(at: LocalDateTime, now: LocalDateTime): String {
     val time = at.format(TimeFmt)
